@@ -1,0 +1,203 @@
+# Chạy dự án
+
+Hai tiến trình: **Flask** (API + thuật toán CP-SAT, cổng 5055) và **Vite** (giao
+diện React, cổng 5173). Có hai cách chạy — chọn theo việc đang làm.
+
+## Cài lần đầu
+
+**Backend** — thư viện khai ở `webapp/requirements.txt`:
+
+```
+cd webapp
+py -m pip install -r requirements.txt
+```
+
+**Frontend:**
+
+```
+cd frontend
+npm install
+```
+
+## Cách 1 — chỉ dùng app (một cửa sổ)
+
+Flask tự phục vụ giao diện đã build ở `frontend/dist`, xem `webapp/api/frontend.py`.
+
+```
+cd frontend
+npm run build      # chỉ chạy lại khi frontend/src có thay đổi
+
+cd ../webapp
+py app.py
+```
+
+Mở **http://127.0.0.1:5055**.
+
+## Cách 2 — sửa giao diện (hai cửa sổ)
+
+Có hot-reload: sửa file trong `frontend/src` là trình duyệt tự cập nhật.
+
+**Cửa sổ 1 — backend:**
+
+```
+cd webapp
+py app.py
+```
+
+**Cửa sổ 2 — frontend:**
+
+```
+cd frontend
+npm run dev
+```
+
+Mở cổng mà **Vite in ra**, không phải cổng nhớ trong đầu. `/api/*` được Vite proxy
+sang `127.0.0.1:5055` (khai ở `vite.config.js`) nên backend không cần cấu hình CORS.
+
+> **Cổng 5173 hay bị chiếm.** Máy này có app khác (Laravel) giữ 5173, Vite lặng lẽ
+> nhảy sang 5174/5175 và vẫn chạy bình thường. Vào nhầm 5173 sẽ thấy app khác —
+> đó không phải lỗi của dự án này. Proxy trỏ đúng 5055 dù Vite nằm ở cổng nào.
+
+## Kiểm tra nhanh backend
+
+```
+curl http://127.0.0.1:5055/api/state
+```
+
+| Trả về | Nghĩa là |
+|---|---|
+| `{"hasData":true,...}` | Chạy tốt, đã có dữ liệu. |
+| `{"error":"Chưa có dữ liệu..."}` kèm mã 400 | Chạy tốt nhưng chưa nạp Excel. **Đúng hành vi**, không phải lỗi. |
+| Không kết nối được | Flask chưa chạy. |
+
+## Kiểm tra "xếp theo phạm vi"
+
+Tính năng xếp riêng một chương trình đào tạo có bài đo chạy trên dữ liệu thật —
+những sai lệch nó bắt (lớp ngoài phạm vi bị xê dịch, trùng giờ giảng viên, vượt
+pool phòng) đều **không nhìn thấy được trên giao diện**. Không cần Flask chạy:
+
+```
+cd webapp
+py kiem_tra_pham_vi.py                                  # phạm vi mặc định
+py kiem_tra_pham_vi.py FTH VJU2026 VJU2025 VJU2024      # chỉ định CTĐT × Khóa
+```
+
+Chạy lại sau mỗi lần nâng `ortools` — mô hình CP-SAT ở `scheduler_core.py` là chỗ
+dễ vỡ nhất khi lên bản mới.
+
+## Kiểm tra "không trùng lịch sinh viên"
+
+Một **nhóm sinh viên** là một cặp (CTĐT, Khóa) — `FTH/VJU2023` — và một người
+không ngồi được hai lớp cùng lúc. Ràng buộc này **mềm** (`scheduler_core.
+_rang_buoc_nhom_sinh_vien`) vì giờ đã chốt trong file vốn đã có sẵn một số vụ
+trùng mà hệ thống không có quyền đổi, nên phép đo là **mức tăng thêm**:
+
+```
+cd webapp
+py kiem_tra_nhom_sinh_vien.py --bo-chan               # đo trên dữ liệu thật
+py kiem_tra_nhom_sinh_vien.py --bo-chan --doi-chung   # chạy thêm bản TẮT ràng buộc để so
+```
+
+| Dòng kết quả | Đọc thế nào |
+|---|---|
+| `[1] Vụ phát sinh thêm, TRÁNH ĐƯỢC` | **Phải bằng 0.** Khác 0 là lỗi của mô hình: lớp đó còn khung giờ khác không đâm vào ai mà solver vẫn xếp chồng. |
+| `[2] Vụ phát sinh thêm, BẾ TẮC` | Mọi khung giờ giảng viên đã khai đều đâm vào lớp cùng nhóm — bế tắc của **dữ liệu**, phải khai thêm giờ hoặc đổi lớp đã chốt. |
+| `[3] Vụ cả hai bên đã chốt giờ` | Có sẵn trong file, solver không được đổi. |
+| `[4] Lớp chưa ghi cột Khóa` | **Không được kiểm** — điền cột Khóa là kiểm được ngay. |
+
+`--doi-chung` in thêm một dòng so sánh (đo gần nhất trên dữ liệu thật: **45 vụ**
+khi tắt ràng buộc, **28 vụ** khi bật). Nếu hai con số bằng nhau thì đường truyền
+`cap_can_ne` từ `api/solve.py` xuống `scheduler_core.py` đã đứt.
+
+Ba trường hợp cùng giờ **không** bị báo: nhóm **học chung** (một buổi dạy vật lý),
+**lớp song song** của cùng một học phần (CSE3013-1 / -2 — sinh viên chia đôi), và
+**lớp trực tuyến** — ô "Hình thức" ghi `Trực tuyến` / `Online` / `LMS`. Lớp trực
+tuyến là môn linh động, lên thời khóa biểu chỉ để có trong danh sách đăng ký nên
+nó không giữ chân sinh viên; chỉ cần **một** bên trực tuyến là cặp đó được miễn.
+Ô ghi cả `Online` lẫn `Trực tiếp` thì **không** miễn — lớp đó có buổi học thật.
+
+Miễn theo TỪNG LỚP chứ không theo học phần: một môn ba buổi mà chỉ một buổi ghi
+"Trực tuyến" thì hai buổi kia vẫn bị kiểm. Điền đủ ô "Hình thức" ở "Dữ liệu học
+phần" (hoặc ở file gốc) cho cả ba.
+
+### Vụ đã chốt lịch — không tính là vấn đề
+
+Một vụ trùng mà **MỌI lớp liên quan đều thuộc học phần đã chốt** thì không còn
+việc gì để làm: hệ thống từ chối mọi thao tác đổi giờ cho tới khi có người bấm
+"Bỏ chốt học phần". Những vụ đó bị **hạ cấp**, không xóa:
+
+- không tính vào số vấn đề, không tô dấu "!" lên thẻ trên lưới;
+- nằm trong mục thu gọn **"Đã chốt — không tính là vấn đề"** cuối hộp thư, bấm vào
+  vẫn nhảy tới buổi tương ứng để tra cứu.
+
+Điều kiện là **mọi** lớp chứ không phải một lớp: còn một bên chưa chốt thì vẫn đổi
+giờ bên đó được, tức vẫn là việc phải làm. Trên dữ liệu thật đây đúng là ranh giới
+đáng kể — 26 vụ trùng lịch sinh viên tách thành **21 vụ cả hai đã chốt** và **5 vụ
+còn gỡ được**; 5 vụ đó mới là thứ đáng hiện lên đỏ.
+
+Chỉ áp cho các vụ "hai buổi đụng nhau" (trùng giảng viên, trùng lịch sinh viên,
+hai cơ sở trong một ngày). **Không** áp cho "nghi trùng lặp dữ liệu" (chốt lịch
+không làm một dòng thừa bớt thừa đi) và "không xếp được / chưa có giờ" (việc chưa
+xong, không phải cam kết đã xong).
+
+> Lưu ý: nạp file xong, `pinning.chot_hoc_phan_du_gio_tu_file()` tự đánh dấu
+> **"Chốt theo file"** cho mọi học phần đã đủ giờ trong file — đo trên dữ liệu
+> thật: 126/126 học phần đã chốt đều là chốt-theo-file, phủ 225/294 lớp. Nên "đã
+> chốt" ở đây phần lớn nghĩa là "giờ đã ghi sẵn trong file kế hoạch", chứ không
+> phải "có người vừa bấm nút Chốt".
+
+### Lớp do đơn vị khác điều phối
+
+Nút **"Bỏ qua N lớp"** ở "Dữ liệu học phần" loại các lớp do đơn vị khác điều phối
+(Phòng Đào tạo, JLE…) khỏi bài toán — khoa không xếp chúng. Nhưng **bỏ qua không
+có nghĩa là vô hình**: lớp nào **đã có giờ chốt** thì vẫn nằm trên lưới thời khóa
+biểu và vẫn **chiếm chỗ của nhóm sinh viên**, vì sinh viên khóa đó đang thật sự
+ngồi học lúc đó. Trên dữ liệu thật: 65/80 lớp được đề xuất bỏ qua đã có giờ, phủ
+15 nhóm (CTĐT × Khóa), riêng BCSE/VJU2026 13 lớp.
+
+| | Lớp bỏ qua ĐÃ có giờ | Lớp bỏ qua CHƯA có giờ |
+|---|---|---|
+| Hiện trên lưới | ✔ (thẻ sọc chéo, viền đứt, nhãn "ĐƠN VỊ KHÁC") | ✘ |
+| Chiếm chỗ nhóm sinh viên | ✔ — solver né, hộp thư báo trùng | ✘ |
+| Vào model CP-SAT / kéo-thả được | ✘ — `/api/move-lesson` trả 409 | ✘ |
+| Tính trùng giảng viên / chiếm phòng | ✘ — ô giảng viên là một ĐƠN VỊ, không phải người | ✘ |
+| Cộng vào `placedCount` (tiến độ của khoa) | ✘ | ✘ |
+
+Ranh giới nằm ở `webapp/domain/bo_qua.py: van_len_luoi()`.
+
+Cùng một luật gom nhóm được viết ở **hai nơi** — `webapp/domain/nhom_sinh_vien.py`
+cho solver, `frontend/src/adapters/nhomSinhVien.js` cho Hộp thư vấn đề. Sửa một
+bên thì phải sửa bên kia, nếu không màn hình sẽ báo một đằng còn solver né một nẻo.
+
+## Dừng
+
+`Ctrl+C` ở từng cửa sổ. Nếu lỡ đóng mất cửa sổ mà tiến trình còn sống:
+
+```
+netstat -ano | findstr :5055
+taskkill /PID <pid> /F
+```
+
+## Dữ liệu nằm ở đâu
+
+Hai file trong `webapp/`. Đường dẫn neo theo vị trí file `.py` (`__file__`) chứ
+không theo thư mục hiện tại, nên gọi `py app.py` từ đâu cũng trỏ về đúng một chỗ.
+
+| File | Là gì |
+|---|---|
+| `manual_state_snapshot.json` | **Nguồn dữ liệu chính** — toàn bộ công nhập liệu. Ghi lại sau mỗi thao tác `/api/manual/*`. Mất file này là mất hết. |
+| `moc_hoan_tac.json` | Mốc để nút "Huỷ thay đổi" quay về. |
+
+Cả hai đều **gitignore** và **tự nạp lại** khi Flask khởi động — tắt app không mất
+dữ liệu. Riêng kết quả giải (Giai đoạn 1 & 2) **không** được lưu: mở lại app phải
+bấm Giải lại.
+
+## Lỗi hay gặp
+
+| Triệu chứng | Nguyên nhân |
+|---|---|
+| `ModuleNotFoundError: No module named 'flask'` | Chưa cài ba gói ở phần "Cài lần đầu", hoặc đang chạy bằng bản Python khác bản đã cài. |
+| Cổng 5055 báo đang bận | Còn một Flask cũ chạy nền — dùng `taskkill` ở trên. |
+| Nhiều lớp hiện CTĐT "Chung" và bỏ trống cột Khóa | Dữ liệu nạp bằng **bản cũ** của trình đọc file: dòng chỉ điền ô Họ tên (giảng viên đồng giảng viết xuống dòng riêng) bị đọc thành một lớp riêng. Nay đã gộp vào lớp ngay trên — **nạp lại file Excel** thì 43 lớp ma đó biến mất. |
+| Trang 5055 hiện "Chưa build giao diện" | Thiếu `frontend/dist/index.html` — chạy `npm run build`. |
+| Giao diện lên nhưng mọi màn đều trống | Backend chưa chạy hoặc sai cổng — mở DevTools xem tab Network, các lời gọi `/api/*` trả gì. |
