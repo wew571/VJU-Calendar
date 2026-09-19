@@ -18,7 +18,9 @@ import itertools
 import time
 from ortools.sat.python import cp_model
 
-DAY_NAMES = ["Thu 2", "Thu 3", "Thu 4", "Thu 5", "Thu 6", "Thu 7", "Chu nhat"]
+from app_config import CONFIG
+
+DAY_NAMES = tuple(CONFIG["calendar"]["slotDayNames"])
 
 
 def slot_label(s, slots_per_day):
@@ -36,11 +38,11 @@ def _giao_nhau(a, dur_a, b, dur_b):
 # duoc day toi Thu 6 (ngay index 4) - gio hanh chinh Thu 7 danh rieng cho
 # thinh giang, khong ai duoc day Chu nhat (index 6). Index tinh theo DAY_NAMES
 # o tren (0 = Thu 2).
-MAX_DAY_INDEX = {"GUEST": 5, "RESIDENT": 4}
+MAX_DAY_INDEX = dict(CONFIG["teacherDayLimits"])
 
 
 def max_day_index(teacher_type):
-    return MAX_DAY_INDEX.get(teacher_type, 6)
+    return MAX_DAY_INDEX.get(teacher_type, CONFIG["calendar"]["numDays"] - 1)
 
 
 def valid_starts(num_days, slots_per_day, duration, teacher_type=None):
@@ -109,7 +111,7 @@ def khu_vuc(s):
 #
 # Khu vuc khong co ten trong day (o trong, co so moi) duoc gom chung vao mot muc
 # CUOI cung: khong biet cai nao xa hon thi doi xu nhu nhau, con hon doan bua.
-THU_TU_KHU_VUC = ("hoa lac", "my dinh")
+THU_TU_KHU_VUC = tuple(CONFIG["campuses"]["priority"])
 
 
 # KHOI CA HOC theo CO SO: mot buoi day phai nam GON trong mot khoi, khong duoc
@@ -141,8 +143,8 @@ THU_TU_KHU_VUC = ("hoa lac", "my dinh")
 # trong file hay giao vu ghim tay la quyet dinh cua con nguoi - xem
 # loc_theo_khoi_buoi() ve cach ha canh an toan.
 KHOI_CA_HOC = {
-    "hoa lac": ((2, 5), (6, 13)),
-    "my dinh": ((1, 5), (6, 13)),
+    kv: tuple(tuple(khoi) for khoi in cac_khoi)
+    for kv, cac_khoi in CONFIG["campuses"]["sessionBlocks"].items()
 }
 
 
@@ -342,7 +344,7 @@ def check_cross_program_conflicts(data):
         combo_count = 1
         for w in sec_windows:
             combo_count *= max(len(w), 1)
-        if combo_count <= 5000:  # an toan, tranh no to hop voi GV qua nhieu buoi
+        if combo_count <= CONFIG["solver"]["crossProgramCombinationLimit"]:  # an toan, tranh no to hop voi GV qua nhieu buoi
             for combo in itertools.product(*sec_windows):
                 ok = True
                 for i in range(len(combo)):
@@ -686,7 +688,7 @@ def _trong_so_giu_cho(placed, uu_tien_giu):
     return {sid: (manh if sid in uu_tien_giu else 1) for sid in placed}
 
 
-def solve_guest_phase(data, time_limit_s=30, dong_bang=None, uu_tien_giu=None,
+def solve_guest_phase(data, time_limit_s=CONFIG["solver"]["timeLimitSeconds"], dong_bang=None, uu_tien_giu=None,
                       cap_can_ne=None, gio_lop_pha_khac=None):
     """dong_bang: cac buoi DA CO CHO ma pha nay khong duoc dung toi - dua vao mo
     hinh nhu interval dat CUNG mot slot de vua chiem gio giang vien, vua chiem mot
@@ -873,7 +875,7 @@ def solve_guest_phase(data, time_limit_s=30, dong_bang=None, uu_tien_giu=None,
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit_s
-    solver.parameters.num_search_workers = 8
+    solver.parameters.num_search_workers = CONFIG["solver"]["numSearchWorkers"]
 
     t0 = time.time()
     status = solver.Solve(model)
@@ -955,7 +957,7 @@ def solve_guest_phase(data, time_limit_s=30, dong_bang=None, uu_tien_giu=None,
     }
 
 
-def solve_resident_phase(data, frozen_guest_lessons, forbidden=None, time_limit_s=30,
+def solve_resident_phase(data, frozen_guest_lessons, forbidden=None, time_limit_s=CONFIG["solver"]["timeLimitSeconds"],
                          ghim_tay=None, bo_ghim=None, uu_tien_giu=None, cap_can_ne=None,
                          gio_lop_pha_khac=None):
     """forbidden: dict {section_id: [danh sach slot bi tu choi]}
@@ -1196,7 +1198,7 @@ def solve_resident_phase(data, frozen_guest_lessons, forbidden=None, time_limit_
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit_s
-    solver.parameters.num_search_workers = 8
+    solver.parameters.num_search_workers = CONFIG["solver"]["numSearchWorkers"]
 
     t0 = time.time()
     status = solver.Solve(model)

@@ -46,6 +46,7 @@ import copy
 import sys
 
 import snapshot
+from app_config import CONFIG
 snapshot.save_snapshot = lambda *a, **k: None   # doc-only, khong dung du lieu that
 
 import scheduler_core as sc
@@ -117,7 +118,7 @@ def _bi_ghim(data, sid):
     return not s.get("time_assumed") and s.get("original_slot") is not None
 
 
-def chay(giay=30):
+def chay(giay=CONFIG["solver"]["timeLimitSeconds"]):
     from app import app  # noqa: F401  - nap app => nap snapshot vao STATE
 
     data = STATE["data"]
@@ -201,7 +202,7 @@ def chay(giay=30):
 
 if __name__ == "__main__":
     doi_so = sys.argv[1:]
-    giay = 30
+    giay = CONFIG["solver"]["timeLimitSeconds"]
     if "--giay" in doi_so:
         giay = int(doi_so[doi_so.index("--giay") + 1])
     sys.exit(chay(giay))

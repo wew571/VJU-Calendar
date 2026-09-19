@@ -8,6 +8,7 @@ cua luat nay se lech nhau ngay lan sua sau.
 """
 
 import scheduler_core as sc
+from app_config import CONFIG
 from domain.availability import gio_ranh_chung, valid_starts_from_slots
 from state import DAY_LABELS_VN
 
@@ -50,7 +51,7 @@ def parse_class_time(body, slots_per_day, teacher_type=None, enforce_cap=True):
         day, p_start, p_end = int(day), int(p_start), int(p_end)
     except (TypeError, ValueError):
         return None, "Thứ/Tiết đầu/Tiết cuối phải là số nguyên."
-    if not (0 <= day <= 6) or p_start < 1 or p_end < p_start or p_end > slots_per_day:
+    if not (0 <= day < CONFIG["calendar"]["numDays"]) or p_start < 1 or p_end < p_start or p_end > slots_per_day:
         # O luong NAP FILE, mot o gio ngoai pham vi KHONG duoc lam rung ca lop:
         # truoc day chon nguon gio ghi tiet 13 o buoc "Xac nhan gio hoc" lam lop
         # bien mat khoi bo du lieu, mat luon GV/SV/hoc phan, chi de lai mot dong

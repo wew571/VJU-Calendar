@@ -4,6 +4,7 @@
 import re
 
 import fate_import
+from app_config import default_data_params
 from domain.programs import program_ids_cua_lop
 from domain.teachers import loai_lop
 from domain.time_rules import parse_class_time
@@ -17,15 +18,11 @@ def empty_manual_data():
     """Bo du lieu rong de bat dau 'nhap lieu thu cong' - dung cau truc ma
     solve_guest_phase/solve_resident_phase/check_cross_program_conflicts/
     build_data_response dung duoc khong can sua gi.
-    numDays=7 de phu ca Thu2..CN. slotsPerDay=13 la MAC DINH cho nhap tay; luong
-    nap file con noi them theo tiet lon nhat co trong file - xem
+    numDays/slotsPerDay mac dinh doc tu config.json; luong nap file con noi them
+    slotsPerDay theo tiet lon nhat co trong file - xem
     domain/merge.py: noi_slots_per_day()."""
     return {
-        "params": {
-            "numDays": 7, "slotsPerDay": 13, "duration": 2,
-            "ltPool": 60, "labPool": 40, "seed": 0,
-            "pctPreSubmitted": 100, "numForcedConflicts": 0,
-        },
+        "params": default_data_params(),
         "programs": [],
         "faculty_names": ["Chưa phân khoa"],
         "program_faculty": {},

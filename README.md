@@ -92,26 +92,47 @@ Quy trình xếp lịch cơ bản trên hệ thống diễn ra qua 4 bước:
 
 ```text
 VJU-Calendar/
-│
-├── frontend/                 # 🖥️ MÃ NGUỒN GIAO DIỆN (React)
+├── frontend/                     # Giao diện React + Vite
+│   ├── public/                   # Tài nguyên tĩnh
 │   ├── src/
-│   │   ├── presentation/     # Các màn hình chính (Thời khóa biểu, Học phần, Dữ liệu...)
-│   │   ├── components/       # Các khối giao diện tái sử dụng (Bút bấm, Bảng, Hộp thoại...)
-│   │   ├── context/          # Bộ nhớ tạm lưu dữ liệu trên trình duyệt
-│   │   └── services/         # Nơi gửi yêu cầu sang máy chủ backend
-│   └── package.json          # Danh sách thư viện giao diện
-│
-├── webapp/                   # ⚙️ MÃ NGUỒN BỘ XỬ LÝ (Python Flask)
-│   ├── app.py                # File khởi động máy chủ chính
-│   ├── scheduler_core.py     # "Bộ não" thuật toán xếp lịch CP-SAT
-│   ├── api/                  # Các cổng tiếp nhận yêu cầu từ giao diện
-│   ├── domain/               # Các quy tắc nghiệp vụ (hoàn tác, kiểm tra...)
-│   ├── fate_import.py        # Đọc & chuẩn hóa dữ liệu từ file Excel
-│   ├── fate_export.py        # Ghi và xuất file Excel kết quả
-│   └── requirements.txt      # Danh sách thư viện Python cần dùng
-│
-├── QUY-TRINH-NGHIEP-VU-XEP-TKB.md  # 📘 Tài liệu chi tiết về nghiệp vụ đào tạo
-└── README.md                 # 📖 Tài liệu hướng dẫn này
+│   │   ├── adapters/             # Chuyển đổi và phân tích dữ liệu từ API
+│   │   ├── components/           # Thành phần giao diện dùng chung
+│   │   ├── constants/            # Hằng số của giao diện
+│   │   ├── context/              # Trạng thái dùng chung của React
+│   │   ├── hooks/                # React hooks
+│   │   ├── lib/                  # Tiện ích frontend
+│   │   ├── presentation/         # Trang, màn hình và thành phần nghiệp vụ
+│   │   ├── services/             # Gọi API backend
+│   │   ├── App.jsx               # Component gốc
+│   │   └── main.jsx              # Điểm khởi tạo React
+│   ├── package.json              # Dependencies và script npm
+│   └── vite.config.js            # Cấu hình Vite và proxy API
+├── webapp/                       # Backend Python Flask
+│   ├── api/                      # Các endpoint HTTP
+│   ├── domain/                   # Quy tắc và xử lý nghiệp vụ
+│   ├── app.py                    # Điểm khởi động Flask
+│   ├── app_config.py             # Đọc và kiểm tra config.json
+│   ├── config.json               # Cấu hình cục bộ, không được Git theo dõi
+│   ├── scheduler_core.py         # Mô hình xếp lịch CP-SAT
+│   ├── state.py                  # Trạng thái phiên làm việc
+│   ├── snapshot.py               # Lưu và khôi phục dữ liệu nhập tay
+│   ├── fate_import.py            # Đọc và chuẩn hóa Excel
+│   ├── fate_export.py            # Xuất dữ liệu Excel
+│   ├── fate_export_luoi.py       # Xuất lưới thời khóa biểu
+│   ├── fate_audit.py             # Kiểm tra dữ liệu Excel
+│   ├── fate_lecturers.py         # Đọc danh sách giảng viên
+│   ├── kiem_tra_pham_vi.py       # Kiểm tra xếp lịch theo phạm vi
+│   ├── kiem_tra_chuyen_di.py     # Kiểm tra tối ưu di chuyển
+│   ├── kiem_tra_nhom_sinh_vien.py # Kiểm tra trùng lịch sinh viên
+│   └── requirements.txt          # Dependencies Python
+├── doc/                          # Tài liệu dự án
+│   ├── PHAN-TICH-RANG-BUOC.md
+│   ├── QUY-TRINH-NGHIEP-VU-XEP-TKB.md
+│   ├── HUONG_DAN_SU_DUNG.docx
+│   └── run.md                    # Hướng dẫn chạy và kiểm tra chuyên sâu
+├── check_real_fate_data.py       # Công cụ kiểm tra dữ liệu thực
+├── .gitignore                    # Danh sách file Git bỏ qua
+└── README.md                     # Tài liệu tổng quan
 ```
 
 ---
@@ -184,6 +205,99 @@ Cách này giúp giao diện tự động cập nhật ngay khi bạn sửa code
 
 ---
 
+### Bước 3: Thiết lập `config.json`
+
+Backend đọc cấu hình từ `webapp/config.json`. File này chứa các tham số lịch học,
+số phòng, giới hạn ngày dạy, khối ca theo cơ sở và cấu hình CP-SAT. File đã được
+đưa vào `.gitignore`, vì vậy mỗi máy phải có một bản cấu hình riêng.
+
+Nếu chạy backend lần đầu mà chưa có file, hệ thống sẽ:
+
+1. Tự tạo `webapp/config.json` trống.
+2. Dừng khởi động và yêu cầu người dùng nhận cấu hình từ người cung cấp hệ thống.
+3. Sau khi điền cấu hình hợp lệ, chạy lại `py app.py`.
+
+Có thể chủ động tạo file trước lần chạy đầu tiên. Nội dung mặc định hiện tại:
+
+```json
+{
+  "calendar": {
+    "numDays": 7,
+    "slotsPerDay": 13,
+    "defaultDuration": 2,
+    "maxImportedPeriod": 16,
+    "dayLabels": [
+      "Thứ 2",
+      "Thứ 3",
+      "Thứ 4",
+      "Thứ 5",
+      "Thứ 6",
+      "Thứ 7",
+      "Chủ nhật"
+    ],
+    "slotDayNames": [
+      "Thu 2",
+      "Thu 3",
+      "Thu 4",
+      "Thu 5",
+      "Thu 6",
+      "Thu 7",
+      "Chu nhat"
+    ]
+  },
+  "rooms": {
+    "ltPool": 60,
+    "labPool": 40
+  },
+  "teacherDayLimits": {
+    "GUEST": 5,
+    "RESIDENT": 4
+  },
+  "campuses": {
+    "priority": [
+      "hoa lac",
+      "my dinh"
+    ],
+    "sessionBlocks": {
+      "hoa lac": [
+        [2, 5],
+        [6, 13]
+      ],
+      "my dinh": [
+        [1, 5],
+        [6, 13]
+      ]
+    }
+  },
+  "solver": {
+    "timeLimitSeconds": 30,
+    "numSearchWorkers": 8,
+    "crossProgramCombinationLimit": 5000
+  },
+  "legacyDataParams": {
+    "seed": 0,
+    "pctPreSubmitted": 100,
+    "numForcedConflicts": 0
+  }
+}
+```
+
+Các nhóm tham số chính:
+
+- `calendar`: số ngày, số tiết mỗi ngày, thời lượng mặc định, tiết nhập tối đa và nhãn ngày.
+- `rooms`: số phòng lý thuyết (`ltPool`) và thực hành (`labPool`) có thể dùng đồng thời.
+- `teacherDayLimits`: ngày cuối cùng hệ thống được tự xếp; chỉ số bắt đầu từ `0`
+  (`GUEST: 5` là Thứ 7, `RESIDENT: 4` là Thứ 6).
+- `campuses.priority`: thứ tự ưu tiên gom số ngày di chuyển tới từng cơ sở.
+- `campuses.sessionBlocks`: các khoảng tiết mà một buổi học phải nằm trọn bên trong.
+- `solver`: giới hạn thời gian, số luồng tìm kiếm và ngưỡng tổ hợp kiểm tra sơ bộ.
+- `legacyDataParams`: các trường tương thích với cấu trúc dữ liệu cũ.
+
+Sau khi thay đổi `config.json`, cần khởi động lại backend để nạp cấu hình mới.
+Không đưa file cấu hình thật vào Git.
+
+---
+
 ## ✨ 7. Các Tính Năng Nổi Bật
 
 1. **Lưới Thời Khóa Biểu Trực Quan:** Xem lịch học theo dạng tuần, lọc theo từng Giảng viên, từng Phòng học hoặc từng Chương trình đào tạo.
@@ -198,6 +312,6 @@ Cách này giúp giao diện tự động cập nhật ngay khi bạn sửa code
 ## 🤝 8. Hỗ Trợ & Đóng Góp
 
 - Nếu gặp sự cố trong quá trình cài đặt hoặc vận hành, bạn có thể kiểm tra thêm tài liệu chi tiết tại:
-  - `run.md`: Hướng dẫn kỹ thuật và lệnh kiểm thử sâu.
-  - `QUY-TRINH-NGHIEP-VU-XEP-TKB.md`: Quy trình nghiệp vụ đào tạo chi tiết.
+  - `doc/run.md`: Hướng dẫn kỹ thuật và lệnh kiểm thử sâu.
+  - `doc/QUY-TRINH-NGHIEP-VU-XEP-TKB.md`: Quy trình nghiệp vụ đào tạo chi tiết.
 - Chúc bạn có trải nghiệm làm việc hiệu quả và thuận lợi cùng **VJU-Calendar**! 🎉

@@ -19,6 +19,8 @@ import unicodedata
 
 import openpyxl
 
+from app_config import CONFIG
+
 # KHONG con import scheduler_core: cho duy nhat dung den no la _parse_time_text()
 # cho cot text tu do - cot do da bo han. Module nay gio doc Excel thuan tuy.
 
@@ -488,7 +490,7 @@ def _structured_sessions(row, layout, col):
     return out
 
 
-_DAY_LABELS_VN = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"]
+_DAY_LABELS_VN = tuple(CONFIG["calendar"]["dayLabels"])
 
 # Tiet lon nhat con TIN DUOC. He thong khong con chot cung 12 tiet/ngay: app.py noi
 # slotsPerDay theo tiet lon nhat gap trong file (file HK1 2026-2027-2 dung tiet 13),
@@ -497,7 +499,7 @@ _DAY_LABELS_VN = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 
 # 16 vi mot ngay hoc toi da la sang (1-5) + chieu (6-10) + toi (11-15); ghi tiet 20
 # hay 99 thi khong the la gio hoc that, ma noi slotsPerDay theo do se phong to mo
 # hinh solver vo ich (moi tiet x 7 ngay).
-MAX_TIET = 16
+MAX_TIET = CONFIG["calendar"]["maxImportedPeriod"]
 
 
 def _session_label(session):
@@ -532,7 +534,7 @@ def _hop_le(sessions):
     CO Y khong loc buoi vuot MAX_TIET o day: gia tri do van phai hien o man "Xac
     nhan gio hoc" de giao vu doi chieu voi file (file HK1-2 dong 280/281 ghi tiet
     11-13). Cho nao chiu no la app._parse_class_time - coi nhu chua co gio."""
-    return [s for s in sessions if 0 <= s[0] <= 6 and s[1] >= 1 and s[2] >= s[1]]
+    return [s for s in sessions if 0 <= s[0] < CONFIG["calendar"]["numDays"] and s[1] >= 1 and s[2] >= s[1]]
 
 
 def _gop_gv_phu(rows, chi_so, row, col, teacher_cell):

@@ -5,6 +5,8 @@ Module NEN cua ca goi: khong import gi tu webapp ca, nen moi module khac deu
 import duoc tu day ma khong sinh vong tron.
 """
 
+from app_config import CONFIG
+
 # State toan cuc don gian (demo local, 1 nguoi dung tai 1 thoi diem)
 STATE = {
     "data": None,
@@ -47,7 +49,7 @@ STATE = {
 }
 
 
-DAY_LABELS_VN = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"]
+DAY_LABELS_VN = tuple(CONFIG["calendar"]["dayLabels"])
 
 
 # Sentinel: phan biet "khong truyen time_info" voi "truyen None" (= de he thong
