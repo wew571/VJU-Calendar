@@ -14,6 +14,7 @@ import datetime
 
 import scheduler_core as sc
 from domain import bo_qua as bq
+from domain.chot import chuyen_chot_hoc_phan_cu
 from domain.hoc_chung import nhom_cua, thanh_vien
 from domain.pinning import ghim_gio_da_chot
 from state import STATE
@@ -225,48 +226,30 @@ def _slot_len_luoi(data, sid, slot_solver):
     return slot_solver.get(sid)
 
 
-def chot_hoc_phan_du_gio_tu_file(data, nguon=None):
-    """Danh dau DA CHOT LICH cho moi hoc phan ma MOI lop cua no deu co gio trong
-    file. Tra ve so hoc phan vua chot.
-
-    Theo dung quyet dinh A2: *"cac lop da duoc import tu file la cac lop da chot
-    gio, tuc giao vien day da chot qua loi voi dieu phoi vien"*. Gio do von da
-    duoc ghim (ghim_gio_da_chot) - viec con thieu chi la NOI RA tren giao dien,
-    de o "Da chot n/153 mon" khong bao 0 trong khi 246/343 lop da co gio chot.
-
-    Chi chot hoc phan DU gio: mot mon con lop chua co gio thi ban chinh thuc cua
-    no chua hoan chinh, chot vao la sai nghia. `truoc` de rong tuong ung "moi lop
-    von da co gio nay" - bo chot se tra dung ve gio trong file, khong ve "de he
-    thong tu xep".
-    """
-    theo_hp = {}
-    for sid, sec in data["sections"].items():
-        theo_hp.setdefault(sec.get("course_id"), []).append(sec)
+def chot_lop_du_gio_tu_file(data, nguon=None):
+    """Danh dau DA CHOT LICH rieng cho moi lop co gio co dinh trong file."""
     now = datetime.datetime.now().isoformat(timespec="seconds")
     dem = 0
-    for cid, ds in theo_hp.items():
-        hp = data.get("courses", {}).get(cid)
-        if hp is None or hp.get("chot"):
+    for s in data["sections"].values():
+        if s.get("chot") or s.get("time_assumed") or s.get("original_slot") is None:
             continue
-        if not ds or any(x.get("time_assumed") or x.get("original_slot") is None for x in ds):
-            continue
-        hp["chot"] = {
+        s["chot"] = {
             "at": now, "by": "Nhập từ Excel",
             "note": f"Giờ đã chốt sẵn trong {nguon}" if nguon else "Giờ đã chốt sẵn trong file",
-            "soLop": len(ds), "tuFile": True,
-            "truoc": {str(x["id"]): {"day": x.get("day"), "periodStart": x.get("period_start"),
-                                     "periodEnd": x.get("period_end"), "timeAssumed": False}
-                      for x in ds},
+            "tuFile": True,
+            "truoc": {"day": s.get("day"), "periodStart": s.get("period_start"),
+                       "periodEnd": s.get("period_end"), "timeAssumed": False},
         }
         dem += 1
     return dem
 
 
 def dat_lich_ban_dau(data, nguon=None):
-    """Ghim gio da chot + danh dau hoc phan du gio la DA CHOT + dat lich ban dau
+    """Ghim gio da chot + danh dau tung lop co gio la DA CHOT + dat lich ban dau
     vao STATE (dung sau khi nap file)."""
+    chuyen_chot_hoc_phan_cu(data)
     ghim_gio_da_chot(data)
-    chot_hoc_phan_du_gio_tu_file(data, nguon)
+    chot_lop_du_gio_tu_file(data, nguon)
     g, r = lich_ban_dau(data)
     attach_override_metadata(data, g, "GUEST")
     attach_override_metadata(data, r, "RESIDENT")

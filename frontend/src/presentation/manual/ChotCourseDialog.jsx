@@ -21,15 +21,13 @@ function dayNumber(day) {
 }
 
 /**
- * CHOT LICH cho ca mot hoc phan.
+ * CHOT LICH rieng cho mot lop hoc phan.
  *
- * Vi sao la mot HOP THOAI chu khong phai bam mot cai la xong: chot = ghi gio dang
- * hien tren luoi thanh gio CHINH THUC va khoa lai (sua tay, keo-tha, xoa gio hang
- * loat deu bi chan). Phai cho nhin DU danh sach lop kem gio truoc khi quyet - va
- * ghi lai ai chot, luc nao, vi sao.
+ * Chot = ghi gio dang hien tren luoi thanh gio CHINH THUC va khoa lai. Hop thoai
+ * cho nguoi dung kiem tra dung ma lop, gio va giang vien truoc khi cam ket.
  */
-export default function ChotCourseDialog({ open, onOpenChange, group }) {
-  const { loading, doChotCourse } = useAppData();
+export default function ChotSectionDialog({ open, onOpenChange, section }) {
+  const { loading, doChotSection } = useAppData();
   const [nguoi, setNguoi] = useState(() => {
     try {
       return localStorage.getItem(NGUOI_KEY) || "";
@@ -39,11 +37,7 @@ export default function ChotCourseDialog({ open, onOpenChange, group }) {
   });
   const [note, setNote] = useState("");
   const [error, setError] = useState(null);
-
-  const rows = group?.rows ?? [];
-  // Chot ma con lop chua co gio thi ban chinh thuc se thieu - backend cung tu
-  // choi, nhung phai noi truoc chu khong de bam roi moi bao.
-  const thieuGio = rows.filter((c) => c.day == null || c.periodStart == null);
+  const thieuGio = section?.day == null || section?.periodStart == null;
 
   const handleChot = async () => {
     setError(null);
@@ -53,7 +47,7 @@ export default function ChotCourseDialog({ open, onOpenChange, group }) {
       /* ignore */
     }
     try {
-      await doChotCourse(group.courseId, { by: nguoi, note });
+      await doChotSection(section.sectionId, { by: nguoi, note });
       onOpenChange(false);
       setNote("");
     } catch (err) {
@@ -65,50 +59,33 @@ export default function ChotCourseDialog({ open, onOpenChange, group }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Chốt lịch — {group?.courseName}</DialogTitle>
+          <DialogTitle>Chốt lớp — {section?.classCode || `#${section?.sectionId}`}</DialogTitle>
           <DialogDescription>
-            Giờ đang hiển thị của <strong>{rows.length} lớp</strong> sẽ thành giờ chính thức và bị{" "}
-            <strong>ghim cứng</strong>: giải lại không dịch được, sửa tay / kéo-thả / xoá giờ hàng
-            loạt đều bị chặn cho đến khi bỏ chốt.
+            Chỉ lớp này thuộc học phần <strong>{section?.courseName}</strong> sẽ bị ghim cứng.
+            Các lớp khác của cùng học phần vẫn có thể sửa hoặc xếp lại độc lập.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3 text-sm">
-          {thieuGio.length > 0 && (
+          {thieuGio && (
             <Notice tone="amber" icon={TriangleAlert}>
-              {thieuGio.length}/{rows.length} lớp <strong>chưa có giờ</strong> — chốt được thì mọi
-              lớp phải có giờ. Hãy chạy xếp lịch hoặc nhập giờ cho chúng trước:{" "}
-              {thieuGio.slice(0, 4).map((c) => c.classCode || `#${c.sectionId}`).join(", ")}
-              {thieuGio.length > 4 && `, +${thieuGio.length - 4}`}.
+              Lớp này <strong>chưa có giờ</strong>. Hãy chạy xếp lịch hoặc nhập giờ trước khi chốt.
             </Notice>
           )}
 
-          <div className="rounded-lg border">
-            <div className="text-muted-foreground border-b px-3 py-1.5 text-xs">
-              Các lớp sẽ được chốt
-            </div>
-            <div className="max-h-56 divide-y overflow-y-auto text-xs">
-              {rows.map((c) => (
-                <div key={c.sectionId} className="flex items-baseline justify-between gap-2 px-3 py-1.5">
-                  <span className="min-w-0 truncate">
-                    <span className="font-medium">{c.classCode || `#${c.sectionId}`}</span>
-                    <span className="text-muted-foreground">
-                      {" "}
-                      · {(c.teachers ?? []).map((t) => t.name).join(", ") || "chưa phân công"}
-                    </span>
-                  </span>
-                  <span
-                    className={
-                      "shrink-0 tabular-nums " +
-                      (c.day == null ? "text-amber-700" : "text-muted-foreground")
-                    }
-                  >
-                    {c.day == null
-                      ? "chưa có giờ"
-                      : `${dayNumber(c.day)} tiết ${c.periodStart}-${c.periodEnd}`}
-                  </span>
-                </div>
-              ))}
+          <div className="rounded-lg border px-3 py-2 text-xs">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="min-w-0 truncate">
+                <span className="font-medium">{section?.classCode || `#${section?.sectionId}`}</span>
+                <span className="text-muted-foreground">
+                  {" "}· {(section?.teachers ?? []).map((t) => t.name).join(", ") || "chưa phân công"}
+                </span>
+              </span>
+              <span className={thieuGio ? "shrink-0 text-amber-700" : "text-muted-foreground shrink-0 tabular-nums"}>
+                {thieuGio
+                  ? "chưa có giờ"
+                  : `${dayNumber(section.day)} tiết ${section.periodStart}-${section.periodEnd}`}
+              </span>
             </div>
           </div>
 
@@ -141,9 +118,9 @@ export default function ChotCourseDialog({ open, onOpenChange, group }) {
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Hủy
           </Button>
-          <Button onClick={handleChot} disabled={loading || thieuGio.length > 0}>
+          <Button onClick={handleChot} disabled={loading || thieuGio}>
             <Lock className="size-4" />
-            {loading ? "Đang chốt…" : `Chốt ${rows.length} lớp`}
+            {loading ? "Đang chốt…" : "Chốt lớp này"}
           </Button>
         </DialogFooter>
       </DialogContent>

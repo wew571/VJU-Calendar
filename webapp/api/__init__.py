@@ -32,7 +32,7 @@ _TAT_CA = (
     bp_manual_section, # /api/manual/section
     bp_solve,      # /api/{solve-guest,solve-resident,results}
     bp_schedule,   # /api/{move-lesson,clear-override}, /api/manual/save-schedule
-    bp_chot,       # /api/manual/course/<id>/chot
+    bp_chot,       # /api/manual/section/<id>/chot
     bp_hoc_chung,  # /api/manual/hoc-chung
     bp_bo_qua,     # /api/manual/bo-qua
     bp_export,     # /api/manual/export

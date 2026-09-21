@@ -105,10 +105,9 @@ def build_classes_list(data):
 
         out.append({
             "sectionId": sid,
-            # CHOT LICH theo HOC PHAN: moi lop cua mon deu mang theo trang thai
-            # nay de bang co the to mau/khoa nut ma khong phai tra cuu cheo.
-            "courseChot": course.get("chot") and {
-                k: v for k, v in course["chot"].items() if k != "truoc"},
+            # CHOT LICH theo LOP HOC PHAN: moi dong mang trang thai doc lap.
+            "sectionChot": s.get("chot") and {
+                k: v for k, v in s["chot"].items() if k != "truoc"},
             "courseId": s.get("course_id"), "courseCode": course.get("code"),
             "courseName": course.get("name") or s.get("course_name"), "credits": course.get("credits"),
             "classCode": s.get("class_code"), "ltCredits": s.get("lt_credits"), "thCredits": s.get("th_credits"),
@@ -161,12 +160,10 @@ def build_classes_list(data):
             # qua bao "trung giang vien" va de gop the tren luoi.
             "hocChungId": (nhom_cua(data, sid) or {}).get("id"),
             "hocChungWith": [x for x in cung_buoi.get(sid, []) if x != sid],
-            # Lop nay KHONG thuoc mon da chot, nhung HOC CHUNG voi mot lop thuoc
-            # mon da chot -> gio bi khoa (xem chot.khoa_vi_da_chot). Gui ly do ra
-            # de bang khoa san o Thu/Tiet va noi vi sao; khong co co nay thi giao
-            # vu thay "chua chot", sua roi moi an 409 va khong hieu tai sao.
+            # Lop nay CHUA chot, nhung HOC CHUNG voi mot lop da chot -> gio bi
+            # khoa (xem chot.khoa_vi_da_chot). Gui ly do ra de giao dien noi ro.
             "hocChungLockedBy": (khoa_vi_da_chot(data, sid)
-                                 if (cung_buoi.get(sid) and not (course.get("chot")))
+                                 if (cung_buoi.get(sid) and not s.get("chot"))
                                  else None),
             "status": _section_status(data, s),
             # Trang thai lich sau khi "Luu thoi khoa bieu" - None khi chua bam

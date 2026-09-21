@@ -6,7 +6,7 @@ import TeacherEditDrawer from "../manual/TeacherEditDrawer";
 import CourseEditDrawer from "../manual/CourseEditDrawer";
 import ImportExcelDialog from "../manual/ImportExcelDialog";
 import ExportExcelDialog from "../manual/ExportExcelDialog";
-import ChotCourseDialog from "../manual/ChotCourseDialog";
+import ChotSectionDialog from "../manual/ChotCourseDialog";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { ListSearch } from "@/components/shared/list-search";
 import { Notice } from "@/components/shared/notice";
@@ -39,7 +39,7 @@ const CHOT_OPTIONS = [
 // px-3 py-3 cua shadcn Table se lam no phinh gap may lan va mat cong dung. Chi
 // phan khung (thanh loc, trang thai, nut) chuyen sang design system.
 export default function ManualEntryPage({ role }) {
-  const { data, loading, initManual, doClearManualTimes, doBoChotCourse,
+  const { data, loading, initManual, doClearManualTimes, doBoChotSection,
           doBoHocChung, doBoQua } = useAppData();
   const canEdit = role !== "viewer";
 
@@ -55,8 +55,8 @@ export default function ManualEntryPage({ role }) {
   const [hienBoQua, setHienBoQua] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [chotFilter, setChotFilter] = useState("");
-  // Nhom hoc phan dang mo hop thoai chot (null = dong).
-  const [chotGroup, setChotGroup] = useState(null);
+  // Lop hoc phan dang mo hop thoai chot (null = dong).
+  const [chotSection, setChotSection] = useState(null);
   const [limit, setLimit] = useState(PAGE_STEP);
   // { type: "section"|"teacher"|"course", id: number|"new" } | null (dong) - moi
   // domain co 1 form rieng (SectionEditDrawer/TeacherEditDrawer/CourseEditDrawer),
@@ -91,8 +91,8 @@ export default function ManualEntryPage({ role }) {
       if (programFilter && !(c.programParts ?? []).includes(programFilter)) return false;
       if (cohortFilter && !(c.cohortParts ?? []).includes(cohortFilter)) return false;
       if (statusFilter && c.status !== statusFilter) return false;
-      if (chotFilter === "roi" && !c.courseChot) return false;
-      if (chotFilter === "chua" && c.courseChot) return false;
+      if (chotFilter === "roi" && !c.sectionChot) return false;
+      if (chotFilter === "chua" && c.sectionChot) return false;
       if (!q) return true;
       return [c.courseName, c.classCode, c.teacherName, String(c.sectionId)]
         .some((v) => (v || "").toLowerCase().includes(q));
@@ -116,27 +116,19 @@ export default function ManualEntryPage({ role }) {
   const tenLop = (sid) => maLopTheoId.get(sid) || `#${sid}`;
 
   const tienDoChot = useMemo(() => {
-    const m = new Map();
-    for (const c of classes) {
-      if (c.courseId == null) continue;
-      if (!m.has(c.courseId)) m.set(c.courseId, Boolean(c.courseChot));
-    }
-    const tong = m.size;
-    const roi = [...m.values()].filter(Boolean).length;
+    const tong = classes.length;
+    const roi = classes.filter((c) => c.sectionChot).length;
     return { tong, roi, con: tong - roi };
   }, [classes]);
 
-  const handleBoChot = (g) => async (e) => {
+  const handleBoChot = (c) => async (e) => {
     e.stopPropagation();
     const ok = window.confirm(
-      `Bỏ chốt học phần "${g.courseName}"?
-
-` +
-      `Giờ của ${g.rows.length} lớp sẽ trả về đúng trạng thái TRƯỚC khi chốt ` +
-      `(lớp vốn chưa có giờ quay lại "để hệ thống tự xếp"), và hệ thống được xếp lại môn này.`,
+      `Bỏ chốt lớp "${c.classCode || `#${c.sectionId}`}" của học phần "${c.courseName}"?\n\n` +
+      `Giờ của riêng lớp này sẽ trả về đúng trạng thái trước khi chốt.`,
     );
     if (!ok) return;
-    await doBoChotCourse(g.courseId);
+    await doBoChotSection(c.sectionId);
   };
 
   const handleStart = async () => {
@@ -250,13 +242,13 @@ export default function ManualEntryPage({ role }) {
             options={CHOT_OPTIONS}
             onChange={(v) => setChotFilter(v ?? "")}
           />
-          {/* Tien do tinh tren CA KY, khong theo bo loc dang hien: cau hoi that
-              su la "con bao nhieu mon chua chot", khong phai "trong man nay". */}
+          {/* Tien do tinh tren CA KY, khong theo bo loc dang hien: dem tung lop
+              hoc phan vi moi lop co khoa doc lap. */}
           {tienDoChot.tong > 0 && (
             <button
               type="button"
               className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs"
-              title={`${tienDoChot.roi} học phần đã chốt lịch, còn ${tienDoChot.con} chưa chốt. Bấm để lọc.`}
+              title={`${tienDoChot.roi} lớp đã chốt lịch, còn ${tienDoChot.con} chưa chốt. Bấm để lọc.`}
               onClick={() => setChotFilter(chotFilter === "chua" ? "" : "chua")}
             >
               <Lock className="size-3.5" />
@@ -264,7 +256,7 @@ export default function ManualEntryPage({ role }) {
               <strong className="tabular-nums">
                 {tienDoChot.roi}/{tienDoChot.tong}
               </strong>{" "}
-              môn
+              lớp
               {tienDoChot.con > 0 && (
                 <span className="text-amber-700">· còn {tienDoChot.con}</span>
               )}
@@ -420,7 +412,7 @@ export default function ManualEntryPage({ role }) {
           onOpenSection={openSection}
           onOpenCourse={openCourse}
           onOpenTeacher={openTeacher}
-          onChot={setChotGroup}
+          onChot={setChotSection}
           onBoChot={handleBoChot}
           onBoHocChung={doBoHocChung}
         />
@@ -470,11 +462,11 @@ export default function ManualEntryPage({ role }) {
         sectionIdsDangHien={visible.map((c) => c.sectionId)}
         tongSoLop={classes.length}
       />
-      {chotGroup && (
-        <ChotCourseDialog
+      {chotSection && (
+        <ChotSectionDialog
           open
-          group={chotGroup}
-          onOpenChange={(o) => !o && setChotGroup(null)}
+          section={chotSection}
+          onOpenChange={(o) => !o && setChotSection(null)}
         />
       )}
     </div>

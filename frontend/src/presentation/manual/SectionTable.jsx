@@ -62,7 +62,7 @@ function groupByCourse(rows) {
     let g = byKey.get(key);
     if (!g) {
       g = { courseId: c.courseId, courseCode: c.courseCode, courseName: c.courseName,
-            credits: c.credits, chot: c.courseChot || null, rows: [] };
+            credits: c.credits, rows: [] };
       byKey.set(key, g);
       groups.push(g);
     }
@@ -207,62 +207,33 @@ export default function SectionTable({
             <tr key={c.sectionId} className="sed-row xls-row" onClick={onOpenSection(c.sectionId)}>
               {i === 0 && <td className="xls-course xls-z-course xls-c-tt" rowSpan={g.rows.length} onClick={onOpenCourse(g.courseId)}>{c.sectionId}</td>}
               {i === 0 && <td className="xls-course xls-z-course xls-c-ma" rowSpan={g.rows.length} onClick={onOpenCourse(g.courseId)}>{g.courseCode || "—"}</td>}
-              {/* TRANG THAI da chot nam ngay DUOI TEN hoc phan, khong o cot
-                  rieng: chot ap cho ca hoc phan nen day moi la cho doc
-                  no tu nhien. Cot "Chot lich" ben canh chi con NUT.
-                  Chi tiet (nguoi chot, luc nao, ghi chu) vao tooltip -
-                  truoc day in het ra o rieng, lap lai o moi hoc phan va
-                  keo cot rong ra ~9rem trong khi bang da co 30 cot. */}
               {i === 0 && (
                 <td className="xls-course xls-z-course xls-c-ten" rowSpan={g.rows.length} onClick={onOpenCourse(g.courseId)}>
-                  {/* Bo trong DIV chu khong dat flex thang len <td>: mot o
-                      co rowSpan ma doi display khoi table-cell thi trinh
-                      duyet bo qua rowSpan -> vo toan bo layout merge. */}
                   <div className="xls-course-ten">
                     <span>{g.courseName || "—"}</span>
-                    {g.chot && (
-                      <span className="xls-chot-badge" title={nhanChot(g.chot)}>
-                        <Lock className="size-3" />
-                        {/* Chot TU FILE (moi lop deu co gio da thong nhat
-                            san - quy tac A2) khac chot TAY: giao vu can
-                            biet mon nao minh da thuc su ra soat. */}
-                        {g.chot.tuFile ? "Chốt theo file" : "Đã chốt"}
-                      </span>
-                    )}
                   </div>
                 </td>
               )}
               {i === 0 && <td className="xls-course xls-z-course xls-c-tc" rowSpan={g.rows.length} onClick={onOpenCourse(g.courseId)}>{g.credits ?? "—"}</td>}
-              {/* CHOT LICH theo HOC PHAN: o merge xuong ca nhom, dung
-                  nhu Ma/Ten hoc phan - vi chot ap cho MOI lop cua mon,
-                  khong phai cho dong dang tro.
-
-                  Cot nay chi con NUT (icon), trang thai da chuyen xuong
-                  duoi ten hoc phan - xem o "Ten hoc phan" ben tren. */}
-              {i === 0 && (
-                <td
-                  className="xls-course xls-z-course xls-chot"
-                  rowSpan={g.rows.length}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {canEdit && g.courseId != null ? (
-                    <button
-                      type="button"
-                      className={g.chot ? "xls-chot-btn xls-chot-btn-mo" : "xls-chot-btn"}
-                      disabled={loading}
-                      onClick={g.chot ? onBoChot(g) : () => onChot(g)}
-                      aria-label={g.chot ? "Bỏ chốt học phần" : "Chốt lịch học phần"}
-                      title={g.chot
-                        ? `Bỏ chốt để sửa lại giờ.\n${nhanChot(g.chot)}`
-                        : "Chốt lịch: ghi giờ đang hiển thị của mọi lớp trong học phần này thành giờ chính thức và ghim cứng"}
-                    >
-                      {g.chot ? <LockOpen className="size-3.5" /> : <Lock className="size-3.5" />}
-                    </button>
-                  ) : (
-                    <span className="xls-chot-meta">{g.chot ? "đã chốt" : "—"}</span>
-                  )}
-                </td>
-              )}
+              {/* CHOT LICH theo tung LOP HOC PHAN: moi dong co mot khoa doc lap. */}
+              <td className="xls-chot" onClick={(e) => e.stopPropagation()}>
+                {canEdit ? (
+                  <button
+                    type="button"
+                    className={c.sectionChot ? "xls-chot-btn xls-chot-btn-mo" : "xls-chot-btn"}
+                    disabled={loading}
+                    onClick={c.sectionChot ? onBoChot(c) : () => onChot(c)}
+                    aria-label={c.sectionChot ? "Bỏ chốt lớp học phần" : "Chốt lớp học phần"}
+                    title={c.sectionChot
+                      ? `Bỏ chốt để sửa lại giờ.\n${nhanChot(c.sectionChot)}`
+                      : `Chốt riêng lớp ${c.classCode || `#${c.sectionId}`}: ghi giờ đang hiển thị thành giờ chính thức và ghim cứng`}
+                  >
+                    {c.sectionChot ? <LockOpen className="size-3.5" /> : <Lock className="size-3.5" />}
+                  </button>
+                ) : (
+                  <span className="xls-chot-meta">{c.sectionChot ? "đã chốt" : "—"}</span>
+                )}
+              </td>
               <td>
                 {c.classCode || "—"}
                 {/* HOC CHUNG: lop nay la MOT buoi cung cac lop khac. Badge

@@ -38,11 +38,11 @@ export const lecturersClear = () => apiDelete("/api/manual/lecturers");
 export const getLecturers = () => apiGet("/api/manual/lecturers");
 export const addManualTeacher = (payload) => apiPost("/api/manual/teacher", payload);
 export const updateManualTeacher = (teacherId, payload) => apiPatch(`/api/manual/teacher/${teacherId}`, payload);
-// CHOT LICH cho ca mot hoc phan: ghi gio dang hien tren luoi thanh gio chinh
-// thuc VA ghim lai - giai lai khong dich duoc nua, sua tay/keo-tha bi chan.
-export const chotCourse = (courseId, payload) =>
-  apiPost(`/api/manual/course/${courseId}/chot`, payload);
-export const boChotCourse = (courseId) => apiDelete(`/api/manual/course/${courseId}/chot`);
+// CHOT LICH rieng mot lop hoc phan: ghi gio dang hien thanh gio chinh thuc va
+// ghim lai - cac lop khac cung hoc phan van co the xep/sua doc lap.
+export const chotSection = (sectionId, payload) =>
+  apiPost(`/api/manual/section/${sectionId}/chot`, payload);
+export const boChotSection = (sectionId) => apiDelete(`/api/manual/section/${sectionId}/chot`);
 export const addManualCourse = (payload) => apiPost("/api/manual/course", payload);
 export const updateManualCourse = (courseId, payload) => apiPatch(`/api/manual/course/${courseId}`, payload);
 export const addManualSection = (payload) => apiPost("/api/manual/section", payload);

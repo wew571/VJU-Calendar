@@ -847,7 +847,7 @@ export function buildProblemInbox(data, guestResult, residentResult = null, pend
   //
   // KHÔNG XÓA mà chuyển sang danh sách riêng: người dùng vẫn phải tra cứu được
   // "khóa này có đụng gì không" khi ngồi đàm phán lại với giảng viên.
-  const chotCuaLop = new Map((data?.classes ?? []).map((c) => [c.sectionId, !!c.courseChot]));
+  const chotCuaLop = new Map((data?.classes ?? []).map((c) => [c.sectionId, !!c.sectionChot]));
   const moiLopDaChot = (it) =>
     LOAI_HA_CAP_KHI_CHOT.has(it.type)
     && (it.sectionIds ?? []).length > 0

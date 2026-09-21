@@ -246,14 +246,14 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
             </Notice>
           )}
 
-          {/* Hoc phan DA CHOT LICH: backend tu choi moi thay doi (409), nen phai
-              noi TRUOC chu khong de nguoi dung go xong ca form roi moi bao. */}
-          {section?.courseChot && (
+          {/* Lop DA CHOT LICH: backend tu choi thay doi gio (409), nen noi truoc
+              chu khong de nguoi dung go xong ca form roi moi bao. */}
+          {section?.sectionChot && (
             <Notice tone="amber" icon={Lock}>
-              Học phần này <strong>đã chốt lịch</strong> ({section.courseChot.by},{" "}
-              {(section.courseChot.at || "").slice(0, 16).replace("T", " ")}
-              {section.courseChot.note ? ` — ${section.courseChot.note}` : ""}). Không sửa được
-              cho tới khi <strong>bỏ chốt</strong> học phần ở bảng “Dữ liệu học phần”.
+              Lớp này <strong>đã chốt lịch</strong> ({section.sectionChot.by},{" "}
+              {(section.sectionChot.at || "").slice(0, 16).replace("T", " ")}
+              {section.sectionChot.note ? ` — ${section.sectionChot.note}` : ""}). Không sửa được
+              giờ cho tới khi <strong>bỏ chốt</strong> lớp ở bảng “Dữ liệu học phần”.
             </Notice>
           )}
 

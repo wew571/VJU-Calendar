@@ -232,23 +232,23 @@ export function AppDataProvider({ children }) {
 
   // Doc file va tra ve ban xem truoc. KHONG setData - buoc nay chua ghi gi ca,
   // nen cung khong duoc dong vao du lieu dang hien tren man.
-  // Chot lich cho 1 hoc phan (moi lop cua no) / bo chot. Tra ve ban data moi -
-  // gan thang de bang doi trang thai ngay, khong doi refresh.
-  const doChotCourse = useCallback((courseId, payload) => runAction(
-    () => scheduler.chotCourse(courseId, payload),
+  // Chot lich / bo chot rieng mot lop hoc phan. Tra ve ban data moi de bang doi
+  // trang thai ngay, khong doi refresh.
+  const doChotSection = useCallback((sectionId, payload) => runAction(
+    () => scheduler.chotSection(sectionId, payload),
     {
       onSuccess: apDungPhanHoi,
       messageFn: (res) =>
-        `Đã chốt lịch học phần "${res.courseName}" — ${res.chotCount} lớp, ghim cứng.`,
+        `Đã chốt lớp "${res.classCode || res.courseName}" — ghim cứng.`,
       errorPrefix: "Không chốt được",
     },
   ), [runAction, apDungPhanHoi]);
 
-  const doBoChotCourse = useCallback((courseId) => runAction(
-    () => scheduler.boChotCourse(courseId),
+  const doBoChotSection = useCallback((sectionId) => runAction(
+    () => scheduler.boChotSection(sectionId),
     {
       onSuccess: apDungPhanHoi,
-      messageFn: (res) => `Đã bỏ chốt học phần "${res.courseName}" — giờ trả về trạng thái trước khi chốt.`,
+      messageFn: (res) => `Đã bỏ chốt lớp "${res.classCode || res.courseName}" — giờ trả về trạng thái trước khi chốt.`,
       errorPrefix: "Không bỏ chốt được",
     },
   ), [runAction, apDungPhanHoi]);
@@ -424,7 +424,7 @@ export function AppDataProvider({ children }) {
         `Đã xoá giờ của ${res.clearedCount} lớp — chuyển về "để hệ thống tự xếp".` +
         // Mon da chot khong bi xoa gio (backend chan) - phai noi ra, neu khong
         // giao vu tuong da xoa het roi di lam viec khac.
-        (res.skippedChotCount ? ` Bỏ qua ${res.skippedChotCount} lớp thuộc học phần đã chốt lịch.` : ""),
+        (res.skippedChotCount ? ` Bỏ qua ${res.skippedChotCount} lớp đã chốt lịch hoặc học chung với lớp đã chốt.` : ""),
       errorPrefix: "Xoá giờ thất bại",
     },
   ), [runAction, apDungPhanHoi]);
@@ -444,7 +444,7 @@ export function AppDataProvider({ children }) {
     refreshData,
     solveGuest, solveResident, doMoveLesson, doClearOverride, doSaveSchedule,
     initManual, doImportPreview, doImportCommit,
-    doLecturersPreview, doLecturersCommit, doChotCourse, doBoChotCourse,
+    doLecturersPreview, doLecturersCommit, doChotSection, doBoChotSection,
     addManualTeacher, updateManualTeacher,
     addManualCourse, updateManualCourse,
     addManualSection, updateManualSection, deleteManualSection, doClearManualTimes,
