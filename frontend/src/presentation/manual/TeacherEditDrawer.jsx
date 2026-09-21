@@ -32,7 +32,7 @@ function formFromTeacher(t) {
 // da co san nut luu rieng, tai dung nguyen khong sua de khong dong den 1
 // component dang dung o man "Khung gio da bao".
 export default function TeacherEditDrawer({ data, teacher, classes = [], onClose }) {
-  const { loading, addManualTeacher, updateManualTeacher } = useAppData();
+  const { loading, addManualTeacher, updateManualTeacher, generateTeacherAvailability } = useAppData();
   const [teacherId, setTeacherId] = useState(teacher?.id ?? null);
   const [form, setForm] = useState(teacher ? formFromTeacher(teacher) : emptyForm());
   const [typeTouched, setTypeTouched] = useState(Boolean(teacher));
@@ -86,6 +86,20 @@ export default function TeacherEditDrawer({ data, teacher, classes = [], onClose
       await updateManualTeacher(teacherId, { availability: slots });
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  // "Tự động khai giờ rảnh": backend TU sinh va LUU NGAY (xoa het gio ranh cu,
+  // giu nguyen gio dang day) - xem POST .../generate-availability. Khong tu
+  // random ben FE, chi goi API va de apDungPhanHoi cap nhat lai liveTeacher.
+  const handleGenerateAvailability = async () => {
+    if (teacherId == null) return;
+    setError(null);
+    try {
+      await generateTeacherAvailability(teacherId);
+    } catch (err) {
+      setError(err.message);
+      throw err; // de GenerateAvailabilityButton biet loi, giu hop thoai mo
     }
   };
 
@@ -246,6 +260,7 @@ export default function TeacherEditDrawer({ data, teacher, classes = [], onClose
               allowEmpty
               saveLabel={(n) => (n === 0 ? "Xóa hết giờ rảnh" : `Lưu ${n} khung giờ`)}
               onSave={handleSaveAvailability}
+              onGenerateAvailability={handleGenerateAvailability}
             />
           </DrawerSection>
         )}

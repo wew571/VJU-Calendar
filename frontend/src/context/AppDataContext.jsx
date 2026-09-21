@@ -340,6 +340,16 @@ export function AppDataProvider({ children }) {
     },
   ), [runAction, apDungPhanHoi]);
 
+  const generateTeacherAvailability = useCallback((teacherId) => runAction(
+    () => scheduler.generateTeacherAvailability(teacherId),
+    {
+      onSuccess: apDungPhanHoi,
+      messageFn: (res) =>
+        `Đã tự động sinh lại giờ rảnh cho giảng viên #${teacherId} (${res.generatedSlotCount ?? 0} tiết).`,
+      errorPrefix: "Tự động khai giờ rảnh thất bại",
+    },
+  ), [runAction, apDungPhanHoi]);
+
   const addManualCourse = useCallback((payload) => runAction(
     () => scheduler.addManualCourse(payload),
     {
@@ -445,7 +455,7 @@ export function AppDataProvider({ children }) {
     solveGuest, solveResident, doMoveLesson, doClearOverride, doSaveSchedule,
     initManual, doImportPreview, doImportCommit,
     doLecturersPreview, doLecturersCommit, doChotSection, doBoChotSection,
-    addManualTeacher, updateManualTeacher,
+    addManualTeacher, updateManualTeacher, generateTeacherAvailability,
     addManualCourse, updateManualCourse,
     addManualSection, updateManualSection, deleteManualSection, doClearManualTimes,
     doHocChung, doBoHocChung, doHoanTac, doBoQua,

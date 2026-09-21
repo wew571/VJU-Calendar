@@ -1,8 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Pencil, X } from "lucide-react";
+import { Check, Pencil, Wand2, X } from "lucide-react";
 import { DAY_LABELS } from "../../adapters/dayPeriod";
 import { submissionToWindowSlots, windowSlotsToSelectedCellsMap } from "../../adapters/submissionAdapter";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 // Luoi khai "gio co the day" trong tuan. Hai che do RO RANG, khong nhap lam mot:
@@ -26,6 +35,11 @@ import { cn } from "@/lib/utils";
 // duoc luc nay", con o tick xanh dam la gio DA KHAI - von la GIOI HAN CUNG khi
 // xep cac lop chua co gio. Tron hai thu lam mot thi khai xong cac lop chua co
 // gio cua ho chi duoc xep vao dung nhung o DA BI CHIEM -> khong xep duoc.
+// onGenerateAvailability: CO tac dung ("Tự động khai giờ rảnh") chi khi duoc
+// truyen vao - man "Khung gio da bao" (SubmissionsPage) va ClassTimeSlotPicker
+// khong truyen prop nay nen khong hien nut, tranh dung nham noi khong co API
+// tuong ung. Nut tu goi API sinh+luu ngay o backend (khong tu random ben FE) -
+// xem webapp/domain/availability_generator.py.
 export default function SubmissionWindowGrid({
   numDays,
   slotsPerDay,
@@ -33,6 +47,7 @@ export default function SubmissionWindowGrid({
   teachingSlots = [],
   onSave,
   onCancel,
+  onGenerateAvailability,
   saving,
   disabled,
   readOnly = false,
@@ -254,6 +269,9 @@ export default function SubmissionWindowGrid({
             <strong className="text-foreground">số tiết</strong> để bật/tắt cả hàng
           </p>
           <div className="ml-auto flex flex-wrap items-center gap-2">
+            {onGenerateAvailability && (
+              <GenerateAvailabilityButton disabled={locked} saving={saving} onConfirm={onGenerateAvailability} />
+            )}
             <Button type="button" variant="ghost" size="sm" disabled={locked} onClick={() => setGrid({})}>
               <X className="size-4" />
               Bỏ chọn hết
@@ -344,6 +362,61 @@ function RowCells({ period, days, slotsPerDay, dangDay, cellOn, locked, onToggle
         );
       })}
     </>
+  );
+}
+
+// Nut "Tu dong khai gio ranh" + hop thoai xac nhan - LUON hoi truoc vi thao tac
+// XOA TOAN BO gio ranh hien co roi sinh lai (xem
+// PROMPT-THEM-CHUC-NANG-GIO-RANH-GIANG-VIEN.md muc 4). Tu quan ly trang thai
+// "dang xu ly" rieng (busy) thay vi chi dua vao `saving` cua cha: bam "Xác nhận
+// sinh lại" phai khoa ngay hop thoai nay, khong doi cho cha re-render voi
+// saving=true (co do tre 1 nhip qua onGenerateAvailability -> runAction).
+function GenerateAvailabilityButton({ disabled, saving, onConfirm }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const locked = disabled || saving || busy;
+
+  const handleConfirm = async () => {
+    setBusy(true);
+    try {
+      await onConfirm();
+      setOpen(false);
+    } catch {
+      // Loi da duoc Notice/Nhat ky o man cha hien roi (xem AppDataContext.runAction)
+      // - giu hop thoai MO de nguoi dung biet thao tac CHUA xong, khong lam nhu
+      // da thanh cong va khong lam mat gio ranh cu tren giao dien.
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !busy && setOpen(o)}>
+      <DialogTrigger asChild>
+        <Button type="button" variant="outline" size="sm" disabled={locked}>
+          <Wand2 className="size-4" />
+          Tự động khai giờ rảnh
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Tự động khai giờ rảnh?</DialogTitle>
+          <DialogDescription>
+            Toàn bộ giờ rảnh hiện tại của giảng viên này sẽ bị <strong>xóa</strong> và thay bằng kết
+            quả sinh tự động mới theo khung sáng/chiều/tối. Giờ đang dạy (theo lớp đã chốt) sẽ được
+            giữ nguyên, không bị đánh dấu là giờ rảnh.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={busy}>
+            Hủy
+          </Button>
+          <Button type="button" onClick={handleConfirm} disabled={busy}>
+            {busy ? "Đang sinh…" : "Xác nhận sinh lại"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

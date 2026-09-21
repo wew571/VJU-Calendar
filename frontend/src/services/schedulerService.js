@@ -38,6 +38,11 @@ export const lecturersClear = () => apiDelete("/api/manual/lecturers");
 export const getLecturers = () => apiGet("/api/manual/lecturers");
 export const addManualTeacher = (payload) => apiPost("/api/manual/teacher", payload);
 export const updateManualTeacher = (teacherId, payload) => apiPatch(`/api/manual/teacher/${teacherId}`, payload);
+// "Tu dong khai gio ranh": xoa toan bo gio ranh hien co (giu nguyen gio dang
+// day) roi sinh lai theo cac khung sang/chieu/toi cau hinh san
+// (CONFIG["availabilityGenerator"]) va luu ngay - xem webapp/api/manual_teacher.py.
+export const generateTeacherAvailability = (teacherId) =>
+  apiPost(`/api/manual/teacher/${teacherId}/generate-availability`);
 // CHOT LICH rieng mot lop hoc phan: ghi gio dang hien thanh gio chinh thuc va
 // ghim lai - cac lop khac cung hoc phan van co the xep/sua doc lap.
 export const chotSection = (sectionId, payload) =>

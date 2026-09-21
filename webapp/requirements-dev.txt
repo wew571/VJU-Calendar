@@ -1,0 +1,5 @@
+# Thu vien CHI dung khi PHAT TRIEN/chay test, khong can khi trien khai that.
+# Cai:  py -m pip install -r requirements.txt -r requirements-dev.txt
+# Chay test:  cd webapp && py -m pytest -q
+
+pytest>=8.0

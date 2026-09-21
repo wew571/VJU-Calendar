@@ -5,6 +5,7 @@ from flask import Blueprint, request
 
 from api.common import can_du_lieu, loi, tra_du_lieu
 from domain.availability import parse_availability_slots
+from domain.availability_generator import generate_teacher_availability
 from domain.hoc_chung import tach_nhom_khong_hop_le
 from domain.luoi import dong_bo_ket_qua
 from domain.sections import id_moi
@@ -100,3 +101,30 @@ def api_manual_update_teacher(data, teacher_id):
     dong_bo_ket_qua(data)
     save_snapshot()
     return tra_du_lieu(data, hocChungSplit=tach)
+
+
+@bp.post("/api/manual/teacher/<int:teacher_id>/generate-availability")
+@can_du_lieu
+def api_manual_generate_availability(data, teacher_id):
+    """Tu dong sinh lai TOAN BO gio ranh cua 1 GV theo cac khung buoi cau hinh
+    san (CONFIG["availabilityGenerator"] - xem domain/availability_generator.py
+    va PROMPT-THEM-CHUC-NANG-GIO-RANH-GIANG-VIEN.md). LUON THAY THE toan bo
+    availabilitySlots cu (replaceExistingAvailability chi ho tro True), GIU
+    NGUYEN gio dang day (khong doc/khong ghi lai cac lop da chot gio).
+
+    All-or-nothing: ket qua duoc sinh xong trong bien tam (khong dung/khong doc
+    manual_teacher_windows hien co) roi moi ghi de mot lan; loi truoc do (vd
+    khong tim thay GV) khong lam mat gio ranh cu."""
+    teacher = data["teachers"].get(teacher_id)
+    if teacher is None:
+        return loi(f"Không tìm thấy giảng viên id={teacher_id}.")
+
+    slots = generate_teacher_availability(data, teacher_id)
+
+    data.setdefault("manual_teacher_windows", {})[teacher_id] = slots
+    dem_lai_so_gv(data)
+    sync_teacher_sections(data, teacher_id)
+    tach = tach_nhom_khong_hop_le(data)
+    dong_bo_ket_qua(data)
+    save_snapshot()
+    return tra_du_lieu(data, hocChungSplit=tach, generatedSlotCount=len(slots))

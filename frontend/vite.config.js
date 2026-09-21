@@ -20,4 +20,11 @@ export default defineConfig({
       },
     },
   },
+  // Cau hinh Vitest - doc chung tu file nay (thay vi tach vitest.config.js
+  // rieng) de khong bi lech alias "@" voi Vite luc build/dev.
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.js'],
+    globals: true,
+  },
 })

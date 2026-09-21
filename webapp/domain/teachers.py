@@ -120,6 +120,27 @@ def ap_lai_loai_gv(data):
     return doi
 
 
+def teaching_slots_by_teacher(data):
+    """Cac o gio TUNG GV dang thuc su day, suy tu cac lop DA CHOT GIO (`original_slot`
+    + `duration`, khong con `time_assumed`) - NGUON DUY NHAT cho "teachingSlots"
+    tren luoi "Gio co the day" (domain/response.py) va cho bo sinh tu dong gio
+    ranh (domain/availability_generator.py), tranh hai noi tinh lech nhau.
+    Tra ve dict teacher_id -> set(slot)."""
+    dang_day = {}
+    for s in data["sections"].values():
+        if s.get("time_assumed") or s.get("original_slot") is None:
+            continue
+        o = range(s["original_slot"], s["original_slot"] + s["duration"])
+        for tid in (s.get("teacher_ids") or [s["teacher_id"]]):
+            dang_day.setdefault(tid, set()).update(o)
+    return dang_day
+
+
+def teaching_slots_of(data, teacher_id):
+    """Cac o gio 1 GV dang thuc su day - xem teaching_slots_by_teacher()."""
+    return teaching_slots_by_teacher(data).get(teacher_id, set())
+
+
 def dem_lai_so_gv(data):
     """Cap nhat num_resident/num_guest theo `type` hien tai cua tung GV.
 

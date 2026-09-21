@@ -12,7 +12,7 @@ from domain import bo_qua
 from domain.chot import khoa_vi_da_chot
 from domain.hoc_chung import nhom_cua
 from domain.programs import KHOA_SPLIT_RE, tach_phan
-from domain.teachers import co_huu_theo_danh_sach
+from domain.teachers import co_huu_theo_danh_sach, teaching_slots_by_teacher
 from state import DAY_LABELS_VN, STATE
 
 
@@ -202,13 +202,7 @@ def build_data_response(data, extra=None):
     #     chua co gio cua ho chi con duoc xep dung vao nhung o DA BI CHIEM ->
     #     khong xep duoc.
     # Nen hai thu di RIENG, luoi hien hai mau khac nhau.
-    dang_day = {}
-    for s in data["sections"].values():
-        if s.get("time_assumed") or s.get("original_slot") is None:
-            continue
-        o = list(range(s["original_slot"], s["original_slot"] + s["duration"]))
-        for tid in (s.get("teacher_ids") or [s["teacher_id"]]):
-            dang_day.setdefault(tid, set()).update(o)
+    dang_day = teaching_slots_by_teacher(data)
 
     teachers = [
         {
