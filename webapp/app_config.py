@@ -1,9 +1,10 @@
 import copy
 import json
 import os
+from pathlib import Path
 
 
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
+CONFIG_PATH = Path(__file__).resolve().parent.parent / "config" / "backend.json"
 
 # Fallback dung khi file cau hinh cu CHUA co khoa "availabilityGenerator" - xem
 # PROMPT-THEM-CHUC-NANG-GIO-RANH-GIANG-VIEN.md muc 6.1/6.2. Neu khoa nay CO mat
@@ -110,6 +111,7 @@ def _resolve_availability_generator(config, slots_per_day):
 
 def _tao_config_trong():
     try:
+        CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
         with open(CONFIG_PATH, "x", encoding="utf-8"):
             pass
     except FileExistsError:
@@ -118,7 +120,7 @@ def _tao_config_trong():
         raise RuntimeError(f"Không thể tạo file cấu hình: {CONFIG_PATH}: {exc}") from exc
     raise RuntimeError(
         f"Đã tạo file cấu hình trống tại {CONFIG_PATH}. "
-        "Hãy liên hệ người cung cấp hệ thống để nhận nội dung config.json trước khi chạy lại."
+        "Hãy bổ sung nội dung JSON hợp lệ trước khi chạy lại."
     )
 
 
@@ -132,9 +134,11 @@ def _load_config():
         if os.path.getsize(CONFIG_PATH) == 0:
             raise RuntimeError(
                 f"File cấu hình đang trống: {CONFIG_PATH}. "
-                "Hãy liên hệ người cung cấp hệ thống để nhận nội dung config.json."
+                "Hãy bổ sung nội dung JSON hợp lệ trước khi chạy lại."
             ) from exc
         raise RuntimeError(f"File cấu hình JSON không hợp lệ: {CONFIG_PATH}: {exc}") from exc
+    except OSError as exc:
+        raise RuntimeError(f"Không thể đọc file cấu hình tại {CONFIG_PATH}: {exc}") from exc
 
     try:
         calendar = config["calendar"]

@@ -92,6 +92,9 @@ Quy trình xếp lịch cơ bản trên hệ thống diễn ra qua 4 bước:
 
 ```text
 VJU-Calendar/
+├── config/                       # Cấu hình cục bộ (Git bỏ qua từng file)
+│   ├── backend.json              # Tham số lịch học và solver của Flask
+│   └── frontend.json             # Thiết lập proxy API cho Vite
 ├── frontend/                     # Giao diện React + Vite
 │   ├── public/                   # Tài nguyên tĩnh
 │   ├── src/
@@ -106,13 +109,12 @@ VJU-Calendar/
 │   │   ├── App.jsx               # Component gốc
 │   │   └── main.jsx              # Điểm khởi tạo React
 │   ├── package.json              # Dependencies và script npm
-│   └── vite.config.js            # Cấu hình Vite và proxy API
+│   └── vite.config.js            # Đọc proxy từ config/frontend.json
 ├── webapp/                       # Backend Python Flask
 │   ├── api/                      # Các endpoint HTTP
 │   ├── domain/                   # Quy tắc và xử lý nghiệp vụ
 │   ├── app.py                    # Điểm khởi động Flask
-│   ├── app_config.py             # Đọc và kiểm tra config.json
-│   ├── config.json               # Cấu hình cục bộ, không được Git theo dõi
+│   ├── app_config.py             # Đọc và kiểm tra config/backend.json
 │   ├── scheduler_core.py         # Mô hình xếp lịch CP-SAT
 │   ├── state.py                  # Trạng thái phiên làm việc
 │   ├── snapshot.py               # Lưu và khôi phục dữ liệu nhập tay
@@ -130,6 +132,7 @@ VJU-Calendar/
 │   ├── QUY-TRINH-NGHIEP-VU-XEP-TKB.md
 │   ├── HUONG_DAN_SU_DUNG.docx
 │   └── run.md                    # Hướng dẫn chạy và kiểm tra chuyên sâu
+├── main.py                       # Khởi chạy cả backend và frontend
 ├── check_real_fate_data.py       # Công cụ kiểm tra dữ liệu thực
 ├── .gitignore                    # Danh sách file Git bỏ qua
 └── README.md                     # Tài liệu tổng quan
@@ -164,60 +167,30 @@ npm install
 
 ---
 
-### Bước 2: Chạy chương trình
+### Bước 2: Chuẩn bị hai file cấu hình
 
-Tùy vào mục đích sử dụng, bạn có thể chọn 1 trong 2 cách sau:
+Hai file luôn nằm trong `config/` ở thư mục gốc dự án (không phụ thuộc vào thư mục bạn chạy lệnh), và đều bị Git bỏ qua:
 
-#### 🔹 Cách 1: Dành cho người dùng trải nghiệm (Gọn nhẹ - 1 cửa sổ)
-Cách này phù hợp khi bạn chỉ muốn chạy hệ thống để sử dụng ngay mà không chỉnh sửa mã nguồn giao diện.
+- `config/backend.json`: quy tắc lịch học, số phòng, giới hạn ngày dạy, khối ca và tham số solver của backend. Nhận cấu hình phù hợp từ người cung cấp hệ thống hoặc tham khảo ví dụ an toàn bên dưới; không đưa dữ liệu nhạy cảm lên Git.
+- `config/frontend.json`: địa chỉ backend mà Vite chuyển tiếp lời gọi API tới.
 
-```bash
-# 1. Đóng gói giao diện (nếu có thay đổi)
-cd frontend
-npm run build
+#### Cấu hình frontend (`config/frontend.json`)
 
-# 2. Chạy máy chủ
-cd ../webapp
-py app.py
+```json
+{
+  "devServer": {
+    "apiProxy": {
+      "path": "/api",
+      "target": "http://127.0.0.1:5055",
+      "changeOrigin": true
+    }
+  }
+}
 ```
-👉 Sau đó mở trình duyệt web và truy cập địa chỉ: **`http://127.0.0.1:5055`**
 
----
+Nếu chưa có một hoặc cả hai file cấu hình, khi chạy `py main.py`, chương trình sẽ tạo các file còn thiếu dưới dạng trống rồi dừng. Hãy điền nội dung theo hai ví dụ trong bước này và chạy lại. File cần đúng định dạng JSON; chương trình không ghi đè file đã có.
 
-#### 🔹 Cách 2: Dành cho lập trình viên phát triển (2 cửa sổ)
-Cách này giúp giao diện tự động cập nhật ngay khi bạn sửa code (Hot-Reload).
-
-- **Cửa sổ dòng lệnh 1 (Chạy Backend):**
-  ```bash
-  cd webapp
-  py app.py
-  ```
-  *(Backend sẽ lắng nghe tại cổng `5055`)*
-
-- **Cửa sổ dòng lệnh 2 (Chạy Frontend):**
-  ```bash
-  cd frontend
-  npm run dev
-  ```
-  *(Mở đường link do Vite in ra trên màn hình, ví dụ: `http://localhost:5173`)*
-
-> 💡 **Mẹo nhỏ:** Nếu cổng 5173 bị chương trình khác chiếm dụng, Vite sẽ tự động chuyển sang cổng 5174 hoặc 5175. Bạn chỉ cần mở đúng link mà terminal hiển thị.
-
----
-
-### Bước 3: Thiết lập `config.json`
-
-Backend đọc cấu hình từ `webapp/config.json`. File này chứa các tham số lịch học,
-số phòng, giới hạn ngày dạy, khối ca theo cơ sở và cấu hình CP-SAT. File đã được
-đưa vào `.gitignore`, vì vậy mỗi máy phải có một bản cấu hình riêng.
-
-Nếu chạy backend lần đầu mà chưa có file, hệ thống sẽ:
-
-1. Tự tạo `webapp/config.json` trống.
-2. Dừng khởi động và yêu cầu người dùng nhận cấu hình từ người cung cấp hệ thống.
-3. Sau khi điền cấu hình hợp lệ, chạy lại `py app.py`.
-
-Có thể chủ động tạo file trước lần chạy đầu tiên. Nội dung mặc định hiện tại:
+#### Cấu hình backend (`config/backend.json`)
 
 ```json
 {
@@ -314,11 +287,11 @@ Có thể chủ động tạo file trước lần chạy đầu tiên. Nội dun
 
 ```
 
-### Giải thích từng tham số (viết cho người mới, không cần biết thuật ngữ kỹ thuật)
+#### Giải thích các mục trong cấu hình backend
 
-Cứ hình dung `config.json` giống như **bảng "luật chơi"** mà cả hệ thống phải tuân theo. Dưới đây là ý nghĩa của từng dòng, giải thích theo kiểu dễ hiểu nhất có thể.
+Cứ hình dung `config/backend.json` giống như **bảng "luật chơi"** mà cả hệ thống phải tuân theo. Dưới đây là ý nghĩa của từng dòng, giải thích theo kiểu dễ hiểu nhất có thể.
 
-#### `calendar` — Lịch tuần trông như thế nào
+##### `calendar` — Lịch tuần trông như thế nào
 
 | Tham số | Giá trị mẫu | Nói nôm na là... |
 |---|---|---|
@@ -329,7 +302,7 @@ Cứ hình dung `config.json` giống như **bảng "luật chơi"** mà cả h�
 | `dayLabels` | `Thứ 2 → Chủ nhật` | Tên các ngày hiển thị cho người dùng xem trên giao diện. |
 | `slotDayNames` | `Thu 2 → Chu nhat` | Tên ngày không dấu, dùng ở phía sau hậu trường (ghi log, xuất file) — người dùng bình thường không cần để ý mục này. |
 
-#### `rooms` — Trường có bao nhiêu phòng học
+##### `rooms` — Trường có bao nhiêu phòng học
 
 | Tham số | Giá trị mẫu | Nói nôm na là... |
 |---|---|---|
@@ -338,7 +311,7 @@ Cứ hình dung `config.json` giống như **bảng "luật chơi"** mà cả h�
 
 Hệ thống sẽ không bao giờ xếp nhiều lớp lý thuyết/thực hành hơn số phòng này diễn ra cùng một giờ.
 
-#### `teacherDayLimits` — Giảng viên được dạy tới ngày nào trong tuần
+##### `teacherDayLimits` — Giảng viên được dạy tới ngày nào trong tuần
 
 | Tham số | Giá trị mẫu | Nói nôm na là... |
 |---|---|---|
@@ -347,12 +320,12 @@ Hệ thống sẽ không bao giờ xếp nhiều lớp lý thuyết/thực hành
 
 Cách đếm hơi khác thói quen một chút: `0` là Thứ 2, `1` là Thứ 3, ... nên `5` = Thứ 7 và `4` = Thứ 6. Nói cách khác: thỉnh giảng có thể được xếp đến hết Thứ 7, còn cơ hữu chỉ đến hết Thứ 6 — không ai bị máy tự xếp vào Chủ nhật cả.
 
-#### `campuses` — Quy tắc riêng theo từng cơ sở (Hòa Lạc / Mỹ Đình)
+##### `campuses` — Quy tắc riêng theo từng cơ sở (Hòa Lạc / Mỹ Đình)
 
 - `priority`: thứ tự cơ sở mà hệ thống **ưu tiên gom lịch gọn gàng hơn**. Ví dụ `["hoa lac", "my dinh"]` nghĩa là hệ thống cố gắng giảm số ngày một giảng viên phải chạy tới Hòa Lạc trước, rồi mới tính đến Mỹ Đình — vì Hòa Lạc thường xa hơn, đi lại vất vả hơn.
 - `sessionBlocks`: mỗi cơ sở có "khối buổi học" riêng — tức là một buổi học không được phép bắt đầu ở buổi sáng rồi kết thúc lấn qua giờ nghỉ trưa. Ví dụ ở Hòa Lạc, buổi sáng là tiết `2` đến `5`, còn lại từ tiết `6` đến `13` được coi là buổi chiều/tối; một lớp 3 tiết có thể học tiết 2-4 hoặc 6-8, nhưng không thể học tiết 4-6 vì sẽ "vắt" qua giờ nghỉ trưa.
 
-#### `solver` — Cài đặt cho "bộ tính toán tự động xếp lịch"
+##### `solver` — Cài đặt cho "bộ tính toán tự động xếp lịch"
 
 | Tham số | Giá trị mẫu | Nói nôm na là... |
 |---|---|---|
@@ -360,7 +333,7 @@ Cách đếm hơi khác thói quen một chút: `0` là Thứ 2, `1` là Thứ 3
 | `numSearchWorkers` | `8` | Cho máy tính "mượn" 8 luồng xử lý để cùng lúc thử nhiều cách xếp khác nhau, giống như nhờ 8 người cùng ngồi tính một bài toán để ra kết quả nhanh hơn. |
 | `crossProgramCombinationLimit` | `5000` | Giới hạn số cặp lớp học được đem ra so sánh chéo giữa các chương trình đào tạo với nhau, để máy không bị "đơ" khi dữ liệu quá nhiều. |
 
-#### `legacyDataParams` — Chỉ dùng khi tạo dữ liệu giả để thử nghiệm
+##### `legacyDataParams` — Chỉ dùng khi tạo dữ liệu giả để thử nghiệm
 
 Nhóm này **không ảnh hưởng đến dữ liệu thật**, chỉ có tác dụng khi lập trình viên tạo dữ liệu mẫu để kiểm tra hệ thống.
 
@@ -370,7 +343,7 @@ Nhóm này **không ảnh hưởng đến dữ liệu thật**, chỉ có tác d
 | `pctPreSubmitted` | `100` | Trong dữ liệu giả, có bao nhiêu phần trăm giảng viên được coi như "đã khai báo sẵn giờ rảnh" (100 = tất cả). |
 | `numForcedConflicts` | `0` | Cố tình tạo ra bao nhiêu vụ trùng lịch trong dữ liệu giả, để xem hệ thống có phát hiện và cảnh báo đúng không. |
 
-#### `availabilityGenerator` — Tự động khai giờ rảnh cho giảng viên
+##### `availabilityGenerator` — Tự động khai giờ rảnh cho giảng viên
 
 Đây là phần cài đặt cho nút **"Tự động khai giờ rảnh"** ở màn hình sửa thông tin giảng viên: chỉ cần bấm 1 nút, hệ thống tự "đoán hộ" giảng viên rảnh vào những giờ nào trong tuần, thay vì phải tick tay từng ô trên lưới giờ. Áp dụng chung cho cả giảng viên thỉnh giảng lẫn cơ hữu.
 
@@ -388,8 +361,20 @@ Nhóm này **không ảnh hưởng đến dữ liệu thật**, chỉ có tác d
 
 > ℹ️ File cũ tạo trước khi có mục `availabilityGenerator` vẫn chạy được bình thường — hệ thống sẽ tự dùng các giá trị mặc định ở trên. Nhưng nếu bạn **đã** thêm mục này vào rồi mà gõ sai (ví dụ tổng `selectionGroupWeights` không bằng 100, hoặc để `replaceExistingAvailability: false`), hệ thống sẽ **dừng khởi động** và báo lỗi rõ ràng thay vì âm thầm bỏ qua, để tránh chạy nhầm với cấu hình sai.
 
-Sau khi thay đổi `config.json`, cần khởi động lại backend để nạp cấu hình mới.
-Không đưa file cấu hình thật vào Git.
+Sau khi sửa một trong hai file cấu hình, hãy dừng chương trình và chạy lại để áp dụng thay đổi. Không đưa hai file cấu hình thật lên Git.
+
+---
+
+### Bước 3: Chạy chương trình
+
+Sau bước 1, cửa sổ dòng lệnh đang ở thư mục `frontend/`. Chạy lệnh sau để trở về thư mục gốc và khởi động cả backend lẫn frontend:
+
+```bash
+cd ..
+py main.py
+```
+
+Chương trình sẽ kiểm tra hai file cấu hình, cài thêm thư viện nếu còn thiếu, rồi khởi chạy hệ thống. Mở địa chỉ frontend do Vite hiển thị trong cửa sổ dòng lệnh (thường là `http://localhost:5173`). Khi muốn dừng, nhấn `Ctrl+C`.
 
 ---
 

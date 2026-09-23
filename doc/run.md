@@ -1,7 +1,7 @@
 # Chạy dự án
 
 Hai tiến trình: **Flask** (API + thuật toán CP-SAT, cổng 5055) và **Vite** (giao
-diện React, cổng 5173). Có hai cách chạy — chọn theo việc đang làm.
+diện React, cổng 5173). Có thể chạy cùng lúc qua `main.py` hoặc chạy riêng theo nhu cầu.
 
 ## Cài lần đầu
 
@@ -18,6 +18,15 @@ py -m pip install -r requirements.txt
 cd frontend
 npm install
 ```
+
+## Chuẩn bị cấu hình
+
+Hai file cục bộ đều nằm trong `config/` tại gốc dự án và bị Git bỏ qua riêng từng file:
+
+- `config/backend.json`: cấu hình lịch học, phòng và solver cho Flask (xem ví dụ không nhạy cảm ở README mục 6).
+- `config/frontend.json`: cấu hình proxy Vite, ví dụ `{"devServer":{"apiProxy":{"path":"/api","target":"http://127.0.0.1:5055","changeOrigin":true}}}`. Không đặt secret ở đây.
+
+Có thể chạy `py main.py` tại gốc để cài dependency còn thiếu và khởi chạy cả Flask lẫn Vite. Nếu thiếu một hoặc cả hai file, launcher tạo **tất cả** file còn thiếu dưới dạng rỗng rồi dừng **trước** khi cài dependency hay mở dịch vụ; điền JSON hợp lệ rồi chạy lại. Chạy `py app.py` trực tiếp trong `webapp/` chỉ tạo `config/backend.json` nếu thiếu; Vite (`npm run dev`, `npm run build`, `npm run preview`, `npm test` trong `frontend/`) chỉ tạo `config/frontend.json` nếu thiếu. Mỗi lệnh dừng ngay sau khi tạo file rỗng, không tự điền mặc định. File đã tồn tại không bị ghi đè; file rỗng, sai cú pháp hoặc sai schema cũng làm lệnh dừng và báo đường dẫn/trường lỗi. Vite luôn nạp frontend config khi chạy dev, build, preview và test, kể cả khi proxy không được dùng.
 
 ## Cách 1 — chỉ dùng app (một cửa sổ)
 
@@ -51,8 +60,7 @@ cd frontend
 npm run dev
 ```
 
-Mở cổng mà **Vite in ra**, không phải cổng nhớ trong đầu. `/api/*` được Vite proxy
-sang `127.0.0.1:5055` (khai ở `vite.config.js`) nên backend không cần cấu hình CORS.
+Mở cổng mà **Vite in ra**, không phải cổng nhớ trong đầu. Với cấu hình ví dụ ở trên, `/api/*` được Vite proxy sang `127.0.0.1:5055`; `vite.config.js` đọc `path`, `target`, `changeOrigin` từ `config/frontend.json`, không chứa giá trị proxy dự phòng. Backend không cần cấu hình CORS khi proxy trỏ đúng backend.
 
 > **Cổng 5173 hay bị chiếm.** Máy này có app khác (Laravel) giữ 5173, Vite lặng lẽ
 > nhảy sang 5174/5175 và vẫn chạy bình thường. Vào nhầm 5173 sẽ thấy app khác —
@@ -180,8 +188,7 @@ taskkill /PID <pid> /F
 
 ## Dữ liệu nằm ở đâu
 
-Hai file trong `webapp/`. Đường dẫn neo theo vị trí file `.py` (`__file__`) chứ
-không theo thư mục hiện tại, nên gọi `py app.py` từ đâu cũng trỏ về đúng một chỗ.
+Hai file **dữ liệu runtime** dưới đây nằm trong `webapp/`, khác với hai file **cấu hình** `config/backend.json` và `config/frontend.json` ở gốc dự án. Đường dẫn dữ liệu neo theo vị trí file `.py` (`__file__`), còn các file cấu hình neo theo vị trí mã nguồn backend/Vite; không phụ thuộc thư mục hiện tại khi chạy lệnh.
 
 | File | Là gì |
 |---|---|
@@ -196,6 +203,10 @@ bấm Giải lại.
 
 | Triệu chứng | Nguyên nhân |
 |---|---|
+| Báo vừa tạo `config/backend.json` hoặc `config/frontend.json` | File còn thiếu đã được tạo rỗng; điền JSON hợp lệ (README mục 6), rồi chạy lại. Với `main.py`, kiểm tra cả hai file. |
+| Báo file cấu hình đang trống | File đã có nhưng chưa có nội dung; bổ sung cấu hình đúng schema trước khi chạy lại. |
+| Báo JSON không hợp lệ | Kiểm tra cú pháp: dấu ngoặc, dấu phẩy, dấu nháy kép. File lỗi không bị sửa tự động. |
+| Báo thiếu trường hoặc sai schema | Xem đường dẫn và trường trong lỗi; backend cần các nhóm tham số lịch/phòng/solver, frontend cần `devServer.apiProxy` và `path`, `target`, `changeOrigin` đúng kiểu. |
 | `ModuleNotFoundError: No module named 'flask'` | Chưa cài ba gói ở phần "Cài lần đầu", hoặc đang chạy bằng bản Python khác bản đã cài. |
 | Cổng 5055 báo đang bận | Còn một Flask cũ chạy nền — dùng `taskkill` ở trên. |
 | Nhiều lớp hiện CTĐT "Chung" và bỏ trống cột Khóa | Dữ liệu nạp bằng **bản cũ** của trình đọc file: dòng chỉ điền ô Họ tên (giảng viên đồng giảng viết xuống dòng riêng) bị đọc thành một lớp riêng. Nay đã gộp vào lớp ngay trên — **nạp lại file Excel** thì 43 lớp ma đó biến mất. |

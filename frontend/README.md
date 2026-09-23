@@ -22,8 +22,7 @@ Chạy tại `http://127.0.0.1:5055`.
 npm install   # chỉ cần lần đầu
 npm run dev
 ```
-Chạy tại `http://localhost:5173` — `/api/*` được Vite tự động proxy sang Flask
-(xem `vite.config.js`), không cần cấu hình CORS ở backend.
+Mở cổng do Vite in ra (thường là `http://localhost:5173`). Với cấu hình ví dụ trong `../README.md` mục 6, `/api/*` được Vite proxy sang Flask; `vite.config.js` đọc proxy từ `../config/frontend.json`, không cần cấu hình CORS ở backend. Nếu file này thiếu, Vite tạo file rỗng rồi dừng; điền JSON hợp lệ trước khi chạy lại. `npm run build`, `npm run preview` và `npm test` cũng cần file này.
 
 ## Cấu trúc
 
