@@ -16,11 +16,11 @@ import { cn } from '@/lib/utils';
  * z-250 chứ không phải z-50 mặc định: xem giải thích tầng xếp chồng ở đầu
  * `dialog.jsx` (chế độ toàn màn hình của SchedulePage chiếm dải z-200..z-220).
  */
-export function Drawer({ open, onOpenChange, title, description, footer, children, className }) {
+export function Drawer({ open, onOpenChange, title, eyebrow, description, footer, children, className, overlayClassName }) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-250 bg-slate-950/40 backdrop-blur-[2px]" />
+        <DialogPrimitive.Overlay className={cn('fixed inset-0 z-250 bg-slate-950/40 backdrop-blur-[2px]', overlayClassName)} />
         <DialogPrimitive.Content
           className={cn(
             'glass-drawer fixed inset-y-0 right-0 z-250 flex w-full max-w-xl flex-col border-l',
@@ -29,7 +29,8 @@ export function Drawer({ open, onOpenChange, title, description, footer, childre
         >
           <div className="flex shrink-0 items-start justify-between gap-3 border-b px-5 py-4">
             <div className="min-w-0 space-y-1">
-              <DialogPrimitive.Title className="text-base leading-none font-semibold">
+              {eyebrow && <p className="text-muted-foreground text-xs">{eyebrow}</p>}
+              <DialogPrimitive.Title className={cn('font-semibold', eyebrow ? 'text-xl tracking-tight' : 'text-base leading-none')}>
                 {title}
               </DialogPrimitive.Title>
               {description ? (

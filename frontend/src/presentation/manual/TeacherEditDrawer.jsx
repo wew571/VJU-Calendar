@@ -108,8 +108,10 @@ export default function TeacherEditDrawer({ data, teacher, classes = [], onClose
       open
       onOpenChange={(o) => !o && onClose()}
       title={teacherId != null ? `Sửa giảng viên #${teacherId}` : "Thêm giảng viên mới"}
+      eyebrow="Chuẩn bị dữ liệu / Giảng viên"
       description="Sửa ở đây áp dụng cho mọi lớp của giảng viên này."
-      className="manual-edit-glass"
+      className="manual-edit-glass edit-drawer-glass"
+      overlayClassName="bg-slate-950/20"
     >
       <DrawerBody>
         {error && (
