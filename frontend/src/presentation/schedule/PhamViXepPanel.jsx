@@ -54,7 +54,7 @@ export default function PhamViXepPanel({ data, phamVi, onChange, disabled, ketQu
   return (
     <div
       className={cn(
-        "bg-card flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border p-3 shadow-sm",
+        "glass-panel flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border p-3",
         // Đang xếp cho một phạm vi là trạng thái ĐẶC BIỆT (nút Xếp sẽ không đụng
         // tới phần còn lại của khoa) — phải nhìn ra ngay, không để lẫn với thanh
         // lọc bên dưới. Chỉ đổi viền, không đặt nền: cn() là tailwind-merge, đặt

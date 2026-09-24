@@ -46,7 +46,7 @@ export function FilterSelect({
     <DropdownMenu modal={modal} onOpenChange={(o) => !o && setTerm('')}>
       <DropdownMenuTrigger
         className={cn(
-          'border-input bg-background hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50 inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm shadow-xs transition-colors focus-visible:ring-[3px] focus-visible:outline-none',
+          'glass-control border-input hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50 inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm transition-colors focus-visible:ring-[3px] focus-visible:outline-none',
           value && 'border-primary/40',
           full && 'flex w-full justify-between',
         )}

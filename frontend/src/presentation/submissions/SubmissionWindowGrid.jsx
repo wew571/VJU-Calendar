@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Pencil, Wand2, X } from "lucide-react";
+import { Pencil, Wand2, X } from "lucide-react";
 import { DAY_LABELS } from "../../adapters/dayPeriod";
 import { submissionToWindowSlots, windowSlotsToSelectedCellsMap } from "../../adapters/submissionAdapter";
 import { Button } from "@/components/ui/button";
@@ -31,8 +31,8 @@ import { cn } from "@/lib/utils";
 // báo" nop rong la vo nghia (khong con lua chon nao de solver xep). Rieng trang
 // "Giờ rảnh GV" thi can bat: giao vu phai xoa duoc gio da khai nham cua 1 GV.
 // teachingSlots: cac o giang vien DANG THUC SU DAY, suy tu cac lop da chot gio.
-// Hien mau khac (xanh nhat, dau cham) va KHONG tick san: day la BANG CHUNG "day
-// duoc luc nay", con o tick xanh dam la gio DA KHAI - von la GIOI HAN CUNG khi
+// Hien bang kinh xanh nuoc bien nhat va KHONG tick san: day la BANG CHUNG "day
+// duoc luc nay", con kinh xanh la nhat la gio DA KHAI - von la GIOI HAN CUNG khi
 // xep cac lop chua co gio. Tron hai thu lam mot thi khai xong cac lop chua co
 // gio cua ho chi duoc xep vao dung nhung o DA BI CHIEM -> khong xep duoc.
 // onGenerateAvailability: CO tac dung ("Tự động khai giờ rảnh") chi khi duoc
@@ -188,17 +188,17 @@ export default function SubmissionWindowGrid({
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
         <span className="text-muted-foreground inline-flex items-center gap-1.5">
-          <span className="border-input bg-background size-3 rounded-[3px] border" aria-hidden="true" />
+          <span className="availability-glass-cell size-3 rounded-[3px] border" aria-hidden="true" />
           {readOnly ? "Không rảnh" : "Chưa chọn"}
         </span>
         <span className="text-muted-foreground inline-flex items-center gap-1.5">
-          <span className="size-3 rounded-[3px] bg-emerald-500" aria-hidden="true" />
+          <span className="availability-glass-available size-3 rounded-[3px] border" aria-hidden="true" />
           Có thể dạy
         </span>
         {dangDay.size > 0 && (
           <span className="text-muted-foreground inline-flex items-center gap-1.5">
             <span
-              className="size-3 rounded-[3px] border border-emerald-500 bg-emerald-500/15"
+              className="availability-glass-teaching size-3 rounded-[3px] border"
               aria-hidden="true"
             />
             Đang dạy (giờ đã chốt)
@@ -219,12 +219,12 @@ export default function SubmissionWindowGrid({
       <div className="overflow-x-auto">
         <div
           className={cn(
-            "grid min-w-max overflow-hidden rounded-lg border select-none",
+            "availability-glass-grid grid min-w-max overflow-hidden rounded-lg border select-none",
             !locked && "cursor-pointer",
           )}
           style={{ gridTemplateColumns: `3.5rem repeat(${numDays}, minmax(2.75rem, 1fr))` }}
         >
-          <div className="bg-muted/60 text-muted-foreground border-b px-2 py-1.5 text-[11px] font-semibold">
+          <div className="availability-glass-header text-muted-foreground border-b px-2 py-1.5 text-[11px] font-semibold">
             Tiết
           </div>
           {days.map((d) => (
@@ -235,7 +235,7 @@ export default function SubmissionWindowGrid({
               title={locked ? undefined : `Bật/tắt cả ${d.label}`}
               onClick={() => toggleDay(d.idx)}
               className={cn(
-                "bg-muted/60 text-muted-foreground border-b border-l px-1 py-1.5 text-center text-[11px] font-semibold",
+                "availability-glass-header text-muted-foreground border-b border-l px-1 py-1.5 text-center text-[11px] font-semibold",
                 !locked && "hover:bg-muted hover:text-foreground",
               )}
             >
@@ -311,7 +311,7 @@ function RowCells({ period, days, slotsPerDay, dangDay, cellOn, locked, onToggle
         title={locked ? undefined : `Bật/tắt tiết ${period + 1} cả tuần`}
         onClick={() => onTogglePeriod(period)}
         className={cn(
-          "bg-muted/60 text-muted-foreground px-2 py-1 text-left text-[11px] tabular-nums",
+          "availability-glass-header text-muted-foreground px-2 py-1 text-left text-[11px] tabular-nums",
           !lastRow && "border-b",
           !locked && "hover:bg-muted hover:text-foreground",
         )}
@@ -341,24 +341,18 @@ function RowCells({ period, days, slotsPerDay, dangDay, cellOn, locked, onToggle
               onToggleCell(d.idx, period);
             }}
             className={cn(
-              "flex h-7 touch-none items-center justify-center border-l transition-colors",
+              "availability-glass-cell flex h-7 touch-none items-center justify-center border-l transition-[filter,background-color]",
               !lastRow && "border-b",
-              on
-                ? "bg-emerald-500 text-white"
-                : day
-                  ? "bg-emerald-500/15 text-emerald-700"
-                  : "bg-background",
-              !locked && !on && "hover:bg-emerald-500/20",
-              !locked && on && "hover:bg-emerald-600",
+              day
+                ? "availability-glass-teaching"
+                : on
+                  ? "availability-glass-available"
+                  : "",
+              !locked && (day || on) && "hover:brightness-[.97]",
+              !locked && !day && !on && "hover:bg-emerald-50/70",
               locked && "cursor-default",
             )}
-          >
-            {on ? (
-              <Check className="size-3.5" aria-hidden="true" />
-            ) : day ? (
-              <span className="size-1.5 rounded-full bg-emerald-600" aria-hidden="true" />
-            ) : null}
-          </div>
+          />
         );
       })}
     </>

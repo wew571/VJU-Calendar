@@ -20,10 +20,10 @@ export function Drawer({ open, onOpenChange, title, description, footer, childre
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-250 bg-black/50" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-250 bg-slate-950/40 backdrop-blur-[2px]" />
         <DialogPrimitive.Content
           className={cn(
-            'bg-background fixed inset-y-0 right-0 z-250 flex w-full max-w-xl flex-col border-l shadow-2xl',
+            'glass-drawer fixed inset-y-0 right-0 z-250 flex w-full max-w-xl flex-col border-l',
             className,
           )}
         >

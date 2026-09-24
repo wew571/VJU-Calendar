@@ -35,7 +35,7 @@ function RoleTag({ role, className }) {
  */
 function Card({ title, description, children, className }) {
   return (
-    <section className={cn('bg-card rounded-xl border p-5 shadow-sm sm:p-6', className)}>
+    <section className={cn('glass-panel rounded-xl border p-5 sm:p-6', className)}>
       {title && (
         <h3 className="text-base font-bold tracking-tight">{title}</h3>
       )}

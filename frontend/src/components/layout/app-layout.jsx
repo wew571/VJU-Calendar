@@ -115,7 +115,7 @@ export function AppLayout({
   }, [title, crumbs]);
 
   return (
-    <div className="bg-muted/40 flex h-dvh flex-col">
+    <div className="liquid-canvas liquid-shell flex h-dvh flex-col">
       <DemoBanner />
       <AppTopbar
         collapsed={effectiveCollapsed}
@@ -155,7 +155,7 @@ export function AppLayout({
             {title && (
               <div
                 ref={headerRef}
-                className="bg-card/95 sticky top-0 z-20 flex flex-wrap items-end justify-between gap-3 border-b px-4 pt-4 pb-3 backdrop-blur md:px-6 md:pt-5"
+                className="glass-page-header sticky top-0 z-20 flex flex-wrap items-end justify-between gap-3 border-b px-4 pt-4 pb-3 md:px-6 md:pt-5"
               >
                 <div>
                   {crumbs && (

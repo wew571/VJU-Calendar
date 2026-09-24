@@ -6,6 +6,10 @@ const FALLBACK_COLOR = {
   GUEST: { bg: "#fffbeb", border: "#f59e0b", text: "#92400e" },
   RESIDENT: { bg: "#eff6ff", border: "#3b82f6", text: "#1e40af" },
 };
+const EXTERNAL_UNIT_COLOR = {
+  GUEST: { bg: "#dbeafe", border: "#2563eb", text: "#1d4ed8" },
+  RESIDENT: { bg: "#ccfbf1", border: "#0d9488", text: "#115e59" },
+};
 
 // Theo yeu cau: thay the day-chu-luon-hien bang 1 THANH MAU gon (toi uu dien
 // tich) - chi hien CHI TIET DAY DU khi di chuot vao, qua popup dinh vi
@@ -32,7 +36,10 @@ const LessonCard = memo(function LessonCard({
   // duoc ma (khong nen xay ra, nhung tranh hien "undefined").
   const label = lesson.classCode || `#${lesson.id}`;
   const isGuest = lesson.teacherType === "GUEST";
-  const color = groupColor || FALLBACK_COLOR[isGuest ? "GUEST" : "RESIDENT"];
+  const teacherType = isGuest ? "GUEST" : "RESIDENT";
+  const color = lesson.boQua
+    ? EXTERNAL_UNIT_COLOR[teacherType]
+    : groupColor || FALLBACK_COLOR[teacherType];
 
   const measure = () => {
     if (!barRef.current) return;
@@ -106,26 +113,19 @@ const LessonCard = memo(function LessonCard({
     .filter(Boolean)
     .join(" ");
 
-  // O che do chi tiet the rong co dinh 180px nen chua duoc chu. Vien trai giu mau
-  // phan loai, nen the sang mau nhat cua chinh mau do de chu doc duoc.
-  // Vien phai thay duoc ro: nen the rat nhat (color.bg) tren nen luoi trang thi
-  // gan nhu khong thay ranh gioi. Dung chinh mau phan loai lam vien mong quanh
-  // the + soc day ben trai.
-  const detailStyle = detailed
-    ? {
-        background: color.bg,
-        border: `1px solid ${color.border}`,
-        borderLeft: `4px solid ${color.border}`,
-        color: color.text,
-      }
-    : { background: color.border };
+  const cardStyle = {
+    "--lesson-color": color.border,
+    "--lesson-soft": color.bg,
+    "--lesson-text": color.text,
+    color: color.text,
+  };
 
   return (
     <>
       <div
         ref={barRef}
         className={barClass}
-        style={{ ...detailStyle, cursor: canDrag ? "grab" : undefined }}
+        style={{ ...cardStyle, cursor: canDrag ? "grab" : undefined }}
         data-short={detailed ? String(lesson.duration || 1) : undefined}
         draggable={canDrag}
         onDragStart={canDrag ? handleDragStart : undefined}

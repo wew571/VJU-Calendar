@@ -37,7 +37,7 @@ export function AppTopbar({ collapsed, onToggleSidebar, role, onChangeRole }) {
   const name = roleLabel(role);
 
   return (
-    <header className="bg-background flex h-12 shrink-0 items-center justify-between gap-2 border-b px-3">
+    <header className="glass-topbar relative z-30 flex h-12 shrink-0 items-center justify-between gap-2 border-b px-3">
       <div className="flex min-w-0 items-center gap-2">
         {/* Nút thu gọn (desktop) / mở drawer (mobile) sidebar */}
         <button

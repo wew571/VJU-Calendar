@@ -23,7 +23,7 @@ export function AppSidebar({
   return (
     <aside
       className={cn(
-        'bg-background flex shrink-0 flex-col overflow-y-auto border-r py-3 duration-200',
+        'glass-sidebar flex shrink-0 flex-col overflow-y-auto border-r py-3 duration-200',
         // Mobile: drawer cố định dưới topbar, trượt vào/ra. Desktop: cột tĩnh trong luồng.
         'fixed inset-y-0 top-12 left-0 z-50 w-64 px-2.5 transition-transform',
         'lg:static lg:top-0 lg:z-auto lg:translate-x-0 lg:transition-[width]',
@@ -71,7 +71,7 @@ function PinnedNavItem({ item, page, collapsed, onNavigate }) {
         'flex items-center rounded-lg text-sm font-medium transition-colors',
         collapsed ? 'size-10 justify-center' : 'gap-2.5 px-3 py-2',
         page === item.key
-          ? 'bg-muted text-foreground font-semibold'
+          ? 'glass-nav-active text-foreground font-semibold'
           : 'text-foreground hover:bg-muted',
       )}
     >
@@ -107,7 +107,7 @@ function NavGroupItem({ group, page, sub, collapsed, onNavigate, onExpand }) {
         className={cn(
           'flex size-10 items-center justify-center rounded-lg transition-colors',
           hasActive
-            ? 'bg-muted text-foreground font-semibold'
+            ? 'glass-nav-active text-foreground font-semibold'
             : 'text-foreground hover:bg-muted',
         )}
       >
@@ -125,7 +125,7 @@ function NavGroupItem({ group, page, sub, collapsed, onNavigate, onExpand }) {
         className={cn(
           'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
           hasActive
-            ? 'bg-muted text-foreground font-semibold'
+            ? 'glass-nav-active text-foreground font-semibold'
             : 'text-foreground hover:bg-muted',
         )}
       >
@@ -150,7 +150,7 @@ function NavGroupItem({ group, page, sub, collapsed, onNavigate, onExpand }) {
           hasActive && open && 'font-semibold',
           // Da dong: muc con bi giau, nhom phai tu mang dau hieu - to nen giong
           // het cach rail thu gon danh dau.
-          hasActive && !open && 'bg-muted font-semibold',
+          hasActive && !open && 'glass-nav-active font-semibold',
         )}
       >
         <Icon className="size-4.5 shrink-0" />
@@ -176,7 +176,7 @@ function NavGroupItem({ group, page, sub, collapsed, onNavigate, onExpand }) {
                 className={cn(
                   'flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] transition-colors',
                   active
-                    ? 'bg-muted text-foreground font-medium'
+                    ? 'glass-nav-active text-foreground font-medium'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                 )}
               >

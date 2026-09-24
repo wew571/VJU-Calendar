@@ -14,7 +14,7 @@ export default function WorkflowStrip({ steps, canEdit, loading }) {
           <div
             key={s.key}
             className={cn(
-              "bg-card flex items-center gap-3 rounded-xl border p-3 shadow-sm",
+              "glass-panel flex items-center gap-3 rounded-xl border p-3",
               done && "border-emerald-500/40",
               // Buoc co canh bao (vd nghiem GD2 vua bi huy) phai NHIN RA duoc,
               // khong the chi doi mot con so o dong `value`.

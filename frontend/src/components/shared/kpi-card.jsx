@@ -14,7 +14,7 @@ export function KpiCard({ stat }) {
     <div
       className={cn(
         'rounded-xl border p-4 shadow-sm',
-        highlight ? cn('border-transparent text-white', highlightBg) : 'bg-card',
+        highlight ? cn('border-transparent text-white', highlightBg) : 'glass-panel',
       )}
     >
       <p

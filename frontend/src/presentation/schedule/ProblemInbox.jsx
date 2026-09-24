@@ -100,7 +100,7 @@ function DaChot({ items, activeId, onPick }) {
 
 function Shell({ children }) {
   return (
-    <aside className="bg-card sticky top-3 flex max-h-[calc(100vh-7rem)] flex-col gap-2.5 rounded-xl border p-3 shadow-sm">
+    <aside className="glass-panel sticky top-3 flex max-h-[calc(100vh-7rem)] flex-col gap-2.5 rounded-xl border p-3">
       {children}
     </aside>
   );

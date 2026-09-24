@@ -27,7 +27,7 @@ export default function ScheduleToolbar({
   const moc = data.hoanTac;
 
   return (
-    <div className="bg-card flex flex-wrap items-center gap-2 rounded-xl border p-3 shadow-sm">
+    <div className="glass-panel flex flex-wrap items-center gap-2 rounded-xl border p-3">
       <div className="flex items-center gap-2">
         <Label htmlFor="sv-scope" className="text-muted-foreground text-xs">
           Xem

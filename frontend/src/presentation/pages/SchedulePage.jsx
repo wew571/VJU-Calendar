@@ -507,13 +507,13 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
               </div>
 
               {navOpen && (
-                <div className="bg-background fixed right-4 bottom-17 z-215 flex max-h-[74vh] max-w-[min(760px,94vw)] flex-col gap-2 overflow-auto rounded-xl border p-2.5 shadow-2xl">
+                <div className="glass-popover fixed right-4 bottom-17 z-215 flex max-h-[74vh] max-w-[min(760px,94vw)] flex-col gap-2 overflow-auto rounded-xl border p-2.5">
                   <DrawerClose onClick={() => setNavOpen(false)} />
                   {densityBlock}
                 </div>
               )}
               {inboxOpen && (
-                <div className="bg-background fixed inset-y-0 right-0 z-220 flex w-90 max-w-[92vw] flex-col gap-2 overflow-hidden border-l p-2.5 shadow-2xl">
+                <div className="glass-drawer fixed inset-y-0 right-0 z-220 flex w-90 max-w-[92vw] flex-col gap-2 overflow-hidden border-l p-2.5">
                   <DrawerClose onClick={() => setInboxOpen(false)} />
                   <div className="min-h-0 flex-1 overflow-auto">{inboxBlock}</div>
                 </div>
