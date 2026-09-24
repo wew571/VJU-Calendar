@@ -322,6 +322,24 @@
     box-shadow: inset 1px 1px 0 rgb(255 255 255 / 90%), inset -1px -1px 0 rgb(14 165 233 / 18%);
   }
 
+  .manual-edit-glass .availability-glass-available {
+    border-color: rgb(13 148 136 / 45%);
+    background:
+      radial-gradient(ellipse at 25% 6%, rgb(255 255 255 / 86%), transparent 54%),
+      radial-gradient(ellipse at 85% 90%, rgb(13 148 136 / 48%), transparent 76%),
+      linear-gradient(145deg, rgb(13 148 136 / 42%), rgb(13 148 136 / 18%) 52%, rgb(13 148 136 / 38%));
+    box-shadow: inset 1px 1px 1px rgb(255 255 255 / 92%), inset -2px -2px 4px rgb(13 148 136 / 22%);
+  }
+
+  .manual-edit-glass .availability-glass-teaching {
+    border-color: rgb(37 99 235 / 45%);
+    background:
+      radial-gradient(ellipse at 25% 6%, rgb(255 255 255 / 86%), transparent 54%),
+      radial-gradient(ellipse at 85% 90%, rgb(37 99 235 / 48%), transparent 76%),
+      linear-gradient(145deg, rgb(37 99 235 / 42%), rgb(37 99 235 / 18%) 52%, rgb(37 99 235 / 38%));
+    box-shadow: inset 1px 1px 1px rgb(255 255 255 / 92%), inset -2px -2px 4px rgb(37 99 235 / 22%);
+  }
+
   .glass-control,
   [data-slot='input'],
   [data-slot='native-select'] {
