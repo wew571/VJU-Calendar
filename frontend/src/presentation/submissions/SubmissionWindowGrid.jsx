@@ -53,6 +53,7 @@ export default function SubmissionWindowGrid({
   readOnly = false,
   allowEmpty = false,
   saveLabel,
+  gridClassName,
 }) {
   const [grid, setGrid] = useState({});
   // Keo chuot quet mot VUNG CHU NHAT: giao vu thuong ranh nguyen buoi ("T2-T6
@@ -220,6 +221,7 @@ export default function SubmissionWindowGrid({
         <div
           className={cn(
             "availability-glass-grid grid min-w-max overflow-hidden rounded-lg border select-none",
+            gridClassName,
             !locked && "cursor-pointer",
           )}
           style={{ gridTemplateColumns: `3.5rem repeat(${numDays}, minmax(2.75rem, 1fr))` }}

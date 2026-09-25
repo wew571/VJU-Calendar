@@ -205,7 +205,7 @@ export default function LessonGridBoard({
           buoi do khong nam trong ket qua loc thi bat lam moi thu chim het ma khong
           co gi noi len. */}
       <div
-        className={`schedv2-grid-table ${hasVisibleHighlight ? "has-highlight" : ""} ${
+        className={`schedv2-grid-table liquid-data-grid ${hasVisibleHighlight ? "has-highlight" : ""} ${
           detailed ? "detailed" : ""
         }`}
         style={{

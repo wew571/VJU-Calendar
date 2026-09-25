@@ -87,14 +87,14 @@ export default function LessonTable({ lessons = [] }) {
 
   if (sorted.length === 0) {
     return (
-      <div className="bg-card text-muted-foreground rounded-xl border p-6 text-center text-sm shadow-sm">
+      <div className="liquid-data-grid text-muted-foreground rounded-xl border p-6 text-center text-sm">
         Không có buổi nào.
       </div>
     );
   }
 
   return (
-    <div className="bg-card overflow-hidden rounded-xl border shadow-sm">
+    <div className="liquid-data-grid overflow-hidden rounded-xl border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -129,7 +129,7 @@ export default function LessonTable({ lessons = [] }) {
               <TableRow key={`sep-${i}`} className="hover:bg-transparent">
                 <TableCell
                   colSpan={numCols}
-                  className="bg-muted/60 text-muted-foreground py-1.5 text-xs font-semibold"
+                  className="bg-white/35 text-muted-foreground py-1.5 text-xs font-semibold"
                 >
                   {item.label}
                 </TableCell>

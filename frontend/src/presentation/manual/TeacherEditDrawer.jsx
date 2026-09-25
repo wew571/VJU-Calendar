@@ -261,6 +261,7 @@ export default function TeacherEditDrawer({ data, teacher, classes = [], onClose
               teachingSlots={liveTeacher?.teachingSlots || []}
               saving={loading}
               allowEmpty
+              gridClassName="liquid-data-grid"
               saveLabel={(n) => (n === 0 ? "Xóa hết giờ rảnh" : `Lưu ${n} khung giờ`)}
               onSave={handleSaveAvailability}
               onGenerateAvailability={handleGenerateAvailability}
