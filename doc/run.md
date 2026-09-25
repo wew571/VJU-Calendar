@@ -26,7 +26,7 @@ Hai file cục bộ đều nằm trong `config/` tại gốc dự án và bị G
 - `config/backend.json`: cấu hình lịch học, phòng và solver cho Flask (xem ví dụ không nhạy cảm ở README mục 6).
 - `config/frontend.json`: cấu hình proxy Vite, ví dụ `{"devServer":{"apiProxy":{"path":"/api","target":"http://127.0.0.1:5055","changeOrigin":true}}}`. Không đặt secret ở đây.
 
-Có thể chạy `py main.py` tại gốc để cài dependency còn thiếu và khởi chạy cả Flask lẫn Vite. Nếu thiếu một hoặc cả hai file, launcher tạo **tất cả** file còn thiếu dưới dạng rỗng rồi dừng **trước** khi cài dependency hay mở dịch vụ; điền JSON hợp lệ rồi chạy lại. Chạy `py app.py` trực tiếp trong `webapp/` chỉ tạo `config/backend.json` nếu thiếu; Vite (`npm run dev`, `npm run build`, `npm run preview`, `npm test` trong `frontend/`) chỉ tạo `config/frontend.json` nếu thiếu. Mỗi lệnh dừng ngay sau khi tạo file rỗng, không tự điền mặc định. File đã tồn tại không bị ghi đè; file rỗng, sai cú pháp hoặc sai schema cũng làm lệnh dừng và báo đường dẫn/trường lỗi. Vite luôn nạp frontend config khi chạy dev, build, preview và test, kể cả khi proxy không được dùng.
+Có thể chạy `py main.py` tại gốc để cài dependency còn thiếu, tạo lại `frontend/dist`, rồi khởi chạy cả Flask lẫn Vite. Vì `frontend/dist` bị Git bỏ qua và không được cập nhật bởi `git pull`, bước build tự động này bảo đảm cổng 5055 không phục vụ bundle cũ sau khi mã nguồn frontend thay đổi. Nếu thiếu một hoặc cả hai file, launcher tạo **tất cả** file còn thiếu dưới dạng rỗng rồi dừng **trước** khi cài dependency, build hay mở dịch vụ; điền JSON hợp lệ rồi chạy lại. Chạy `py app.py` trực tiếp trong `webapp/` chỉ tạo `config/backend.json` nếu thiếu; Vite (`npm run dev`, `npm run build`, `npm run preview`, `npm test` trong `frontend/`) chỉ tạo `config/frontend.json` nếu thiếu. Mỗi lệnh dừng ngay sau khi tạo file rỗng, không tự điền mặc định. File đã tồn tại không bị ghi đè; file rỗng, sai cú pháp hoặc sai schema cũng làm lệnh dừng và báo đường dẫn/trường lỗi. Vite luôn nạp frontend config khi chạy dev, build, preview và test, kể cả khi proxy không được dùng.
 
 ## Cách 1 — chỉ dùng app (một cửa sổ)
 
@@ -210,5 +210,6 @@ bấm Giải lại.
 | `ModuleNotFoundError: No module named 'flask'` | Chưa cài ba gói ở phần "Cài lần đầu", hoặc đang chạy bằng bản Python khác bản đã cài. |
 | Cổng 5055 báo đang bận | Còn một Flask cũ chạy nền — dùng `taskkill` ở trên. |
 | Nhiều lớp hiện CTĐT "Chung" và bỏ trống cột Khóa | Dữ liệu nạp bằng **bản cũ** của trình đọc file: dòng chỉ điền ô Họ tên (giảng viên đồng giảng viết xuống dòng riêng) bị đọc thành một lớp riêng. Nay đã gộp vào lớp ngay trên — **nạp lại file Excel** thì 43 lớp ma đó biến mất. |
-| Trang 5055 hiện "Chưa build giao diện" | Thiếu `frontend/dist/index.html` — chạy `npm run build`. |
+| Trang 5055 hiện "Chưa build giao diện" | Thiếu `frontend/dist/index.html` — chạy lại `py main.py`, hoặc chạy `npm run build` nếu chỉ khởi động Flask riêng. |
+| Trang 5055 có giao diện cũ hoặc thiếu Liquid Glass sau `git pull` | `frontend/dist` là bản build cục bộ bị Git bỏ qua. Dừng tiến trình cũ và chạy lại `py main.py`; nếu chạy Flask riêng thì chạy `npm run build` trong `frontend/` trước. |
 | Giao diện lên nhưng mọi màn đều trống | Backend chưa chạy hoặc sai cổng — mở DevTools xem tab Network, các lời gọi `/api/*` trả gì. |
