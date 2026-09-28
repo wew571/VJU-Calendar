@@ -21,10 +21,13 @@ def _default():
     return copy.deepcopy(DEFAULT_AVAILABILITY_GENERATOR)
 
 
-def test_config_that_da_nap_dung_bo_mac_dinh():
-    """File config.json that cua du an phai nap duoc va dung dung schema mac
-    dinh (chua ai chinh tay cau hinh nay)."""
-    assert app_config.CONFIG["availabilityGenerator"] == DEFAULT_AVAILABILITY_GENERATOR
+def test_config_that_da_nap_hop_le():
+    """File config that cua du an phai nap duoc voi gia tri mac dinh hoac tuy chinh hop le."""
+    current = copy.deepcopy(app_config.CONFIG["availabilityGenerator"])
+    assert _resolve_availability_generator(
+        {"availabilityGenerator": current},
+        app_config.CONFIG["calendar"]["slotsPerDay"],
+    ) == current
 
 
 def test_thieu_toan_bo_khoa_dung_bo_mac_dinh():

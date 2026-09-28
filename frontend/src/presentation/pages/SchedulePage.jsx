@@ -13,7 +13,7 @@ import ProblemInbox from "../schedule/ProblemInbox";
 import DensityNavigator from "../schedule/DensityNavigator";
 import WorkflowStrip from "../schedule/WorkflowStrip";
 import PhamViXepPanel from "../schedule/PhamViXepPanel";
-import ScheduleToolbar from "../schedule/ScheduleToolbar";
+import ScheduleToolbar, { ScheduleActions } from "../schedule/ScheduleToolbar";
 import MoveReasonDialog from "../schedule/MoveReasonDialog";
 import SaveMoveDialog from "../schedule/SaveMoveDialog";
 import PendingMoveBanner from "../schedule/PendingMoveBanner";
@@ -327,50 +327,96 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
       {/* Toan man hinh la ban lam viec: bo thanh tien trinh de nhuong cho luoi. */}
       {/* "Xep cho ai" doc TRUOC "bam gi" - nen khoi chon pham vi nam tren thanh
           tien trinh, va ba buoc ben duoi deu dem theo dung pham vi nay. */}
-      {!fullscreen && canEdit && (
-        <PhamViXepPanel
-          data={data}
-          phamVi={phamVi}
-          onChange={setPhamVi}
-          disabled={loading}
-          // Con so cua LAN GIAI gan nhat (backend gui kem) - nhung canh bao chi
-          // biet duoc sau khi giai, khong tinh truoc tu du lieu duoc.
-          ketQuaPhamVi={residentResult?.phamVi ?? guestResult?.phamVi ?? null}
-        />
-      )}
-      {!fullscreen && <WorkflowStrip steps={steps} canEdit={canEdit} loading={loading} />}
+      <div className={cn(!fullscreen && "grid items-stretch gap-3 xl:grid-cols-[minmax(0,1fr)_330px]")}>
+        <div className="min-w-0 space-y-3">
+          {!fullscreen && canEdit && (
+            <PhamViXepPanel
+              data={data}
+              phamVi={phamVi}
+              onChange={setPhamVi}
+              disabled={loading}
+              // Con so cua LAN GIAI gan nhat (backend gui kem) - nhung canh bao chi
+              // biet duoc sau khi giai, khong tinh truoc tu du lieu duoc.
+              ketQuaPhamVi={residentResult?.phamVi ?? guestResult?.phamVi ?? null}
+            />
+          )}
+          {!fullscreen && <WorkflowStrip steps={steps} canEdit={canEdit} loading={loading} />}
 
-      {error && (
-        <Notice tone="red" icon={TriangleAlert}>
-          {error}
-        </Notice>
-      )}
+          {error && (
+            <Notice tone="red" icon={TriangleAlert}>
+              {error}
+            </Notice>
+          )}
 
-      <ScheduleToolbar
-        f={f}
-        set={set}
-        view={view}
-        data={data}
-        canEdit={canEdit}
-        loading={loading}
-        guestResult={guestResult}
-        residentResult={residentResult}
-        mode={mode}
-        onModeChange={setMode}
-        fullscreen={fullscreen}
-        onFullscreenChange={setFullscreen}
-        onSaveSchedule={doSaveSchedule}
-        onHoanTac={doHoanTac}
-        phamVi={phamVi}
-        onXuatLuoi={handleXuatLuoi}
-      />
-
-      <div className="text-muted-foreground flex flex-wrap items-baseline gap-x-3 gap-y-1 px-0.5 text-xs">
-        <strong className="text-foreground text-[13px]">{scopeLabel(view, data)}</strong>
-        <span>
-          {view.lessons.length}/{view.totalLessons} buổi đang hiện
-          {view.problemCount > 0 && ` · ${view.problemCount} buổi có vấn đề`}
-        </span>
+          <ScheduleToolbar f={f} set={set} view={view} mode={mode} phamVi={phamVi} />
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch">
+            <div className="flex min-w-0 flex-col justify-between gap-2 px-0.5 lg:w-72 lg:shrink-0">
+              <div className="text-muted-foreground flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs">
+                <strong className="text-foreground text-[13px]">{scopeLabel(view, data)}</strong>
+                <span>
+                  {view.lessons.length}/{view.totalLessons} buổi đang hiện
+                  {view.problemCount > 0 && ` · ${view.problemCount} buổi có vấn đề`}
+                </span>
+              </div>
+              {mode === "grid" && view.totalLessons > 0 && (f.colorBy === "status" ? (
+                <div className="text-muted-foreground flex flex-wrap gap-x-3.5 gap-y-1 text-[11.5px]">
+                  {Object.entries(STATUS_COLORS).map(([k, c]) => (
+                    <span key={k} className="inline-flex items-center gap-1.5">
+                      <span
+                        className="size-2.5 rounded-sm"
+                        style={{ background: c.border }}
+                        aria-hidden="true"
+                      />
+                      {k}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                // Ba lop mau con lai (Chuong trinh/Loai GV/Khoa) dung getColor()
+                // hash theo ten nhom - khong co chu giai thi mau vo nghia. Cap 8
+                // nhom, phan du gap vao "+n khac" (khong ve o).
+                legend?.length > 0 && (
+                  <div className="text-muted-foreground flex flex-wrap gap-x-3.5 gap-y-1 text-[11.5px]">
+                    {legend.map((it) => (
+                      <span key={it.key} className="inline-flex items-center gap-1.5">
+                        {it.color && (
+                          <span
+                            className="size-2.5 rounded-sm"
+                            style={{ background: it.color.border }}
+                            aria-hidden="true"
+                          />
+                        )}
+                        {it.key}
+                      </span>
+                    ))}
+                  </div>
+                )
+              ))}
+            </div>
+            <ScheduleActions
+              data={data}
+              view={view}
+              canEdit={canEdit}
+              loading={loading}
+              guestResult={guestResult}
+              residentResult={residentResult}
+              mode={mode}
+              onModeChange={setMode}
+              fullscreen={fullscreen}
+              onFullscreenChange={setFullscreen}
+              onSaveSchedule={doSaveSchedule}
+              onHoanTac={doHoanTac}
+              onXuatLuoi={handleXuatLuoi}
+            />
+          </div>
+        </div>
+        {!fullscreen && (
+          <div className="min-w-0 xl:relative xl:min-h-0">
+            <div className="xl:absolute xl:inset-0 xl:[&>aside]:static xl:[&>aside]:h-full xl:[&>aside]:max-h-none">
+              {inboxBlock}
+            </div>
+          </div>
+        )}
       </div>
 
       <PendingMoveBanner
@@ -391,9 +437,7 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
         <div
           className={cn(
             "grid items-start gap-3",
-            fullscreen
-              ? "min-h-0 flex-1 grid-cols-1"
-              : "grid-cols-1 xl:grid-cols-[minmax(0,1fr)_330px]",
+            fullscreen ? "min-h-0 flex-1 grid-cols-1" : "grid-cols-1",
           )}
         >
           <div
@@ -404,40 +448,6 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
           >
             {mode === "grid" ? (
               <>
-                {f.colorBy === "status" ? (
-                  <div className="text-muted-foreground flex flex-wrap gap-x-3.5 gap-y-1 text-[11.5px]">
-                    {Object.entries(STATUS_COLORS).map(([k, c]) => (
-                      <span key={k} className="inline-flex items-center gap-1.5">
-                        <span
-                          className="size-2.5 rounded-sm"
-                          style={{ background: c.border }}
-                          aria-hidden="true"
-                        />
-                        {k}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  // Ba lop mau con lai (Chuong trinh/Loai GV/Khoa) dung getColor()
-                  // hash theo ten nhom - khong co chu giai thi mau vo nghia. Cap 8
-                  // nhom, phan du gap vao "+n khac" (khong ve o).
-                  legend?.length > 0 && (
-                    <div className="text-muted-foreground flex flex-wrap gap-x-3.5 gap-y-1 text-[11.5px]">
-                      {legend.map((it) => (
-                        <span key={it.key} className="inline-flex items-center gap-1.5">
-                          {it.color && (
-                            <span
-                              className="size-2.5 rounded-sm"
-                              style={{ background: it.color.border }}
-                              aria-hidden="true"
-                            />
-                          )}
-                          {it.key}
-                        </span>
-                      ))}
-                    </div>
-                  )
-                )}
                 <LessonGridBoard
                   lessons={displayLessons}
                   numDays={view.numDays}
@@ -520,9 +530,7 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
                 </div>
               )}
             </>
-          ) : (
-            inboxBlock
-          )}
+          ) : null}
         </div>
       )}
 

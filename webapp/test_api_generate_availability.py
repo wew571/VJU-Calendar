@@ -8,6 +8,8 @@ KHONG dung file snapshot that: monkeypatch save_snapshot thanh no-op (giong
 kiem_tra_nhom_sinh_vien.py) va tu dung STATE truc tiep thay vi nap file.
 """
 
+import copy
+
 import pytest
 
 import api.manual_teacher as manual_teacher_api
@@ -17,7 +19,7 @@ from state import STATE
 
 @pytest.fixture(autouse=True)
 def _khong_ghi_snapshot(monkeypatch):
-    monkeypatch.setattr(manual_teacher_api, "save_snapshot", lambda: None)
+    monkeypatch.setattr(manual_teacher_api, "save_snapshot", lambda *args, **kwargs: None)
 
 
 @pytest.fixture
@@ -92,3 +94,114 @@ def test_loi_giua_chung_khong_lam_mat_gio_ranh_cu(client, monkeypatch):
         client.post("/api/manual/teacher/1/generate-availability")
     # Loi truoc khi ghi -> gio ranh cu con nguyen, khong bi xoa nua chung.
     assert STATE["data"]["manual_teacher_windows"][1] == [5, 6, 7]
+
+
+def _them_du_giang_vien_hang_loat():
+    STATE["data"]["teachers"][2] = {
+        "id": 2, "name": "GV co huu", "type": "RESIDENT", "org": "", "title": "", "email": "", "phone": "",
+    }
+    STATE["data"]["teachers"][3] = {
+        "id": 3, "name": "Cho trong", "type": "GUEST", "placeholder": True,
+        "org": "", "title": "", "email": "", "phone": "",
+    }
+    STATE["data"]["manual_teacher_windows"].update({1: [12], 2: [], 3: [71]})
+
+
+def test_hang_loat_xu_ly_ca_hai_loai_bo_qua_placeholder_va_luu_mot_lan(client, monkeypatch):
+    _them_du_giang_vien_hang_loat()
+    generated_ids = []
+    snapshots = []
+
+    def _generate(data, teacher_id):
+        generated_ids.append(teacher_id)
+        return [teacher_id * 10]
+
+    monkeypatch.setattr(manual_teacher_api, "generate_teacher_availability", _generate)
+    monkeypatch.setattr(manual_teacher_api, "save_snapshot", lambda **kwargs: snapshots.append(kwargs))
+
+    res = client.post("/api/manual/teachers/generate-availability")
+
+    assert res.status_code == 200
+    assert res.get_json()["generatedTeacherCount"] == 2
+    assert generated_ids == [1, 2]
+    assert STATE["data"]["manual_teacher_windows"] == {1: [10], 2: [20], 3: [71]}
+    assert snapshots == [{"raise_on_error": True}]
+
+
+def test_hang_loat_giu_gio_dang_day_va_thay_gio_ranh_cu(client):
+    _them_du_giang_vien_hang_loat()
+    STATE["data"]["courses"][1] = {"id": 1, "code": "TEST101", "name": "Mon test", "credits": 3}
+    STATE["data"]["program_faculty"]["Chung"] = 0
+    STATE["data"]["sections"][1] = {
+        "id": 1, "course_id": 1, "course_name": "Mon test", "teacher_id": 1, "teacher_ids": [1],
+        "teacher_type": "GUEST", "duration": 2, "time_assumed": False,
+        "original_slot": 1, "room_type": "LT", "program": "Chung", "program_ids": [],
+        "class_code": "", "cohort": "",
+    }
+
+    res = client.post("/api/manual/teachers/generate-availability")
+
+    assert res.status_code == 200
+    teacher = next(t for t in res.get_json()["teachers"] if t["id"] == 1)
+    assert 12 not in teacher["availabilitySlots"]
+    assert {1, 2}.issubset(teacher["teachingSlots"])
+    assert not {1, 2}.intersection(teacher["availabilitySlots"])
+
+
+def test_hang_loat_loi_o_giang_vien_giua_danh_sach_khong_doi_ai(client, monkeypatch):
+    _them_du_giang_vien_hang_loat()
+    before = copy.deepcopy(STATE["data"])
+    snapshot_calls = []
+
+    def _generate(data, teacher_id):
+        if teacher_id == 2:
+            raise RuntimeError("loi sinh")
+        return [10]
+
+    monkeypatch.setattr(manual_teacher_api, "generate_teacher_availability", _generate)
+    monkeypatch.setattr(manual_teacher_api, "save_snapshot", lambda **kwargs: snapshot_calls.append(kwargs))
+
+    with pytest.raises(RuntimeError):
+        client.post("/api/manual/teachers/generate-availability")
+
+    assert STATE["data"] == before
+    assert snapshot_calls == []
+
+
+@pytest.mark.parametrize("failing_step", ["teacher_sync", "grid_sync", "save"])
+def test_hang_loat_loi_dong_bo_hoac_luu_phuc_hoi_toan_bo_state(client, monkeypatch, failing_step):
+    _them_du_giang_vien_hang_loat()
+    STATE["guestResult"] = {"lessons": [], "placedCount": 0, "total": 0, "unplaced": []}
+    STATE["residentResult"] = {"lessons": [], "placedCount": 0, "total": 0, "unplaced": []}
+    before = copy.deepcopy({
+        "data": STATE["data"],
+        "guestResult": STATE["guestResult"],
+        "residentResult": STATE["residentResult"],
+    })
+    monkeypatch.setattr(
+        manual_teacher_api,
+        "generate_teacher_availability",
+        lambda data, teacher_id: [teacher_id * 10],
+    )
+    if failing_step == "teacher_sync":
+        monkeypatch.setattr(manual_teacher_api, "sync_teacher_sections", lambda *args: (_ for _ in ()).throw(RuntimeError("loi sync")))
+    elif failing_step == "grid_sync":
+        monkeypatch.setattr(manual_teacher_api, "dong_bo_ket_qua", lambda *args: (_ for _ in ()).throw(RuntimeError("loi grid")))
+    else:
+        monkeypatch.setattr(manual_teacher_api, "save_snapshot", lambda **kwargs: (_ for _ in ()).throw(OSError("loi save")))
+
+    with pytest.raises((RuntimeError, OSError)):
+        client.post("/api/manual/teachers/generate-availability")
+
+    assert STATE["data"] == before["data"]
+    assert STATE["guestResult"] == before["guestResult"]
+    assert STATE["residentResult"] == before["residentResult"]
+
+
+def test_hang_loat_khong_co_giang_vien_that_tra_400(client):
+    STATE["data"]["teachers"][1]["placeholder"] = True
+
+    res = client.post("/api/manual/teachers/generate-availability")
+
+    assert res.status_code == 400
+    assert res.get_json()["error"]

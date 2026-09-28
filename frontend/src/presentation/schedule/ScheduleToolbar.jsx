@@ -19,13 +19,7 @@ function nhanGio(at) {
   return at ? ` lúc ${at.slice(11, 16)} ngày ${at.slice(8, 10)}/${at.slice(5, 7)}` : "";
 }
 
-export default function ScheduleToolbar({
-  f, set, view, data, canEdit, loading, guestResult, residentResult,
-  mode, onModeChange, fullscreen, onFullscreenChange, onSaveSchedule, onHoanTac,
-  phamVi, onXuatLuoi,
-}) {
-  const moc = data.hoanTac;
-
+export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
   return (
     <div className="glass-panel flex flex-wrap items-center gap-2 rounded-xl border p-3">
       <div className="flex items-center gap-2">
@@ -113,7 +107,7 @@ export default function ScheduleToolbar({
         value={f.search}
         onChange={(v) => set({ search: v })}
         placeholder="Tìm môn, giảng viên, #id"
-        className="w-full sm:w-64"
+        className="w-full sm:min-w-48 sm:flex-1"
       />
 
       <Label htmlFor="sv-problems" className="text-sm font-normal">
@@ -150,7 +144,20 @@ export default function ScheduleToolbar({
         </NativeSelect>
       )}
 
-      <div className="ml-auto flex items-center gap-2">
+    </div>
+  );
+}
+
+export function ScheduleActions({
+  data, view, canEdit, loading, guestResult, residentResult,
+  mode, onModeChange, fullscreen, onFullscreenChange, onSaveSchedule, onHoanTac,
+  onXuatLuoi,
+}) {
+  const moc = data.hoanTac;
+
+  return (
+    <div className="glass-panel flex w-full min-w-0 items-center rounded-xl border p-2 lg:ml-auto lg:w-fit lg:max-w-full">
+      <div className="flex flex-wrap items-center gap-2">
         {canEdit && (guestResult || residentResult) && (
           <Button
             size="sm"

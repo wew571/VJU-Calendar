@@ -43,6 +43,8 @@ export const updateManualTeacher = (teacherId, payload) => apiPatch(`/api/manual
 // (CONFIG["availabilityGenerator"]) va luu ngay - xem webapp/api/manual_teacher.py.
 export const generateTeacherAvailability = (teacherId) =>
   apiPost(`/api/manual/teacher/${teacherId}/generate-availability`);
+export const generateAllTeacherAvailability = () =>
+  apiPost("/api/manual/teachers/generate-availability");
 // CHOT LICH rieng mot lop hoc phan: ghi gio dang hien thanh gio chinh thuc va
 // ghim lai - cac lop khac cung hoc phan van co the xep/sua doc lap.
 export const chotSection = (sectionId, payload) =>
