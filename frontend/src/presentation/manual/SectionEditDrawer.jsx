@@ -207,6 +207,9 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
       onOpenChange={(o) => !o && onClose()}
       title={section ? `Sửa lớp ${section.classCode || `#${section.sectionId}`}` : "Thêm lớp mới"}
       description={section?.courseName || undefined}
+      eyebrow="Chuẩn bị dữ liệu / Lớp"
+      className="manual-edit-glass edit-drawer-glass"
+      overlayClassName="bg-slate-950/20"
       footer={
         <>
           {section && (

@@ -108,7 +108,10 @@ export default function TeacherEditDrawer({ data, teacher, classes = [], onClose
       open
       onOpenChange={(o) => !o && onClose()}
       title={teacherId != null ? `Sửa giảng viên #${teacherId}` : "Thêm giảng viên mới"}
+      eyebrow="Chuẩn bị dữ liệu / Giảng viên"
       description="Sửa ở đây áp dụng cho mọi lớp của giảng viên này."
+      className="manual-edit-glass edit-drawer-glass"
+      overlayClassName="bg-slate-950/20"
     >
       <DrawerBody>
         {error && (
@@ -258,6 +261,7 @@ export default function TeacherEditDrawer({ data, teacher, classes = [], onClose
               teachingSlots={liveTeacher?.teachingSlots || []}
               saving={loading}
               allowEmpty
+              gridClassName="liquid-data-grid"
               saveLabel={(n) => (n === 0 ? "Xóa hết giờ rảnh" : `Lưu ${n} khung giờ`)}
               onSave={handleSaveAvailability}
               onGenerateAvailability={handleGenerateAvailability}

@@ -88,6 +88,16 @@
   --sidebar-active: oklch(0.57 0.22 27);
   --sidebar-active-foreground: oklch(0.99 0 0);
   --sidebar-border: oklch(1 0 0 / 14%);
+
+  --glass-surface: rgb(255 255 255 / 78%);
+  --glass-surface-strong: rgb(255 255 255 / 92%);
+  --glass-blue: rgb(37 99 235 / 25%);
+  --glass-teal: rgb(13 148 136 / 25%);
+  --glass-red: rgb(220 38 38 / 30%);
+  --glass-border: rgb(255 255 255 / 82%);
+  --glass-shadow: 0 18px 50px rgb(82 24 24 / 10%), 0 2px 10px rgb(15 23 42 / 6%);
+  --glass-shadow-soft: 0 8px 28px rgb(82 24 24 / 8%), 0 1px 4px rgb(15 23 42 / 5%);
+  --manual-glass-surface: linear-gradient(105deg, rgb(255 255 255 / 88%), rgb(239 246 255 / 78%), rgb(240 253 250 / 76%));
 }
 
 .dark {

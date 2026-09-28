@@ -11,11 +11,11 @@ import { Button } from "@/components/ui/button";
 // khoi thuong hieu o giua, the trang do bong.
 export default function RolePickerScreen({ onPick }) {
   return (
-    <div className="bg-sidebar flex min-h-dvh items-center justify-center p-4">
+    <div className="liquid-role-canvas flex min-h-dvh items-center justify-center p-4">
       <div className="w-full max-w-sm">
         {/* Thương hiệu */}
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
-          <span className="flex size-12 items-center justify-center rounded-xl bg-white/10 text-sm font-bold tracking-tight text-white">
+          <span className="glass-brand-mark flex size-12 items-center justify-center rounded-xl text-sm font-bold tracking-tight text-white">
             VJU
           </span>
           <div>
@@ -25,7 +25,7 @@ export default function RolePickerScreen({ onPick }) {
         </div>
 
         {/* Thẻ chọn vai trò */}
-        <div className="bg-card rounded-xl p-6 shadow-xl">
+        <div className="glass-hero-card rounded-2xl border p-6">
           <h1 className="text-lg font-semibold">Vào công cụ xếp TKB</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Không cần tài khoản — chọn vai trò phù hợp với việc bạn cần làm.

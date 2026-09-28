@@ -14,7 +14,7 @@ export function Panel({
 }) {
   return (
     <section
-      className={cn('bg-card rounded-xl border p-4 shadow-sm sm:p-5', className)}
+      className={cn('glass-panel rounded-xl border p-4 sm:p-5', className)}
     >
       {(title || action) && (
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">

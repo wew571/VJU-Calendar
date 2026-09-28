@@ -9,6 +9,13 @@ import SubmissionWindowGrid from "./SubmissionWindowGrid";
 const baseProps = { numDays: 6, slotsPerDay: 12, initialSlots: [], teachingSlots: [] };
 
 describe("SubmissionWindowGrid - nut Tự động khai giờ rảnh", () => {
+  it("chi ap dung giao dien bang kinh khi duoc yeu cau", () => {
+    const { container, rerender } = render(<SubmissionWindowGrid {...baseProps} onSave={() => {}} />);
+    expect(container.querySelector(".availability-glass-grid")).not.toHaveClass("liquid-data-grid");
+    rerender(<SubmissionWindowGrid {...baseProps} onSave={() => {}} gridClassName="liquid-data-grid" />);
+    expect(container.querySelector(".availability-glass-grid")).toHaveClass("liquid-data-grid");
+  });
+
   it("khong hien nut khi khong truyen onGenerateAvailability (vd man Khung giờ đã báo)", () => {
     render(<SubmissionWindowGrid {...baseProps} onSave={() => {}} />);
     expect(screen.queryByRole("button", { name: /Tự động khai giờ rảnh/i })).not.toBeInTheDocument();

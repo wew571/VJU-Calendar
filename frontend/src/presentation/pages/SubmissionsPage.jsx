@@ -37,7 +37,7 @@ const VIEW = { QUEUE: "queue", TABLE: "table", COORDS: "coords" };
 /** Khung the dung chung cho ba man con. */
 function Card({ title, note, children, headExtra }) {
   return (
-    <section className="bg-card rounded-xl border shadow-sm">
+    <section className="glass-panel rounded-xl border">
       <div className="flex flex-wrap items-center gap-2 border-b p-3">
         <h3 className="mr-1 text-sm font-semibold">{title}</h3>
         {note && <span className="text-muted-foreground text-xs">{note}</span>}
@@ -120,7 +120,7 @@ export default function SubmissionsPage({ role }) {
       {/* Tien do xu ly - so lieu quan trong nhat cua man nay, de len dau. Hai
           viec CHUA XONG (phan cong GV / khai gio) deu tinh vao day, vi ca hai
           deu la dieu kien can truoc khi Giai doan 1 xep duoc dung. */}
-      <div className="bg-card flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4 shadow-sm">
+      <div className="glass-panel flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4">
         <p className="text-muted-foreground max-w-prose text-xs">
           Mỗi lớp thỉnh giảng cần đủ hai việc trước khi xếp: có giảng viên thật (không phải chỗ
           trống), và giảng viên đó đã khai giờ có thể dạy. Buổi của GV cơ hữu không thuộc bước này.

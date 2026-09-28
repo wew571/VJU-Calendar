@@ -374,7 +374,7 @@ cd ..
 py main.py
 ```
 
-Chương trình sẽ kiểm tra hai file cấu hình, cài thêm thư viện nếu còn thiếu, rồi khởi chạy hệ thống. Mở địa chỉ frontend do Vite hiển thị trong cửa sổ dòng lệnh (thường là `http://localhost:5173`). Khi muốn dừng, nhấn `Ctrl+C`.
+Chương trình sẽ kiểm tra hai file cấu hình, cài thêm thư viện nếu còn thiếu, tạo lại `frontend/dist` rồi khởi chạy hệ thống. Có thể mở `http://127.0.0.1:5055` để dùng bản giao diện vừa build, hoặc mở đúng địa chỉ frontend do Vite hiển thị trong cửa sổ dòng lệnh (thường là `http://localhost:5173`) để phát triển với hot-reload. Không dùng lại một tiến trình `main.py` cũ sau khi kéo mã mới; hãy dừng và chạy lại để bản build được cập nhật. Khi muốn dừng, nhấn `Ctrl+C`.
 
 ---
 

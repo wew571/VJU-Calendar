@@ -179,7 +179,7 @@ export default function ManualEntryPage({ role }) {
     // trang nay): canh bao va thanh cong cu la flex item co dinh, BANG lay het
     // phan con lai va tu cuon - co the bang moi "dong bang" duoc hang tieu de va
     // 5 cot dau (xem .xls-scroll trong styles.css).
-    <div className="bg-background flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       {(!canEdit || (canEdit && !isManualMode)) && (
         <div className="shrink-0 px-4 pt-3 md:px-6">
           {!canEdit && (
@@ -203,7 +203,7 @@ export default function ManualEntryPage({ role }) {
             Nay trang la mot cot flex chiem tron chieu cao, cuon doc do CHINH
             bang lo (xem fullHeight trong AppLayout) - thanh nay chi can la flex
             item khong co lai (`shrink-0`) la da dung yen, khong can sticky nua. */}
-        <div className="bg-background shrink-0 border-b">
+        <div className="glass-toolbar shrink-0 border-b">
         <div className="flex flex-wrap items-center gap-2 px-4 py-3 md:px-6">
           <h2 className="mr-1 text-sm font-semibold">
             Lớp đã nhập ({visible.length}

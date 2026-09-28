@@ -124,7 +124,7 @@ export default function TeacherAvailabilityPage({ role }) {
 
   return (
     <div className="space-y-3">
-      <div className="bg-card rounded-xl border shadow-sm">
+      <div className="glass-panel rounded-xl border">
         <div className="flex flex-wrap items-center gap-2 border-b p-3">
           {/* Loc LOAI GV truoc tien - day la bo loc CAP MOT, quyet dinh ca danh
               sach ben duoi va nghia cua cot "Giờ có thể dạy". Dung chung mot

@@ -53,10 +53,12 @@ export default function CourseEditDrawer({ course, onClose }) {
       open
       onOpenChange={(o) => !o && onClose()}
       title={course ? `Sửa học phần #${course.id}` : "Thêm học phần mới"}
+      eyebrow="Chuẩn bị dữ liệu / Học phần"
       description={
         course ? "Sửa ở đây áp dụng cho tất cả lớp thuộc học phần này." : undefined
       }
-      className="max-w-md"
+      className="manual-edit-glass edit-drawer-glass max-w-md"
+      overlayClassName="bg-slate-950/20"
       footer={
         <>
           <Button type="button" variant="outline" disabled={loading} onClick={onClose}>

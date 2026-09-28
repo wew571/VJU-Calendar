@@ -25,7 +25,7 @@ export default function SolverProgress({ label = "Đang giải bằng CP-SAT" })
       role="status"
       aria-live="polite"
     >
-      <div className="bg-card w-full max-w-md rounded-xl border p-6 shadow-lg">
+      <div className="glass-dialog w-full max-w-md rounded-2xl border p-6">
         <div className="flex items-center gap-3">
           <Spinner className="text-primary size-6" />
           <div className="min-w-0 flex-1">

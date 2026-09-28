@@ -26,7 +26,7 @@ function DropdownMenuContent({ className, sideOffset = 4, ...props }) {
           // z-260: trên cả Dialog/Drawer (z-250) vì menu có thể bung ra TỪ trong
           // một hộp thoại, và trên dải toàn màn hình của SchedulePage (z-200..220).
           // Xem giải thích tầng xếp chồng ở đầu `dialog.jsx`.
-          'bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 z-260 min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-md',
+          'glass-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 z-260 min-w-[8rem] overflow-hidden rounded-lg border p-1',
           className,
         )}
         {...props}

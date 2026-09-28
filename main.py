@@ -109,6 +109,11 @@ def install_missing_dependencies() -> str:
     return npm
 
 
+def build_frontend(npm: str) -> None:
+    print("Đang tạo bản giao diện mới cho Flask...")
+    run([npm, "run", "build"], FRONTEND_DIR)
+
+
 def process_options() -> dict[str, object]:
     if os.name == "nt":
         return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
@@ -140,8 +145,8 @@ def start_services(npm: str) -> int:
     environment["PYTHONIOENCODING"] = "utf-8"
 
     print("\nĐang khởi chạy backend và frontend...")
-    print("Backend: http://127.0.0.1:5055")
-    print("Frontend: xem địa chỉ Vite hiển thị bên dưới (thường là http://localhost:5173)")
+    print("Flask + giao diện đã build: http://127.0.0.1:5055")
+    print("Vite phát triển: xem địa chỉ hiển thị bên dưới (thường là http://localhost:5173)")
     print("Nhấn Ctrl+C để dừng cả hai.\n")
 
     processes: list[subprocess.Popen[bytes]] = []
@@ -173,6 +178,7 @@ def main() -> int:
         remove_legacy_config()
         ensure_config_files()
         npm = install_missing_dependencies()
+        build_frontend(npm)
         return start_services(npm)
     except (OSError, subprocess.CalledProcessError, RuntimeError) as exc:
         print(f"\nLỗi: {exc}", file=sys.stderr)

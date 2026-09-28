@@ -93,6 +93,18 @@ def test_launcher_filesystem_error_contains_path(tmp_path, monkeypatch):
         launcher.ensure_config_files((path,))
 
 
+def test_launcher_builds_frontend_before_starting_services(monkeypatch):
+    launcher = load_launcher()
+    calls = []
+    monkeypatch.setattr(launcher, "remove_legacy_config", lambda: calls.append("remove"))
+    monkeypatch.setattr(launcher, "ensure_config_files", lambda: calls.append("config"))
+    monkeypatch.setattr(launcher, "install_missing_dependencies", lambda: calls.append("install") or "npm")
+    monkeypatch.setattr(launcher, "build_frontend", lambda npm: calls.append(("build", npm)))
+    monkeypatch.setattr(launcher, "start_services", lambda npm: calls.append(("start", npm)) or 0)
+    assert launcher.main() == 0
+    assert calls == ["remove", "config", "install", ("build", "npm"), ("start", "npm")]
+
+
 @pytest.mark.parametrize("cwd_name", ["webapp", "frontend", "elsewhere"])
 def test_backend_missing_creates_file_at_project_root(tmp_path, cwd_name):
     cwd = tmp_path / cwd_name
