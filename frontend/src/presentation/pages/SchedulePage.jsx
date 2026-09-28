@@ -321,6 +321,7 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
           // va de chong len hang chu giai.
           ? "bg-background fixed inset-0 z-200 flex flex-col gap-2 overflow-hidden p-3"
           : "space-y-3",
+        "schedule-workspace",
       )}
     >
       {/* Toan man hinh la ban lam viec: bo thanh tien trinh de nhuong cho luoi. */}

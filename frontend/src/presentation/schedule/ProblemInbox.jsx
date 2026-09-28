@@ -114,7 +114,7 @@ function TabButton({ active, onClick, count, tone, children }) {
       aria-pressed={active}
       className={cn(
         "flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
-        active ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground",
+        active ? "glass-segmented-active" : "text-muted-foreground hover:text-foreground",
       )}
     >
       {children}
@@ -210,7 +210,7 @@ export default function ProblemInbox({ inbox, activeId, onPick, onClear, onPlace
         )}
       </div>
 
-      <div className="bg-muted flex items-center gap-1 rounded-lg p-1">
+      <div className="glass-segmented flex items-center gap-1 rounded-lg border p-1">
         <TabButton active={tab === TAB.VAN_DE} onClick={() => setTab(TAB.VAN_DE)} count={vanDeCount} tone="red">
           Vấn đề
         </TabButton>
@@ -307,7 +307,7 @@ export default function ProblemInbox({ inbox, activeId, onPick, onClear, onPlace
 
                           {isPair && it.when && (
                             // So do "hai buoi tranh mot cho" - giu tu man Giai doan 1 cu.
-                            <div className="bg-background space-y-1 rounded-md border p-2">
+                            <div className="schedule-glass-inset space-y-1 rounded-md border p-2">
                               <div className="text-muted-foreground text-[11px]">
                                 {it.when} —{" "}
                                 {it.soDongTrung
@@ -351,7 +351,7 @@ export default function ProblemInbox({ inbox, activeId, onPick, onClear, onPlace
                               duoc tren may khong co chuot. */}
                           {(it.type === PROBLEM_TYPE.DI_LAI
                             || it.type === PROBLEM_TYPE.KHAC_CO_SO) && it.detail && (
-                            <div className="bg-background rounded-md border p-2 text-[11px] leading-relaxed">
+                            <div className="schedule-glass-inset rounded-md border p-2 text-[11px] leading-relaxed">
                               {it.detail}
                             </div>
                           )}

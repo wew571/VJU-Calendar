@@ -212,7 +212,7 @@ export default function ScheduleToolbar({
           </Button>
         )}
         {/* Bo chuyen che do dang segmented - cung ngon ngu voi TabsList. */}
-        <div className="bg-muted inline-flex h-9 items-center rounded-lg p-0.75">
+        <div className="glass-segmented inline-flex h-9 items-center rounded-lg border p-0.75">
           {[
             { key: "grid", label: "Lưới", icon: LayoutGrid },
             { key: "table", label: "Bảng", icon: Rows3 },
@@ -225,7 +225,7 @@ export default function ScheduleToolbar({
               className={cn(
                 "inline-flex h-full items-center gap-1.5 rounded-md px-2.5 text-sm font-medium transition-colors",
                 mode === m.key
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "glass-segmented-active text-foreground"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >

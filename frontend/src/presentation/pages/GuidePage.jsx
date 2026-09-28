@@ -281,12 +281,14 @@ export default function GuidePage() {
               <button
                 key={key}
                 type="button"
+                data-slot="button"
+                data-variant="ghost"
                 onClick={() => setSection(key)}
                 className={cn(
                   'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   section === key
-                    ? 'bg-muted text-foreground font-semibold'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    ? 'glass-nav-active text-foreground font-semibold'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 <Icon className="size-4 shrink-0" />

@@ -42,6 +42,8 @@ export function AppTopbar({ collapsed, onToggleSidebar, role, onChangeRole }) {
         {/* Nút thu gọn (desktop) / mở drawer (mobile) sidebar */}
         <button
           type="button"
+          data-slot="button"
+          data-variant="ghost"
           onClick={onToggleSidebar}
           title={collapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'}
           aria-label={collapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'}

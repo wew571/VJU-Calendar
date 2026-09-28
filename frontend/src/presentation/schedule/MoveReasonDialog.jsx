@@ -65,7 +65,8 @@ export default function MoveReasonDialog({ pending, onConfirm, onCancel }) {
           <Label htmlFor="move-reason">Lý do (bắt buộc)</Label>
           <textarea
             id="move-reason"
-            className="border-input focus-visible:border-ring focus-visible:ring-ring/50 min-h-24 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
+            data-slot="input"
+            className="placeholder:text-muted-foreground min-h-24 w-full rounded-md border px-3 py-2 text-sm transition-[color,background-color,border-color,box-shadow] outline-none"
             placeholder="Vì sao vẫn đặt vào đây?"
             value={reason}
             onChange={(e) => setReason(e.target.value)}

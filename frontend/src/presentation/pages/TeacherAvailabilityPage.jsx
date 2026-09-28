@@ -129,7 +129,7 @@ export default function TeacherAvailabilityPage({ role }) {
           {/* Loc LOAI GV truoc tien - day la bo loc CAP MOT, quyet dinh ca danh
               sach ben duoi va nghia cua cot "Giờ có thể dạy". Dung chung mot
               kieu "segmented" voi tab man "Học phần" de dong bo. */}
-          <div className="bg-muted inline-flex h-9 items-center rounded-lg p-0.75" role="tablist">
+          <div className="glass-segmented inline-flex h-9 items-center rounded-lg border p-0.75" role="tablist">
             {Object.entries(LOAI).map(([key, m]) => (
               <button
                 type="button"
@@ -140,7 +140,7 @@ export default function TeacherAvailabilityPage({ role }) {
                 className={cn(
                   "inline-flex h-full items-center gap-1.5 rounded-md px-2.5 text-sm font-medium capitalize transition-colors",
                   loai === key
-                    ? "bg-background text-foreground shadow-sm"
+                    ? "glass-segmented-active text-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >

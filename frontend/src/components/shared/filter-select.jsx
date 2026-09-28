@@ -68,8 +68,8 @@ export function FilterSelect({
         className="max-h-80 min-w-48 max-w-[calc(100vw-1.5rem)] overflow-y-auto"
       >
         {searchable && (
-          <div className="bg-popover sticky top-0 z-10 p-1.5 pb-1">
-            <div className="border-input flex items-center gap-1.5 rounded-md border px-2">
+          <div className="sticky top-0 z-10 p-1.5 pb-1">
+            <div data-slot="input-shell" className="flex items-center gap-1.5 rounded-md border px-2">
               <Search className="text-muted-foreground size-3.5 shrink-0" />
               <input
                 value={term}
@@ -77,7 +77,7 @@ export function FilterSelect({
                 onKeyDown={(e) => e.stopPropagation()}
                 placeholder="Tìm…"
                 autoFocus
-                className="h-7 w-full bg-transparent text-sm outline-none"
+                className="placeholder:text-muted-foreground h-7 w-full bg-transparent text-sm outline-none"
               />
             </div>
           </div>
