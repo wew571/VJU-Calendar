@@ -11,6 +11,7 @@ config/frontend.json
 fate_full.txt
 real_data_check_report.txt
 real_fate_solve_report.txt
+prompt/*
 
 # Build artifact Python - khong phai source, sinh lai tu .py moi lan chay.
 webapp/__pycache__/
