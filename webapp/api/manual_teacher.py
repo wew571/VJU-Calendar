@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """GIANG VIEN nhap tay: them moi va sua (ke ca khung gio ranh)."""
 
+import copy
+
 from flask import Blueprint, request
 
 from api.common import can_du_lieu, loi, tra_du_lieu
@@ -11,6 +13,7 @@ from domain.luoi import dong_bo_ket_qua
 from domain.sections import id_moi
 from domain.teachers import dem_lai_so_gv, sync_teacher_sections
 from snapshot import save_snapshot
+from state import STATE
 
 bp = Blueprint("manual_teacher", __name__)
 
@@ -128,3 +131,49 @@ def api_manual_generate_availability(data, teacher_id):
     dong_bo_ket_qua(data)
     save_snapshot()
     return tra_du_lieu(data, hocChungSplit=tach, generatedSlotCount=len(slots))
+
+
+@bp.post("/api/manual/teachers/generate-availability")
+@can_du_lieu
+def api_manual_generate_all_availability(data):
+    teacher_ids = sorted(
+        teacher_id for teacher_id, teacher in data["teachers"].items()
+        if not teacher.get("placeholder") and teacher.get("type") in ("GUEST", "RESIDENT")
+    )
+    if not teacher_ids:
+        return loi("Không có giảng viên thật nào để khai giờ rảnh.")
+
+    generated = {
+        teacher_id: generate_teacher_availability(data, teacher_id)
+        for teacher_id in teacher_ids
+    }
+    working_data = copy.deepcopy(data)
+    windows = working_data.setdefault("manual_teacher_windows", {})
+    for teacher_id, slots in generated.items():
+        windows[teacher_id] = slots
+    dem_lai_so_gv(working_data)
+    for teacher_id in teacher_ids:
+        sync_teacher_sections(working_data, teacher_id)
+    tach = tach_nhom_khong_hop_le(working_data)
+
+    previous = {
+        "data": STATE["data"],
+        "guestResult": STATE["guestResult"],
+        "residentResult": STATE["residentResult"],
+    }
+    STATE["data"] = working_data
+    STATE["guestResult"] = copy.deepcopy(previous["guestResult"])
+    STATE["residentResult"] = copy.deepcopy(previous["residentResult"])
+    try:
+        dong_bo_ket_qua(working_data)
+        save_snapshot(raise_on_error=True)
+    except Exception:
+        STATE.update(previous)
+        raise
+
+    return tra_du_lieu(
+        working_data,
+        hocChungSplit=tach,
+        generatedTeacherCount=len(teacher_ids),
+        generatedSlotCount=sum(len(slots) for slots in generated.values()),
+    )

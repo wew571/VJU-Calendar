@@ -25,7 +25,7 @@ export function ListSearch({
 
   return (
     <div className={cn('flex min-w-0 items-center gap-2', className)}>
-      <div className="focus-within:ring-ring/40 bg-background flex h-9 min-w-0 flex-1 items-center rounded-md border focus-within:ring-2">
+      <div data-slot="input-shell" className="flex h-9 min-w-0 flex-1 items-center rounded-md border">
         <Search className="text-muted-foreground mx-2.5 size-4 shrink-0" />
         <input
           value={value}
@@ -36,11 +36,13 @@ export function ListSearch({
           }}
           placeholder={placeholder}
           aria-label={placeholder}
-          className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none"
+          className="placeholder:text-muted-foreground h-9 min-w-0 flex-1 bg-transparent text-sm outline-none"
         />
         {value && (
           <button
             type="button"
+            data-slot="button"
+            data-variant="ghost"
             onClick={clear}
             aria-label="Xoá từ khoá"
             className="text-muted-foreground hover:text-foreground px-2"

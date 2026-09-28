@@ -8,18 +8,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90',
-        destructive:
-          'bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90',
+        default: 'text-primary-foreground',
+        destructive: 'text-destructive-foreground',
         // Nút hành động ngữ nghĩa (chuẩn hoá màu — không dùng className màu rời rạc).
-        success: 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700',
-        warning: 'bg-amber-600 text-white shadow-xs hover:bg-amber-700',
-        outline:
-          'glass-control border border-input hover:bg-accent hover:text-accent-foreground',
-        secondary:
-          'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
+        success: 'text-white',
+        warning: 'text-white',
+        outline: 'text-foreground',
+        secondary: 'text-secondary-foreground',
+        ghost: 'text-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
@@ -41,6 +37,7 @@ function Button({ className, variant, size, asChild = false, ...props }) {
   return (
     <Comp
       data-slot="button"
+      data-variant={variant ?? 'default'}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

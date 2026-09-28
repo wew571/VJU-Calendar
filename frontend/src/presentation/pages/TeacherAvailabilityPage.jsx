@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { GraduationCap, Plus, TriangleAlert, Upload } from "lucide-react";
+import { GraduationCap, Plus, TriangleAlert, Upload, Wand2 } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import TeacherEditDrawer from "../manual/TeacherEditDrawer";
 import ImportLecturersDialog from "../manual/ImportLecturersDialog";
@@ -8,6 +8,14 @@ import { FilterSelect } from "@/components/shared/filter-select";
 import { Notice } from "@/components/shared/notice";
 import { Pill } from "@/components/shared/pill";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -48,7 +56,7 @@ function tongTiet(classes, teacherId) {
 }
 
 export default function TeacherAvailabilityPage({ role }) {
-  const { data, loading } = useAppData();
+  const { data, loading, generateAllTeacherAvailability } = useAppData();
   // Mac dinh THINH GIANG: day la nhom co viec "khai gio" cap thiet hon (Giai
   // doan 1 phu thuoc khung gio ho bao), con co huu Giai doan 2 tu do chon gio.
   const [loai, setLoai] = useState("GUEST");
@@ -56,6 +64,8 @@ export default function TeacherAvailabilityPage({ role }) {
   const [orgFilter, setOrgFilter] = useState("");
   const [drawerId, setDrawerId] = useState(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [generateAllOpen, setGenerateAllOpen] = useState(false);
+  const [generatingAll, setGeneratingAll] = useState(false);
 
   const meta = LOAI[loai];
   const canEdit = role !== "viewer";
@@ -114,6 +124,19 @@ export default function TeacherAvailabilityPage({ role }) {
   const chuaNapDanhSach = all.length > 0 && all.every((t) => t.inLecturerList == null);
   const ngoaiDanhSach = cuaLoai.filter((t) => t.inLecturerList === false);
 
+  const handleGenerateAll = async () => {
+    if (generatingAll) return;
+    setGeneratingAll(true);
+    try {
+      await generateAllTeacherAvailability();
+      setGenerateAllOpen(false);
+    } catch {
+      return;
+    } finally {
+      setGeneratingAll(false);
+    }
+  };
+
   if (!data) {
     return (
       <Notice tone="slate">
@@ -129,7 +152,7 @@ export default function TeacherAvailabilityPage({ role }) {
           {/* Loc LOAI GV truoc tien - day la bo loc CAP MOT, quyet dinh ca danh
               sach ben duoi va nghia cua cot "Giờ có thể dạy". Dung chung mot
               kieu "segmented" voi tab man "Học phần" de dong bo. */}
-          <div className="bg-muted inline-flex h-9 items-center rounded-lg p-0.75" role="tablist">
+          <div className="glass-segmented inline-flex h-9 items-center rounded-lg border p-0.75" role="tablist">
             {Object.entries(LOAI).map(([key, m]) => (
               <button
                 type="button"
@@ -140,7 +163,7 @@ export default function TeacherAvailabilityPage({ role }) {
                 className={cn(
                   "inline-flex h-full items-center gap-1.5 rounded-md px-2.5 text-sm font-medium capitalize transition-colors",
                   loai === key
-                    ? "bg-background text-foreground shadow-sm"
+                    ? "glass-segmented-active text-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -160,6 +183,17 @@ export default function TeacherAvailabilityPage({ role }) {
               placeholder="Tìm tên, email, đơn vị"
               className="w-full sm:w-60"
             />
+            {canEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={loading || generatingAll || all.length === 0}
+                onClick={() => setGenerateAllOpen(true)}
+              >
+                <Wand2 className="size-4" />
+                {generatingAll ? "Đang xử lý…" : "Khai toàn bộ giờ rảnh"}
+              </Button>
+            )}
             <FilterSelect
               label="Mọi đơn vị"
               searchable
@@ -282,6 +316,33 @@ export default function TeacherAvailabilityPage({ role }) {
           Bấm vào một dòng để sửa thông tin, khai giờ có thể dạy hoặc chuyển loại cơ hữu ⇄ thỉnh giảng.
         </div>
       </div>
+
+      <Dialog open={generateAllOpen} onOpenChange={(open) => !generatingAll && setGenerateAllOpen(open)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Khai toàn bộ giờ rảnh?</DialogTitle>
+            <DialogDescription>
+              Hệ thống sẽ sinh lại giờ rảnh cho <strong>{all.length} giảng viên</strong> thuộc cả hai
+              loại cơ hữu và thỉnh giảng, không phụ thuộc tab, từ khóa tìm kiếm hay bộ lọc đơn vị.
+              Toàn bộ giờ rảnh đã khai sẽ bị thay bằng kết quả mới. Giờ đang dạy và lịch đã chốt
+              được giữ nguyên.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={generatingAll}
+              onClick={() => setGenerateAllOpen(false)}
+            >
+              Hủy
+            </Button>
+            <Button type="button" disabled={generatingAll} onClick={handleGenerateAll}>
+              {generatingAll ? "Đang xử lý…" : "Xác nhận"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {drawerId != null && (
         <TeacherEditDrawer

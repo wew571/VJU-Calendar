@@ -25,21 +25,30 @@ KHOA_INT = ("teachers", "sections", "submissions", "courses", "program_faculty",
              "coordinator_names", "program_names_reverse", "manual_teacher_windows")
 
 
-def save_snapshot():
+def save_snapshot(raise_on_error=False):
     """Ghi STATE['data']/['extra']/['co_huu'] xuong file JSON sau moi thay doi.
 
     Loi ghi file (vd het dung luong) khong duoc chan luong nhap lieu cua nguoi
     dung - chi bo qua, demo local 1 nguoi dung."""
     if STATE["data"] is None:
-        return
+        return False
     snapshot = {**STATE["data"],
                 "forced_conflict_teacher_ids": sorted(STATE["data"].get("forced_conflict_teacher_ids") or [])}
+    temp_path = f"{SNAPSHOT_PATH}.tmp"
     try:
-        with open(SNAPSHOT_PATH, "w", encoding="utf-8") as f:
+        with open(temp_path, "w", encoding="utf-8") as f:
             json.dump({"data": snapshot, "extra": STATE.get("extra"),
                        "coHuu": STATE.get("co_huu")}, f, ensure_ascii=False)
+        os.replace(temp_path, SNAPSHOT_PATH)
+        return True
     except OSError:
-        pass
+        try:
+            os.remove(temp_path)
+        except OSError:
+            pass
+        if raise_on_error:
+            raise
+        return False
 
 
 def load_snapshot():

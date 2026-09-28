@@ -141,7 +141,7 @@ export default function SubmissionsPage({ role }) {
         </div>
       </div>
 
-      <div className="bg-muted inline-flex h-9 items-center rounded-lg p-0.75" role="tablist">
+      <div className="glass-segmented inline-flex h-9 items-center rounded-lg border p-0.75" role="tablist">
         {tabs.map((t) => (
           <button
             type="button"
@@ -152,7 +152,7 @@ export default function SubmissionsPage({ role }) {
             className={cn(
               "inline-flex h-full items-center gap-1.5 rounded-md px-2.5 text-sm font-medium transition-colors",
               activeView === t.key
-                ? "bg-background text-foreground shadow-sm"
+                ? "glass-segmented-active text-foreground"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >

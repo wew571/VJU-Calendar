@@ -73,19 +73,19 @@ def test_ngay_trong_chon_khung_sang_theo_dung_trong_so():
     """Ngay hoan toan trong: stage0 = 100% (luon thanh cong), r=44 (<=45) phai
     roi vao khung sang (thu tu trong so 45/45/10, morning dung dau)."""
     rng = FakeRng(randint_values=[1], uniform_values=[44])
-    out = _generate_day(0, teaching_slots=set(), config=CONFIG, rng=rng)
+    out = _generate_day(0, teaching_slots=set(), config=_config_with_max_blocks(1), rng=rng)
     assert sorted(out) == sorted(_slots(0, MORNING))
 
 
 def test_ngay_trong_chon_khung_chieu_theo_dung_trong_so():
     rng = FakeRng(randint_values=[1], uniform_values=[70])  # 45 < 70 <= 90 -> afternoon
-    out = _generate_day(0, teaching_slots=set(), config=CONFIG, rng=rng)
+    out = _generate_day(0, teaching_slots=set(), config=_config_with_max_blocks(1), rng=rng)
     assert sorted(out) == sorted(_slots(0, AFTERNOON))
 
 
 def test_ngay_trong_chon_khung_toi_theo_dung_trong_so():
     rng = FakeRng(randint_values=[1], uniform_values=[95])  # > 90 -> evening
-    out = _generate_day(0, teaching_slots=set(), config=CONFIG, rng=rng)
+    out = _generate_day(0, teaching_slots=set(), config=_config_with_max_blocks(1), rng=rng)
     assert sorted(out) == sorted(_slots(0, EVENING))
 
 
@@ -93,7 +93,7 @@ def test_mac_dinh_max_1_khung_moi_ngay_dung_sau_khung_dau():
     """maxGeneratedBlocksPerDay=1 (mac dinh) -> dung ngay sau khung dau, du con
     randint/uniform con lai trong hang doi cung khong bi dung toi."""
     rng = FakeRng(randint_values=[1, 999], uniform_values=[44, 999])
-    out = _generate_day(0, teaching_slots=set(), config=CONFIG, rng=rng)
+    out = _generate_day(0, teaching_slots=set(), config=_config_with_max_blocks(1), rng=rng)
     assert sorted(out) == sorted(_slots(0, MORNING))
     assert rng._randint == [999] and rng._uniform == [999]  # con du, khong bi tieu
 
@@ -111,21 +111,21 @@ def test_phep_thu_that_bai_dung_ngay_khong_sinh_gi():
 def test_co_dung_mot_khung_dang_day_bat_dau_tu_35_phan_tram():
     teaching = set(_slots(0, MORNING))
     rng = FakeRng(randint_values=[35], uniform_values=[95])  # thanh cong (<=35), roi ra toi
-    out = _generate_day(0, teaching_slots=teaching, config=CONFIG, rng=rng)
+    out = _generate_day(0, teaching_slots=teaching, config=_config_with_max_blocks(1), rng=rng)
     assert sorted(out) == sorted(_slots(0, EVENING))
 
 
 def test_co_hai_khung_dang_day_bat_dau_tu_10_phan_tram():
     teaching = set(_slots(0, MORNING)) | set(_slots(0, AFTERNOON))
     rng = FakeRng(randint_values=[10], uniform_values=[0])  # thanh cong (<=10) -> chi con evening hop le
-    out = _generate_day(0, teaching_slots=teaching, config=CONFIG, rng=rng)
+    out = _generate_day(0, teaching_slots=teaching, config=_config_with_max_blocks(1), rng=rng)
     assert sorted(out) == sorted(_slots(0, EVENING))
 
 
 def test_co_ba_khung_dang_day_khong_sinh_them():
     teaching = set(_slots(0, MORNING)) | set(_slots(0, AFTERNOON)) | set(_slots(0, EVENING))
     rng = FakeRng(randint_values=[1])  # chance stage3OrMore = 0% -> luon that bai (randint>=1>0)
-    out = _generate_day(0, teaching_slots=teaching, config=CONFIG, rng=rng)
+    out = _generate_day(0, teaching_slots=teaching, config=_config_with_max_blocks(1), rng=rng)
     assert out == []
 
 
@@ -136,7 +136,7 @@ def test_sang_bi_chiem_mot_phan_van_la_ung_vien_voi_phan_con_trong():
     day0_p2_p3 = [0 * SLOTS_PER_DAY + 1, 0 * SLOTS_PER_DAY + 2]  # tiet 2,3 (0-indexed period 1,2)
     teaching = set(day0_p2_p3)
     rng = FakeRng(randint_values=[35], uniform_values=[10])  # thanh cong, r=10 -> con nam trong nhom daytime, roi vao "morning" (dau danh sach)
-    out = _generate_day(0, teaching_slots=teaching, config=CONFIG, rng=rng)
+    out = _generate_day(0, teaching_slots=teaching, config=_config_with_max_blocks(1), rng=rng)
     tiet_4_5 = [0 * SLOTS_PER_DAY + 3, 0 * SLOTS_PER_DAY + 4]
     assert sorted(out) == sorted(tiet_4_5)
 
@@ -146,7 +146,7 @@ def test_sang_da_kin_thi_chi_con_chieu_va_toi_theo_90_10():
     vien, chuan hoa lai trong so: chieu con lai nhan het 90%, toi 10%."""
     teaching = set(_slots(0, MORNING))
     rng = FakeRng(randint_values=[35], uniform_values=[50])  # <=90 (voi trong so da chuan hoa) -> afternoon
-    out = _generate_day(0, teaching_slots=teaching, config=CONFIG, rng=rng)
+    out = _generate_day(0, teaching_slots=teaching, config=_config_with_max_blocks(1), rng=rng)
     assert sorted(out) == sorted(_slots(0, AFTERNOON))
 
 
@@ -225,7 +225,7 @@ def test_time_assumed_section_khong_tinh_la_dang_day():
     data = make_data("GUEST")
     add_section(data, 1, original_slot=1, duration=2, time_assumed=True)
     rng = FakeRng(randint_values=[1] * 10, uniform_values=[44] * 10)
-    out = _generate_day(0, teaching_slots=set(), config=CONFIG, rng=rng)
+    out = _generate_day(0, teaching_slots=set(), config=_config_with_max_blocks(1), rng=rng)
     # time_assumed khong duoc dua vao teaching_slots (test nay chi khang dinh ham
     # _generate_day khong lien quan gi field do - kiem tra qua generate_teacher_availability):
     slots = generate_teacher_availability(data, 1, rng=random.Random(2))

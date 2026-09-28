@@ -65,6 +65,8 @@ function PinnedNavItem({ item, page, collapsed, onNavigate }) {
   return (
     <button
       type="button"
+      data-slot="button"
+      data-variant="ghost"
       onClick={() => onNavigate(item.key, null)}
       title={collapsed ? item.label : undefined}
       className={cn(
@@ -98,6 +100,8 @@ function NavGroupItem({ group, page, sub, collapsed, onNavigate, onExpand }) {
     return (
       <button
         type="button"
+        data-slot="button"
+        data-variant="ghost"
         title={group.label}
         onClick={() => {
           onExpand();
@@ -121,6 +125,8 @@ function NavGroupItem({ group, page, sub, collapsed, onNavigate, onExpand }) {
     return (
       <button
         type="button"
+        data-slot="button"
+        data-variant="ghost"
         onClick={() => onNavigate(group.key, null)}
         className={cn(
           'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
@@ -143,6 +149,8 @@ function NavGroupItem({ group, page, sub, collapsed, onNavigate, onExpand }) {
           thu gon ben tren da danh dau, nhanh nay truoc do thi khong. */}
       <button
         type="button"
+        data-slot="button"
+        data-variant="ghost"
         onClick={() => setOpen((o) => !o)}
         className={cn(
           'text-foreground hover:bg-muted flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
@@ -172,6 +180,8 @@ function NavGroupItem({ group, page, sub, collapsed, onNavigate, onExpand }) {
               <button
                 key={child.key}
                 type="button"
+                data-slot="button"
+                data-variant="ghost"
                 onClick={() => onNavigate(group.key, child.key)}
                 className={cn(
                   'flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] transition-colors',

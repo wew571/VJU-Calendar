@@ -247,7 +247,9 @@ export default function ManualEntryPage({ role }) {
           {tienDoChot.tong > 0 && (
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs"
+              data-slot="button"
+              data-variant="outline"
+              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs"
               title={`${tienDoChot.roi} lớp đã chốt lịch, còn ${tienDoChot.con} chưa chốt. Bấm để lọc.`}
               onClick={() => setChotFilter(chotFilter === "chua" ? "" : "chua")}
             >
