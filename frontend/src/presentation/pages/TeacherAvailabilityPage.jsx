@@ -348,7 +348,6 @@ export default function TeacherAvailabilityPage({ role }) {
         <TeacherEditDrawer
           data={data}
           teacher={drawerTeacher}
-          classes={lopTheoGv.get(drawerId) || []}
           onClose={() => setDrawerId(null)}
         />
       )}

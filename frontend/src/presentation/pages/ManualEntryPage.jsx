@@ -11,6 +11,7 @@ import { FilterSelect } from "@/components/shared/filter-select";
 import { ListSearch } from "@/components/shared/list-search";
 import { Notice } from "@/components/shared/notice";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import SectionTable, { STATUS_META } from "../manual/SectionTable";
 
 const PAGE_STEP = 25;
@@ -57,6 +58,7 @@ export default function ManualEntryPage({ role }) {
   const [chotFilter, setChotFilter] = useState("");
   // Lop hoc phan dang mo hop thoai chot (null = dong).
   const [chotSection, setChotSection] = useState(null);
+  const [boChotSection, setBoChotSection] = useState(null);
   const [limit, setLimit] = useState(PAGE_STEP);
   // { type: "section"|"teacher"|"course", id: number|"new" } | null (dong) - moi
   // domain co 1 form rieng (SectionEditDrawer/TeacherEditDrawer/CourseEditDrawer),
@@ -121,14 +123,19 @@ export default function ManualEntryPage({ role }) {
     return { tong, roi, con: tong - roi };
   }, [classes]);
 
-  const handleBoChot = (c) => async (e) => {
+  const handleBoChot = (c) => (e) => {
     e.stopPropagation();
-    const ok = window.confirm(
-      `Bỏ chốt lớp "${c.classCode || `#${c.sectionId}`}" của học phần "${c.courseName}"?\n\n` +
-      `Giờ của riêng lớp này sẽ trả về đúng trạng thái trước khi chốt.`,
-    );
-    if (!ok) return;
-    await doBoChotSection(c.sectionId);
+    setBoChotSection(c);
+  };
+
+  const confirmBoChot = async () => {
+    if (!boChotSection) return;
+    try {
+      await doBoChotSection(boChotSection.sectionId);
+      setBoChotSection(null);
+    } catch {
+      return;
+    }
   };
 
   const handleStart = async () => {
@@ -464,6 +471,27 @@ export default function ManualEntryPage({ role }) {
         sectionIdsDangHien={visible.map((c) => c.sectionId)}
         tongSoLop={classes.length}
       />
+      {boChotSection && (
+        <Dialog open onOpenChange={(open) => !open && !loading && setBoChotSection(null)}>
+          <DialogContent className="manual-edit-glass">
+            <DialogHeader>
+              <DialogTitle>Bỏ chốt lớp {boChotSection.classCode || `#${boChotSection.sectionId}`}?</DialogTitle>
+              <DialogDescription>
+                Giờ của lớp đang bị khóa để giữ đúng lịch đã xác nhận. Bỏ chốt sẽ trả giờ về trạng thái
+                trước khi chốt; các lớp khác không bị thay đổi.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="outline" disabled={loading} onClick={() => setBoChotSection(null)}>
+                Hủy
+              </Button>
+              <Button type="button" disabled={loading} onClick={confirmBoChot}>
+                {loading ? "Đang bỏ chốt…" : "Xác nhận bỏ chốt"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       {chotSection && (
         <ChotSectionDialog
           open

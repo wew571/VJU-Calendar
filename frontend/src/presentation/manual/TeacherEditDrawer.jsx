@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { TriangleAlert } from "lucide-react";
+import { Maximize2, Minimize2, TriangleAlert, X } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import SubmissionWindowGrid from "../submissions/SubmissionWindowGrid";
 import { FormRow } from "@/components/shared/form-row";
 import { Notice } from "@/components/shared/notice";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerBody, DrawerSection } from "@/components/ui/drawer";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DrawerBody, DrawerSection } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 
@@ -31,12 +32,13 @@ function formFromTeacher(t) {
 // co id de gan gio ranh (phai tao xong GV truoc), va SubmissionWindowGrid von
 // da co san nut luu rieng, tai dung nguyen khong sua de khong dong den 1
 // component dang dung o man "Khung gio da bao".
-export default function TeacherEditDrawer({ data, teacher, classes = [], onClose }) {
+export default function TeacherEditDrawer({ data, teacher, onClose }) {
   const { loading, addManualTeacher, updateManualTeacher, generateTeacherAvailability } = useAppData();
   const [teacherId, setTeacherId] = useState(teacher?.id ?? null);
   const [form, setForm] = useState(teacher ? formFromTeacher(teacher) : emptyForm());
   const [typeTouched, setTypeTouched] = useState(Boolean(teacher));
   const [error, setError] = useState(null);
+  const [expanded, setExpanded] = useState(false);
   const teacherKey = teacher?.id ?? "new";
 
   useEffect(() => {
@@ -55,6 +57,13 @@ export default function TeacherEditDrawer({ data, teacher, classes = [], onClose
   // Sau khi vua tao xong trong phien nay, doc lai ban ghi moi nhat tu
   // data.teachers de co availabilitySlots hien tai (form nay khong tu giu).
   const liveTeacher = teacherId != null ? (data?.teachers || []).find((t) => t.id === teacherId) : null;
+  const teacherClasses = teacherId == null ? [] : (data?.classes || []).filter(
+    (c) => (c.teacherIds ?? [c.teacherId]).includes(teacherId),
+  );
+  const weeklyPeriods = teacherClasses.reduce(
+    (total, c) => total + (c.periodStart == null || c.periodEnd == null ? 0 : c.periodEnd - c.periodStart + 1),
+    0,
+  );
 
   const setField = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -104,16 +113,38 @@ export default function TeacherEditDrawer({ data, teacher, classes = [], onClose
   };
 
   return (
-    <Drawer
-      open
-      onOpenChange={(o) => !o && onClose()}
-      title={teacherId != null ? `Sửa giảng viên #${teacherId}` : "Thêm giảng viên mới"}
-      eyebrow="Chuẩn bị dữ liệu / Giảng viên"
-      description="Sửa ở đây áp dụng cho mọi lớp của giảng viên này."
-      className="manual-edit-glass edit-drawer-glass"
-      overlayClassName="bg-slate-950/20"
-    >
-      <DrawerBody>
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        className={`teacher-edit-dialog manual-edit-glass flex max-w-none flex-col gap-0 overflow-hidden p-0 ${expanded
+          ? "h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)]"
+          : "h-[min(600px,calc(100dvh-2rem))] w-[min(1000px,calc(100vw-2rem))]"}`}
+      >
+        <DialogHeader className="flex shrink-0 flex-row items-center justify-between gap-3 border-b px-5 py-3">
+          <div className="min-w-0">
+            <DialogTitle className="text-xl tracking-tight">
+              {teacherId != null ? `Sửa giảng viên #${teacherId}` : "Thêm giảng viên mới"}
+            </DialogTitle>
+            <DialogDescription className="sr-only">Chỉnh sửa thông tin giảng viên.</DialogDescription>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring/50 inline-flex size-8 items-center justify-center rounded-md transition-colors focus-visible:ring-[3px] focus-visible:outline-none"
+              aria-label={expanded ? "Thu nhỏ popup" : "Mở rộng popup"}
+              aria-pressed={expanded}
+              onClick={() => setExpanded((value) => !value)}
+            >
+              {expanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+            </button>
+            <DialogClose className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring/50 inline-flex size-8 items-center justify-center rounded-md transition-colors focus-visible:ring-[3px] focus-visible:outline-none">
+              <X className="size-4" />
+              <span className="sr-only">Đóng</span>
+            </DialogClose>
+          </div>
+        </DialogHeader>
+        <DrawerBody className={`grid grid-cols-1 !space-y-0 !overflow-y-auto !p-0 ${teacherId != null ? "min-[900px]:grid-cols-2 min-[900px]:!overflow-hidden" : ""}`}>
+          <div className="min-h-0 min-w-0 space-y-5 px-5 py-4 min-[900px]:overflow-y-auto">
         {error && (
           <Notice tone="red" icon={TriangleAlert}>
             {error}
@@ -214,6 +245,16 @@ export default function TeacherEditDrawer({ data, teacher, classes = [], onClose
                 />
               )}
             </FormRow>
+            {teacherId != null && (
+              <>
+                <FormRow label="Lớp kỳ này">
+                  {(id) => <Input id={id} value={teacherClasses.length} readOnly />}
+                </FormRow>
+                <FormRow label="Số Tiết trong tuần">
+                  {(id) => <Input id={id} value={weeklyPeriods || "—"} readOnly />}
+                </FormRow>
+              </>
+            )}
 
             {/* Nut nam TRONG muc thong tin chu khong o chan ngan keo: ngan keo
                 nay co HAI viec luu doc lap (thong tin GV va gio co the day),
@@ -228,84 +269,32 @@ export default function TeacherEditDrawer({ data, teacher, classes = [], onClose
             </div>
           </DrawerSection>
         </form>
-
-        {/* Khai gio cho MOI giang vien (ca co huu) va co TAC DUNG THAT: da khai
-            thi chi xep trong khung do. Luoi con hien them cac o nguoi nay DANG
-            DAY (suy tu lop da chot gio) bang mau nhat - de nap file xong nhin ra
-            ngay "nguoi nay dang day T5 tiet 3-5", chu khong phai luoi trong tron.
-            Hai loai o KHONG tron lam mot: xem chu thich o SubmissionWindowGrid. */}
-        {teacherId != null && (
-          <DrawerSection
-            title="Giờ có thể dạy"
-            hint="Tick MỌI tiết giảng viên rảnh trong tuần (không chỉ tiết bắt đầu). ĐÃ KHAI = giới hạn cứng: các lớp chưa có giờ của giảng viên này chỉ được xếp trong khung đã tick. Chưa khai gì thì hệ thống tự do xếp cả tuần. Ô xanh nhạt là giờ đang dạy theo lớp đã chốt — chỉ để tham khảo, không phải khung đã khai."
-          >
-            {(liveTeacher?.teachingSlots || []).length > 0 && (
-              <p className="text-muted-foreground text-xs">
-                Đang dạy {liveTeacher.teachingSlots.length} tiết theo các lớp đã chốt giờ.{" "}
-                <button
-                  type="button"
-                  className="font-medium underline"
-                  disabled={loading}
-                  onClick={() => handleSaveAvailability(
-                    [...new Set([...(liveTeacher.availabilitySlots || []), ...liveTeacher.teachingSlots])],
-                  )}
-                >
-                  Lấy các giờ đang dạy làm khung đã khai
-                </button>{" "}
-                — chỉ bấm nếu giảng viên CHỈ dạy được đúng những giờ đó.
-              </p>
-            )}
-            <SubmissionWindowGrid
-              numDays={numDays} slotsPerDay={slotsPerDay}
-              initialSlots={liveTeacher?.availabilitySlots || []}
-              teachingSlots={liveTeacher?.teachingSlots || []}
-              saving={loading}
-              allowEmpty
-              gridClassName="liquid-data-grid"
-              saveLabel={(n) => (n === 0 ? "Xóa hết giờ rảnh" : `Lưu ${n} khung giờ`)}
-              onSave={handleSaveAvailability}
-              onGenerateAvailability={handleGenerateAvailability}
-            />
-          </DrawerSection>
-        )}
-
-        {/* CAC LOP KY NAY - de sua thong tin GV ma van thay ngay ho dang day gi,
-            khong phai mo bang lop o man khac roi loc tay. */}
-        {teacherId != null && classes.length > 0 && (
-          <DrawerSection
-            title={`Lớp kỳ này (${classes.length})`}
-            hint="Các lớp giảng viên này đang dạy, kể cả lớp đồng giảng với người khác."
-          >
-            <div className="max-h-64 space-y-1 overflow-y-auto text-xs">
-              {classes.map((c) => (
-                <div key={c.sectionId} className="bg-muted/40 rounded-md border px-2 py-1.5">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="min-w-0 truncate font-medium">
-                      {c.classCode || `#${c.sectionId}`} · {c.courseName}
-                    </span>
-                    <span className="text-muted-foreground shrink-0">
-                      {c.day == null || c.periodStart == null
-                        ? "chưa có giờ"
-                        : `${c.day === 6 ? "CN" : `T${c.day + 2}`} tiết ${c.periodStart}-${c.periodEnd}`}
-                    </span>
-                  </div>
-                  {(c.teacherIds ?? []).length > 1 && (
-                    <div className="text-muted-foreground">
-                      Đồng giảng: {(c.teachers ?? []).map((t) => t.name).join(", ")}
-                    </div>
-                  )}
-                </div>
-              ))}
+          </div>
+          {teacherId != null && (
+            <div className="min-h-0 min-w-0 border-white/70 px-5 py-4 min-[900px]:overflow-y-auto min-[900px]:border-l">
+              {/* Khai gio cho MOI giang vien (ca co huu) va co TAC DUNG THAT: da khai
+                  thi chi xep trong khung do. Luoi con hien them cac o nguoi nay DANG
+                  DAY (suy tu lop da chot gio) bang mau nhat - de nap file xong nhin ra
+                  ngay "nguoi nay dang day T5 tiet 3-5", chu khong phai luoi trong tron.
+                  Hai loai o KHONG tron lam mot: xem chu thich o SubmissionWindowGrid. */}
+              <DrawerSection title="Giờ có thể dạy">
+                <SubmissionWindowGrid
+                  numDays={numDays} slotsPerDay={slotsPerDay}
+                  initialSlots={liveTeacher?.availabilitySlots || []}
+                  teachingSlots={liveTeacher?.teachingSlots || []}
+                  saving={loading}
+                  allowEmpty
+                  gridClassName="liquid-data-grid"
+                  showInstructions={false}
+                  saveLabel={(n) => (n === 0 ? "Xóa hết giờ rảnh" : `Lưu ${n} khung giờ`)}
+                  onSave={handleSaveAvailability}
+                  onGenerateAvailability={handleGenerateAvailability}
+                />
+              </DrawerSection>
             </div>
-          </DrawerSection>
-        )}
-
-        {teacherId == null && (
-          <p className="text-muted-foreground text-xs">
-            Tạo giảng viên xong sẽ hiện thêm mục khai giờ có thể dạy.
-          </p>
-        )}
-      </DrawerBody>
-    </Drawer>
+          )}
+        </DrawerBody>
+      </DialogContent>
+    </Dialog>
   );
 }

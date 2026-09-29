@@ -56,8 +56,26 @@ def api_manual_update_section(data, section_id):
     if section_id not in data["sections"]:
         return loi(f"Không tìm thấy lớp id={section_id}.")
     body = request.get_json(force=True)
+    current = data["sections"][section_id]
+    try:
+        raw_teacher_ids = body.get("teacherIds")
+        if raw_teacher_ids is None:
+            raw_teacher_ids = ([body["teacherId"]] if "teacherId" in body else []) + list(body.get("coTeacherIds") or [])
+        incoming_teacher_ids = [int(t) for t in raw_teacher_ids]
+        unchanged_legacy_time = (
+            not body.get("autoSchedule")
+            and int(body.get("day")) == current.get("day")
+            and int(body.get("periodStart")) == current.get("period_start")
+            and int(body.get("periodEnd")) == current.get("period_end")
+            and int(body.get("duration")) == current.get("duration")
+            and incoming_teacher_ids == (current.get("teacher_ids") or [current.get("teacher_id")])
+        )
+    except (TypeError, ValueError):
+        unchanged_legacy_time = False
 
-    fields, teacher, duration, time_info, err = validate_section_body(data, body)
+    fields, teacher, duration, time_info, err = validate_section_body(
+        data, body, enforce_day_cap=not unchanged_legacy_time,
+    )
     if err:
         return loi(err)
 

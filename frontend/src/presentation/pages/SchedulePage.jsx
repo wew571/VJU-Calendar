@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Map as MapIcon, TriangleAlert, X } from "lucide-react";
+import { ChevronDown, Map as MapIcon, TriangleAlert, X } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import { buildProblemInbox, filterProblemInbox } from "../../adapters/problemInbox";
 import { buildScheduleView, scopeLabel, SCOPE, DEFAULT_FILTER } from "../../adapters/scheduleView";
@@ -63,6 +63,7 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
   const [fullscreen, setFullscreen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const [setupOpen, setSetupOpen] = useState(false);
   const canEdit = role !== "viewer";
 
   useEffect(() => {
@@ -175,6 +176,12 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
     }),
     [data, guestResult, residentResult, gd2HetHieuLuc, phamVi, solveGuest, solveResident],
   );
+  const completedSteps = steps.filter((step) => step.state === "done").length;
+  const setupWarning = steps.some((step) => step.hint);
+
+  useEffect(() => {
+    if (data && (completedSteps < steps.length || setupWarning)) setSetupOpen(true);
+  }, [data, completedSteps, setupWarning, steps.length]);
 
   if (!data) {
     return (
@@ -325,99 +332,127 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
       )}
     >
       {/* Toan man hinh la ban lam viec: bo thanh tien trinh de nhuong cho luoi. */}
-      {/* "Xep cho ai" doc TRUOC "bam gi" - nen khoi chon pham vi nam tren thanh
-          tien trinh, va ba buoc ben duoi deu dem theo dung pham vi nay. */}
-      <div className={cn(!fullscreen && "grid items-stretch gap-3 xl:grid-cols-[minmax(0,1fr)_330px]")}>
-        <div className="min-w-0 space-y-3">
-          {!fullscreen && canEdit && (
-            <PhamViXepPanel
-              data={data}
-              phamVi={phamVi}
-              onChange={setPhamVi}
-              disabled={loading}
-              // Con so cua LAN GIAI gan nhat (backend gui kem) - nhung canh bao chi
-              // biet duoc sau khi giai, khong tinh truoc tu du lieu duoc.
-              ketQuaPhamVi={residentResult?.phamVi ?? guestResult?.phamVi ?? null}
-            />
-          )}
-          {!fullscreen && <WorkflowStrip steps={steps} canEdit={canEdit} loading={loading} />}
-
-          {error && (
-            <Notice tone="red" icon={TriangleAlert}>
-              {error}
-            </Notice>
-          )}
-
-          <ScheduleToolbar f={f} set={set} view={view} mode={mode} phamVi={phamVi} />
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch">
-            <div className="flex min-w-0 flex-col justify-between gap-2 px-0.5 lg:w-72 lg:shrink-0">
-              <div className="text-muted-foreground flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs">
-                <strong className="text-foreground text-[13px]">{scopeLabel(view, data)}</strong>
-                <span>
-                  {view.lessons.length}/{view.totalLessons} buổi đang hiện
-                  {view.problemCount > 0 && ` · ${view.problemCount} buổi có vấn đề`}
+      <div className="flex min-w-0 flex-col gap-2.5 lg:flex-row lg:items-stretch">
+        <div className="glass-panel flex min-w-0 flex-1 flex-col justify-center gap-2 rounded-xl border px-3.5 py-2.5">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-muted-foreground text-[11px] font-semibold tracking-wide uppercase">Đang xem</span>
+            <strong className="text-foreground text-base">{scopeLabel(view, data)}</strong>
+            <span className="text-muted-foreground text-sm tabular-nums">
+              {view.lessons.length}/{view.totalLessons} buổi
+            </span>
+            {view.problemCount > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-700">
+                <TriangleAlert className="size-3.5" aria-hidden="true" />
+                {view.problemCount} buổi có vấn đề
+              </span>
+            )}
+          </div>
+          {mode === "grid" && view.totalLessons > 0 && (f.colorBy === "status" ? (
+            <div className="text-muted-foreground flex flex-wrap gap-x-3.5 gap-y-1 text-[11.5px]">
+              {Object.entries(STATUS_COLORS).map(([k, c]) => (
+                <span key={k} className="inline-flex items-center gap-1.5">
+                  <span
+                    className="size-2.5 rounded-sm"
+                    style={{ background: c.border }}
+                    aria-hidden="true"
+                  />
+                  {k}
                 </span>
-              </div>
-              {mode === "grid" && view.totalLessons > 0 && (f.colorBy === "status" ? (
-                <div className="text-muted-foreground flex flex-wrap gap-x-3.5 gap-y-1 text-[11.5px]">
-                  {Object.entries(STATUS_COLORS).map(([k, c]) => (
-                    <span key={k} className="inline-flex items-center gap-1.5">
-                      <span
-                        className="size-2.5 rounded-sm"
-                        style={{ background: c.border }}
-                        aria-hidden="true"
-                      />
-                      {k}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                // Ba lop mau con lai (Chuong trinh/Loai GV/Khoa) dung getColor()
-                // hash theo ten nhom - khong co chu giai thi mau vo nghia. Cap 8
-                // nhom, phan du gap vao "+n khac" (khong ve o).
-                legend?.length > 0 && (
-                  <div className="text-muted-foreground flex flex-wrap gap-x-3.5 gap-y-1 text-[11.5px]">
-                    {legend.map((it) => (
-                      <span key={it.key} className="inline-flex items-center gap-1.5">
-                        {it.color && (
-                          <span
-                            className="size-2.5 rounded-sm"
-                            style={{ background: it.color.border }}
-                            aria-hidden="true"
-                          />
-                        )}
-                        {it.key}
-                      </span>
-                    ))}
-                  </div>
-                )
               ))}
             </div>
-            <ScheduleActions
-              data={data}
-              view={view}
-              canEdit={canEdit}
-              loading={loading}
-              guestResult={guestResult}
-              residentResult={residentResult}
-              mode={mode}
-              onModeChange={setMode}
-              fullscreen={fullscreen}
-              onFullscreenChange={setFullscreen}
-              onSaveSchedule={doSaveSchedule}
-              onHoanTac={doHoanTac}
-              onXuatLuoi={handleXuatLuoi}
-            />
-          </div>
+          ) : (
+            // Ba lop mau con lai (Chuong trinh/Loai GV/Khoa) dung getColor()
+            // hash theo ten nhom - khong co chu giai thi mau vo nghia. Cap 8
+            // nhom, phan du gap vao "+n khac" (khong ve o).
+            legend?.length > 0 && (
+              <div className="text-muted-foreground flex flex-wrap gap-x-3.5 gap-y-1 text-[11.5px]">
+                {legend.map((it) => (
+                  <span key={it.key} className="inline-flex items-center gap-1.5">
+                    {it.color && (
+                      <span
+                        className="size-2.5 rounded-sm"
+                        style={{ background: it.color.border }}
+                        aria-hidden="true"
+                      />
+                    )}
+                    {it.key}
+                  </span>
+                ))}
+              </div>
+            )
+          ))}
         </div>
-        {!fullscreen && (
-          <div className="min-w-0 xl:relative xl:min-h-0">
-            <div className="xl:absolute xl:inset-0 xl:[&>aside]:static xl:[&>aside]:h-full xl:[&>aside]:max-h-none">
-              {inboxBlock}
-            </div>
-          </div>
-        )}
+        <ScheduleActions
+          data={data}
+          view={view}
+          canEdit={canEdit}
+          loading={loading}
+          guestResult={guestResult}
+          residentResult={residentResult}
+          mode={mode}
+          onModeChange={setMode}
+          fullscreen={fullscreen}
+          onFullscreenChange={setFullscreen}
+          onSaveSchedule={doSaveSchedule}
+          onHoanTac={doHoanTac}
+          onXuatLuoi={handleXuatLuoi}
+        />
       </div>
+
+      <ScheduleToolbar f={f} set={set} view={view} mode={mode} phamVi={phamVi} />
+
+      {/* "Xep cho ai" doc TRUOC "bam gi" - nen khoi chon pham vi nam tren thanh
+          tien trinh, va ba buoc ben duoi deu dem theo dung pham vi nay. */}
+      {!fullscreen && canEdit && (
+        <section className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setSetupOpen((open) => !open)}
+            aria-expanded={setupOpen}
+            className={cn(
+              "glass-panel flex w-full items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors",
+              setupWarning && "border-amber-500/60",
+            )}
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">Xếp lịch</span>
+              <span className="text-muted-foreground block text-xs">
+                {completedSteps}/{steps.length} bước hoàn tất · Mở để chọn phạm vi và chạy xếp lịch
+              </span>
+            </span>
+            {setupWarning && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700">
+                <TriangleAlert className="size-3.5" aria-hidden="true" />
+                Cần chú ý
+              </span>
+            )}
+            <ChevronDown
+              className={cn("text-muted-foreground size-4 shrink-0 transition-transform", setupOpen && "rotate-180")}
+              aria-hidden="true"
+            />
+          </button>
+          {setupOpen && (
+            <div className="space-y-2">
+              <PhamViXepPanel
+                data={data}
+                phamVi={phamVi}
+                onChange={setPhamVi}
+                disabled={loading}
+                // Con so cua LAN GIAI gan nhat (backend gui kem) - nhung canh bao chi
+                // biet duoc sau khi giai, khong tinh truoc tu du lieu duoc.
+                ketQuaPhamVi={residentResult?.phamVi ?? guestResult?.phamVi ?? null}
+              />
+              <WorkflowStrip steps={steps} canEdit={canEdit} loading={loading} />
+            </div>
+          )}
+        </section>
+      )}
+
+      {error && (
+        <Notice tone="red" icon={TriangleAlert}>
+          {error}
+        </Notice>
+      )}
 
       <PendingMoveBanner
         pending={pendingMove}
@@ -429,110 +464,112 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
 
       {loading && <SolverProgress label="Đang giải" />}
 
-      {view.totalLessons === 0 ? (
-        <Notice tone="slate">
-          Chưa có lịch nào — bấm "Giải" ở bước 2 trên thanh tiến trình.
-        </Notice>
-      ) : (
+      <div
+        className={cn(
+          "grid items-start gap-3",
+          fullscreen ? "min-h-0 flex-1 grid-cols-1" : "grid-cols-1 xl:grid-cols-[minmax(0,1fr)_330px]",
+        )}
+      >
         <div
           className={cn(
-            "grid items-start gap-3",
-            fullscreen ? "min-h-0 flex-1 grid-cols-1" : "grid-cols-1",
+            "flex min-w-0 flex-col gap-2.5",
+            fullscreen && "h-full min-h-0",
           )}
         >
-          <div
-            className={cn(
-              "flex min-w-0 flex-col gap-2.5",
-              fullscreen && "h-full min-h-0",
-            )}
-          >
-            {mode === "grid" ? (
-              <>
-                <LessonGridBoard
-                  lessons={displayLessons}
-                  numDays={view.numDays}
-                  slotsPerDay={view.slotsPerDay}
-                  highlightedIds={highlighted}
-                  colorBy={f.colorBy}
-                  onPickProblem={pickProblem}
-                  scrollTarget={scrollTarget}
-                  detailed={fullscreen}
-                  // BUG DA SUA: truoc day gate them "&& !pendingMove" o day -
-                  // nhung onMoveLesson=undefined lam dragEnabled (= detailed &&
-                  // !!onMoveLesson, xem LessonGridBoard) sup xuong false, KEO
-                  // THEO tat ca o body mat luon onDrop (ke ca o TRONG) va tat ca
-                  // the mat luon draggable - khong chi chan "keo tiep" nhu du
-                  // dinh, ma tat ca het toan bo he thong keo-tha ngay sau lan
-                  // dau. Keo tiep gio se THAY THE pendingMove cu (chua luu gi nen
-                  // khong mat du lieu) thay vi bi khoa.
-                  onMoveLesson={canEdit ? handleDropLesson : undefined}
-                  onClearOverride={canEdit ? doClearOverride : undefined}
-                  onTachHocChung={canEdit ? doBoHocChung : undefined}
-                />
-              </>
-            ) : (
-              <LessonTable lessons={displayLessons} />
-            )}
+          {view.totalLessons === 0 ? (
+            <Notice tone="slate">
+              {canEdit
+                ? <>Chưa có lịch nào — mở "Xếp lịch" và chạy bước 2.</>
+                : "Chưa có lịch nào để xem."}
+            </Notice>
+          ) : mode === "grid" ? (
+            <>
+              <LessonGridBoard
+                lessons={displayLessons}
+                numDays={view.numDays}
+                slotsPerDay={view.slotsPerDay}
+                highlightedIds={highlighted}
+                colorBy={f.colorBy}
+                onPickProblem={pickProblem}
+                scrollTarget={scrollTarget}
+                detailed={fullscreen}
+                // BUG DA SUA: truoc day gate them "&& !pendingMove" o day -
+                // nhung onMoveLesson=undefined lam dragEnabled (= detailed &&
+                // !!onMoveLesson, xem LessonGridBoard) sup xuong false, KEO
+                // THEO tat ca o body mat luon onDrop (ke ca o TRONG) va tat ca
+                // the mat luon draggable - khong chi chan "keo tiep" nhu du
+                // dinh, ma tat ca het toan bo he thong keo-tha ngay sau lan
+                // dau. Keo tiep gio se THAY THE pendingMove cu (chua luu gi nen
+                // khong mat du lieu) thay vi bi khoa.
+                onMoveLesson={canEdit ? handleDropLesson : undefined}
+                onClearOverride={canEdit ? doClearOverride : undefined}
+                onTachHocChung={canEdit ? doBoHocChung : undefined}
+              />
+            </>
+          ) : (
+            <LessonTable lessons={displayLessons} />
+          )}
 
-            {/* Che do thuong: hai luoi 7x12 nam cung mot hang.
-                Toan man hinh: KHONG hien o day - chung an mat mot dai ngang lon
-                ma nua phai bo trong, trong khi cho do phai danh cho luoi. Chuyen
-                thanh nut o goc duoi, can moi mo. */}
-            {!fullscreen && (
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(430px,1fr))] items-start gap-2.5 *:min-w-0">
+          {/* Che do thuong: hai luoi 7x12 nam cung mot hang.
+              Toan man hinh: KHONG hien o day - chung an mat mot dai ngang lon
+              ma nua phai bo trong, trong khi cho do phai danh cho luoi. Chuyen
+              thanh nut o goc duoi, can moi mo. */}
+          {!fullscreen && view.totalLessons > 0 && (
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(430px,100%),1fr))] items-start gap-2.5 *:min-w-0">
+              {densityBlock}
+            </div>
+          )}
+        </div>
+
+        {!fullscreen && <div className="min-w-0">{inboxBlock}</div>}
+
+        {/* Toan man hinh: hop thu thu ve mot nut co badge, bam moi bung ra dang
+            ngan keo - luoi lay tron be ngang. */}
+        {fullscreen ? (
+          <>
+            {/* Hai nut cung mot cum o goc phai duoi - luon hien, bam de bat/tat
+                lop tuong ung. */}
+            <div className="fixed right-4 bottom-4 z-210 flex items-center gap-2">
+              <Button
+                variant={navOpen ? "default" : "outline"}
+                className="rounded-full shadow-lg"
+                onClick={() => setNavOpen(!navOpen)}
+                aria-pressed={navOpen}
+              >
+                <MapIcon className="size-4" />
+                Bản đồ tuần
+              </Button>
+              {inbox.total > 0 && (
+                <Button
+                  variant="destructive"
+                  className="rounded-full shadow-lg"
+                  onClick={() => setInboxOpen(!inboxOpen)}
+                  aria-pressed={inboxOpen}
+                >
+                  <TriangleAlert className="size-4" />
+                  Vấn đề
+                  <span className="rounded-full bg-white/25 px-2 tabular-nums">
+                    {inbox.total}
+                  </span>
+                </Button>
+              )}
+            </div>
+
+            {navOpen && (
+              <div className="glass-popover fixed right-4 bottom-17 z-215 flex max-h-[74vh] max-w-[min(760px,94vw)] flex-col gap-2 overflow-auto rounded-xl border p-2.5">
+                <DrawerClose onClick={() => setNavOpen(false)} />
                 {densityBlock}
               </div>
             )}
-          </div>
-
-          {/* Toan man hinh: hop thu thu ve mot nut co badge, bam moi bung ra dang
-              ngan keo - luoi lay tron be ngang. */}
-          {fullscreen ? (
-            <>
-              {/* Hai nut cung mot cum o goc phai duoi - luon hien, bam de bat/tat
-                  lop tuong ung. */}
-              <div className="fixed right-4 bottom-4 z-210 flex items-center gap-2">
-                <Button
-                  variant={navOpen ? "default" : "outline"}
-                  className="rounded-full shadow-lg"
-                  onClick={() => setNavOpen(!navOpen)}
-                  aria-pressed={navOpen}
-                >
-                  <MapIcon className="size-4" />
-                  Bản đồ tuần
-                </Button>
-                {inbox.total > 0 && (
-                  <Button
-                    variant="destructive"
-                    className="rounded-full shadow-lg"
-                    onClick={() => setInboxOpen(!inboxOpen)}
-                    aria-pressed={inboxOpen}
-                  >
-                    <TriangleAlert className="size-4" />
-                    Vấn đề
-                    <span className="rounded-full bg-white/25 px-2 tabular-nums">
-                      {inbox.total}
-                    </span>
-                  </Button>
-                )}
+            {inboxOpen && (
+              <div className="glass-drawer fixed inset-y-0 right-0 z-220 flex w-90 max-w-[92vw] flex-col gap-2 overflow-hidden border-l p-2.5">
+                <DrawerClose onClick={() => setInboxOpen(false)} />
+                <div className="min-h-0 flex-1 overflow-auto">{inboxBlock}</div>
               </div>
-
-              {navOpen && (
-                <div className="glass-popover fixed right-4 bottom-17 z-215 flex max-h-[74vh] max-w-[min(760px,94vw)] flex-col gap-2 overflow-auto rounded-xl border p-2.5">
-                  <DrawerClose onClick={() => setNavOpen(false)} />
-                  {densityBlock}
-                </div>
-              )}
-              {inboxOpen && (
-                <div className="glass-drawer fixed inset-y-0 right-0 z-220 flex w-90 max-w-[92vw] flex-col gap-2 overflow-hidden border-l p-2.5">
-                  <DrawerClose onClick={() => setInboxOpen(false)} />
-                  <div className="min-h-0 flex-1 overflow-auto">{inboxBlock}</div>
-                </div>
-              )}
-            </>
-          ) : null}
-        </div>
-      )}
+            )}
+          </>
+        ) : null}
+      </div>
 
       {/* pending chi truyen khi saveConfirmOpen=true - co pendingMove khong co
           nghia la hop thoai dang mo, chi la CO the doi da tam giu (banner). */}

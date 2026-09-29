@@ -96,4 +96,43 @@ describe("TeacherAvailabilityPage - Khai toàn bộ giờ rảnh", () => {
     rerender(<TeacherAvailabilityPage role="editor" />);
     expect(screen.getByRole("button", { name: /Khai toàn bộ giờ rảnh/i })).toBeDisabled();
   });
+
+  it("mở popup sửa giảng viên ở giữa màn hình và cho phép mở rộng, thu nhỏ", async () => {
+    const user = userEvent.setup();
+    appData.data = {
+      ...appData.data,
+      teachers: teachers.map((t) => t.id === 1 ? { ...t, teachingSlots: [1, 2, 3, 4, 5, 6, 7] } : t),
+      classes: [
+        { sectionId: 10, classCode: "TEST101", courseName: "Lớp thử", teacherIds: [1], periodStart: 1, periodEnd: 3 },
+        { sectionId: 11, teacherIds: [1, 2], periodStart: 5, periodEnd: 6 },
+        { sectionId: 12, teacherIds: [1], periodStart: null, periodEnd: null },
+        { sectionId: 13, teacherIds: [2], periodStart: 1, periodEnd: 4 },
+      ],
+    };
+    render(<TeacherAvailabilityPage role="editor" />);
+
+    await user.click(screen.getByText("GV thỉnh giảng"));
+    const dialog = screen.getByRole("dialog", { name: "Sửa giảng viên #1" });
+    expect(dialog).toHaveClass("teacher-edit-dialog", "manual-edit-glass", "w-[min(1000px,calc(100vw-2rem))]", "h-[min(600px,calc(100dvh-2rem))]");
+    const body = dialog.querySelector(".grid-cols-1");
+    expect(body).toHaveClass("min-[900px]:grid-cols-2");
+    expect(within(body.children[0]).getByText("Thông tin giảng viên")).toBeInTheDocument();
+    const classCount = within(body.children[0]).getByRole("textbox", { name: "Lớp kỳ này" });
+    const weeklyPeriods = within(body.children[0]).getByRole("textbox", { name: "Số Tiết trong tuần" });
+    expect(classCount).toHaveValue("3");
+    expect(weeklyPeriods).toHaveValue("5");
+    expect(classCount).toHaveAttribute("readonly");
+    expect(weeklyPeriods).toHaveAttribute("readonly");
+    expect(within(dialog).queryByText("TEST101")).not.toBeInTheDocument();
+    expect(within(body.children[1]).getByText("Giờ có thể dạy")).toBeInTheDocument();
+    expect(within(dialog).queryByText(/Đang dạy 7 tiết theo các lớp/)).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole("button", { name: "Lấy các giờ đang dạy làm khung đã khai" })).not.toBeInTheDocument();
+    expect(within(dialog).queryByText(/Tick MỌI tiết giảng viên rảnh/)).not.toBeInTheDocument();
+    expect(within(dialog).queryByText(/Kéo để quét cả vùng/)).not.toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole("button", { name: "Mở rộng popup" }));
+    expect(dialog).toHaveClass("w-[calc(100vw-2rem)]");
+    await user.click(within(dialog).getByRole("button", { name: "Thu nhỏ popup" }));
+    expect(dialog).toHaveClass("w-[min(1000px,calc(100vw-2rem))]");
+  });
 });

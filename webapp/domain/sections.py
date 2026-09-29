@@ -97,11 +97,14 @@ def validate_section_body(data, body, enforce_day_cap=True):
     if duration <= 0:
         return None, None, None, None, "Số tiết mỗi buổi dạy phải là số nguyên > 0."
 
+    teacher_type = loai_lop(data, teacher_ids)
     time_info, time_err = parse_class_time(
-        body, data["params"]["slotsPerDay"], teacher["type"], enforce_cap=enforce_day_cap,
+        body, data["params"]["slotsPerDay"], teacher_type, enforce_cap=enforce_day_cap,
     )
     if time_err:
         return None, None, None, None, time_err
+    if enforce_day_cap and time_info is not None and time_info["period_end"] - time_info["period_start"] + 1 != duration:
+        return None, None, None, None, "Dải giờ phải dài đúng bằng Số tiết mỗi buổi dạy."
 
     class_code = (body.get("classCode") or "").strip()
     lt_credits = body.get("ltCredits")
@@ -121,7 +124,7 @@ def validate_section_body(data, body, enforce_day_cap=True):
         # teacher_id = nguoi dau danh sach (khoa hien thi), teacher_ids = CA NHOM.
         "teacher_id": teacher_id, "teacher_ids": teacher_ids,
         # Loai lop tinh theo CA NHOM - xem teachers.loai_lop().
-        "teacher_type": loai_lop(data, teacher_ids),
+        "teacher_type": teacher_type,
         "room_type": room_type, "duration": duration,
         "class_code": class_code, "lt_credits": lt_credits, "th_credits": th_credits,
         "cohort": (body.get("cohort") or "").strip(),

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { TriangleAlert } from "lucide-react";
+import { TriangleAlert, X } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import { FormRow } from "@/components/shared/form-row";
 import { Notice } from "@/components/shared/notice";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerBody, DrawerSection } from "@/components/ui/drawer";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DrawerBody, DrawerSection } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 
 function emptyForm() {
@@ -49,66 +50,69 @@ export default function CourseEditDrawer({ course, onClose }) {
   };
 
   return (
-    <Drawer
-      open
-      onOpenChange={(o) => !o && onClose()}
-      title={course ? `Sửa học phần #${course.id}` : "Thêm học phần mới"}
-      eyebrow="Chuẩn bị dữ liệu / Học phần"
-      description={
-        course ? "Sửa ở đây áp dụng cho tất cả lớp thuộc học phần này." : undefined
-      }
-      className="manual-edit-glass edit-drawer-glass max-w-md"
-      overlayClassName="bg-slate-950/20"
-      footer={
-        <>
-          <Button type="button" variant="outline" disabled={loading} onClick={onClose}>
-            Hủy
-          </Button>
-          <Button type="submit" form="course-form" disabled={loading}>
-            {loading ? "Đang lưu…" : "Lưu"}
-          </Button>
-        </>
-      }
-    >
-      <form id="course-form" onSubmit={handleSave} className="flex min-h-0 flex-1 flex-col">
-        <DrawerBody>
-          {error && (
-            <Notice tone="red" icon={TriangleAlert}>
-              {error}
-            </Notice>
-          )}
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        className="teacher-edit-dialog manual-edit-glass flex h-[min(600px,calc(100dvh-2rem))] w-[min(1000px,calc(100vw-2rem))] max-w-none flex-col gap-0 overflow-hidden p-0"
+      >
+        <DialogHeader className="flex shrink-0 flex-row items-center justify-between gap-3 border-b px-5 py-3">
+          <DialogTitle className="text-xl tracking-tight">
+            {course ? `Sửa học phần #${course.id}` : "Thêm học phần mới"}
+          </DialogTitle>
+          <DialogDescription className="sr-only">Chỉnh sửa thông tin học phần.</DialogDescription>
+          <DialogClose className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring/50 inline-flex size-8 shrink-0 items-center justify-center rounded-md transition-colors focus-visible:ring-[3px] focus-visible:outline-none">
+            <X className="size-4" />
+            <span className="sr-only">Đóng</span>
+          </DialogClose>
+        </DialogHeader>
+        <form id="course-form" onSubmit={handleSave} className="flex min-h-0 flex-1 flex-col">
+          <DrawerBody>
+            {error && (
+              <Notice tone="red" icon={TriangleAlert}>
+                {error}
+              </Notice>
+            )}
 
-          <DrawerSection title="Học phần">
-            <FormRow label="Mã học phần">
-              {(id) => (
-                <Input id={id} value={form.code} onChange={set("code")} placeholder="IT101" />
-              )}
-            </FormRow>
-            <FormRow label="Tên học phần" required>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={form.name}
-                  onChange={set("name")}
-                  placeholder="Nhập môn Công nghệ thông tin"
-                  required
-                />
-              )}
-            </FormRow>
-            <FormRow label="Số tín chỉ">
-              {(id) => (
-                <Input
-                  id={id}
-                  type="number"
-                  min={0}
-                  value={form.credits}
-                  onChange={set("credits")}
-                />
-              )}
-            </FormRow>
-          </DrawerSection>
-        </DrawerBody>
-      </form>
-    </Drawer>
+            <DrawerSection title="Học phần">
+              <FormRow label="Mã học phần">
+                {(id) => (
+                  <Input id={id} value={form.code} onChange={set("code")} placeholder="IT101" />
+                )}
+              </FormRow>
+              <FormRow label="Tên học phần" required>
+                {(id) => (
+                  <Input
+                    id={id}
+                    value={form.name}
+                    onChange={set("name")}
+                    placeholder="Nhập môn Công nghệ thông tin"
+                    required
+                  />
+                )}
+              </FormRow>
+              <FormRow label="Số tín chỉ">
+                {(id) => (
+                  <Input
+                    id={id}
+                    type="number"
+                    min={0}
+                    value={form.credits}
+                    onChange={set("credits")}
+                  />
+                )}
+              </FormRow>
+            </DrawerSection>
+          </DrawerBody>
+          <DialogFooter className="shrink-0 flex-row border-t px-5 py-3">
+            <Button type="button" variant="outline" disabled={loading} onClick={onClose}>
+              Hủy
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Đang lưu…" : "Lưu"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

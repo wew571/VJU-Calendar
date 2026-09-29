@@ -54,6 +54,7 @@ export default function SubmissionWindowGrid({
   allowEmpty = false,
   saveLabel,
   gridClassName,
+  showInstructions = true,
 }) {
   const [grid, setGrid] = useState({});
   // Keo chuot quet mot VUNG CHU NHAT: giao vu thuong ranh nguyen buoi ("T2-T6
@@ -266,10 +267,12 @@ export default function SubmissionWindowGrid({
 
       {!readOnly && (
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-muted-foreground text-xs">
-            Kéo để quét cả vùng · bấm nhãn <strong className="text-foreground">T2…CN</strong> hoặc{" "}
-            <strong className="text-foreground">số tiết</strong> để bật/tắt cả hàng
-          </p>
+          {showInstructions && (
+            <p className="text-muted-foreground text-xs">
+              Kéo để quét cả vùng · bấm nhãn <strong className="text-foreground">T2…CN</strong> hoặc{" "}
+              <strong className="text-foreground">số tiết</strong> để bật/tắt cả hàng
+            </p>
+          )}
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {onGenerateAvailability && (
               <GenerateAvailabilityButton disabled={locked} saving={saving} onConfirm={onGenerateAvailability} />
