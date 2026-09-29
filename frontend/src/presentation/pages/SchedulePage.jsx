@@ -179,10 +179,6 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
   const completedSteps = steps.filter((step) => step.state === "done").length;
   const setupWarning = steps.some((step) => step.hint);
 
-  useEffect(() => {
-    if (data && (completedSteps < steps.length || setupWarning)) setSetupOpen(true);
-  }, [data, completedSteps, setupWarning, steps.length]);
-
   if (!data) {
     return (
       <Notice tone="slate">
@@ -467,7 +463,7 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
       <div
         className={cn(
           "grid items-start gap-3",
-          fullscreen ? "min-h-0 flex-1 grid-cols-1" : "grid-cols-1 xl:grid-cols-[minmax(0,1fr)_330px]",
+          fullscreen ? "min-h-0 flex-1 grid-cols-1" : "grid-cols-1",
         )}
       >
         <div
@@ -510,18 +506,22 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
             <LessonTable lessons={displayLessons} />
           )}
 
-          {/* Che do thuong: hai luoi 7x12 nam cung mot hang.
+          {/* Che do thuong: ban do mat do va hop thu van de nam canh nhau.
               Toan man hinh: KHONG hien o day - chung an mat mot dai ngang lon
               ma nua phai bo trong, trong khi cho do phai danh cho luoi. Chuyen
               thanh nut o goc duoi, can moi mo. */}
-          {!fullscreen && view.totalLessons > 0 && (
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(430px,100%),1fr))] items-start gap-2.5 *:min-w-0">
-              {densityBlock}
+          {!fullscreen && (
+            <div
+              className={cn(
+                "grid items-start gap-2.5 *:min-w-0",
+                view.totalLessons > 0 && "lg:grid-cols-2",
+              )}
+            >
+              {view.totalLessons > 0 && <div className="space-y-2.5">{densityBlock}</div>}
+              <div>{inboxBlock}</div>
             </div>
           )}
         </div>
-
-        {!fullscreen && <div className="min-w-0">{inboxBlock}</div>}
 
         {/* Toan man hinh: hop thu thu ve mot nut co badge, bam moi bung ra dang
             ngan keo - luoi lay tron be ngang. */}

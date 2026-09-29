@@ -10,6 +10,7 @@ const EXTERNAL_UNIT_COLOR = {
   GUEST: { bg: "#dbeafe", border: "#2563eb", text: "#1d4ed8" },
   RESIDENT: { bg: "#ccfbf1", border: "#0d9488", text: "#115e59" },
 };
+const POPOVER_SPACE = 322;
 
 // Theo yeu cau: thay the day-chu-luon-hien bang 1 THANH MAU gon (toi uu dien
 // tich) - chi hien CHI TIET DAY DU khi di chuot vao, qua popup dinh vi
@@ -30,6 +31,7 @@ const LessonCard = memo(function LessonCard({
   const [locked, setLocked] = useState(false);
   const [rect, setRect] = useState(null);
   const [flipLeft, setFlipLeft] = useState(false);
+  const flipLeftRef = useRef(false);
 
   // Ma lop hoc phan (vd "CSE3003-1") de nhan dien lop - de hon "#<id noi bo>"
   // von khong noi len gi voi giao vu. Fallback ve #id khi lop nao do khong tra
@@ -41,7 +43,7 @@ const LessonCard = memo(function LessonCard({
     ? EXTERNAL_UNIT_COLOR[teacherType]
     : groupColor || FALLBACK_COLOR[teacherType];
 
-  const measure = () => {
+  const measure = (pointerX = null) => {
     if (!barRef.current) return;
     const r = barRef.current.getBoundingClientRect();
     // Neu thanh da cuon ra ngoai man hinh hoan toan, dong popup luon - de no
@@ -51,10 +53,19 @@ const LessonCard = memo(function LessonCard({
       setLocked(false);
       return;
     }
+    const leftSpace = r.left;
+    const rightSpace = window.innerWidth - r.right;
+    let nextFlip = pointerX == null
+      ? flipLeftRef.current
+      : pointerX > r.left + r.width / 2;
+    if (nextFlip && leftSpace < POPOVER_SPACE && rightSpace > leftSpace) nextFlip = false;
+    if (!nextFlip && rightSpace < POPOVER_SPACE && leftSpace > rightSpace) nextFlip = true;
+    flipLeftRef.current = nextFlip;
     setRect(r);
-    setFlipLeft(window.innerWidth - r.right < 340);
+    setFlipLeft(nextFlip);
   };
-  const showPopover = () => { measure(); setHover(true); };
+  const showPopover = (e) => { measure(e.clientX); setHover(true); };
+  const keepPopover = () => { measure(); setHover(true); };
   const hidePopover = () => setHover(false);
   const toggleLock = () => {
     measure();
@@ -183,14 +194,14 @@ const LessonCard = memo(function LessonCard({
       </div>
       {visible && rect && createPortal(
         <div
-          className={`lesson-popover ${flipLeft ? "flip-left" : ""}`}
+          className={`lesson-popover ${flipLeft ? "flip-left" : ""} ${locked ? "interactive" : "pass-through"}`}
           style={{
             top: rect.top + rect.height / 2,
             left: flipLeft ? undefined : rect.right + 10,
             right: flipLeft ? window.innerWidth - rect.left + 10 : undefined,
             transform: "translateY(-50%)",
           }}
-          onMouseEnter={showPopover}
+          onMouseEnter={keepPopover}
           onMouseLeave={hidePopover}
         >
           {locked && (

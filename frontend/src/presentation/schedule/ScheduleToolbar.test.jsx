@@ -15,7 +15,7 @@ describe("ScheduleToolbar", () => {
   it("ưu tiên phạm vi và tìm kiếm, thu gọn các bộ lọc phụ", async () => {
     const user = userEvent.setup();
     const set = vi.fn();
-    const { container } = render(
+    render(
       <ScheduleToolbar
         f={DEFAULT_FILTER}
         set={set}
@@ -27,15 +27,19 @@ describe("ScheduleToolbar", () => {
 
     expect(screen.getByLabelText("Xem")).toHaveValue("all");
     expect(screen.getByPlaceholderText("Tìm môn, giảng viên, #id")).toBeInTheDocument();
-    const details = container.querySelector("details");
-    expect(details).not.toHaveAttribute("open");
+    const trigger = screen.getByRole("button", { name: "Bộ lọc thêm" });
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText("Bộ lọc hiển thị")).not.toBeInTheDocument();
 
-    await user.click(screen.getByText("Bộ lọc thêm"));
-    expect(details).toHaveAttribute("open");
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Bộ lọc hiển thị").closest(".glass-popover")).toBeInTheDocument();
     expect(screen.getByLabelText("Cách tô màu")).toBeInTheDocument();
 
     await user.click(screen.getByText("Chỉ buổi có vấn đề"));
     expect(set).toHaveBeenCalledWith({ onlyProblems: true });
+    await user.click(screen.getByRole("button", { name: "Đóng bộ lọc thêm" }));
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
   });
 
   it("hiện số bộ lọc phụ đang dùng", () => {

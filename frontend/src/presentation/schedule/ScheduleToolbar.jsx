@@ -1,4 +1,5 @@
-import { Download, LayoutGrid, Maximize2, Minimize2, RotateCcw, Rows3, Save, SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
+import { Download, LayoutGrid, Maximize2, Minimize2, RotateCcw, Rows3, Save, SlidersHorizontal, X } from "lucide-react";
 import { SCOPE } from "../../adapters/scheduleView";
 import { coPhamVi, moTa as moTaPhamVi } from "../../adapters/phamVi";
 import { COLOR_BY_OPTIONS } from "../../adapters/colorGrouping";
@@ -20,6 +21,7 @@ function nhanGio(at) {
 }
 
 export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
+  const [extraOpen, setExtraOpen] = useState(false);
   const extraFilterCount = [
     !f.guest || !f.resident,
     f.onlyProblems,
@@ -28,7 +30,7 @@ export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
   ].filter(Boolean).length;
 
   return (
-    <div className="glass-panel relative rounded-xl border p-2.5">
+    <div className={cn("glass-panel relative rounded-xl border p-2.5", extraOpen && "z-40")}>
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2">
           <Label htmlFor="sv-scope" className="text-muted-foreground text-xs font-medium">
@@ -98,8 +100,16 @@ export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
           className="w-full min-w-48 flex-1 lg:max-w-md"
         />
 
-        <details className="group w-full sm:w-auto">
-          <summary className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring flex h-9 cursor-pointer list-none items-center justify-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+        <div className="relative w-full sm:w-auto">
+          <Button
+            type="button"
+            variant={extraOpen ? "secondary" : "outline"}
+            size="sm"
+            className="w-full sm:w-auto"
+            onClick={() => setExtraOpen((open) => !open)}
+            aria-expanded={extraOpen}
+            aria-controls="schedule-extra-filters"
+          >
             <SlidersHorizontal className="size-4" aria-hidden="true" />
             Bộ lọc thêm
             {extraFilterCount > 0 && (
@@ -107,64 +117,86 @@ export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
                 {extraFilterCount}
               </span>
             )}
-          </summary>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 border-t pt-2.5 sm:absolute sm:right-0 sm:z-20 sm:w-[min(46rem,calc(100vw-2rem))] sm:rounded-xl sm:border sm:bg-background/95 sm:p-3 sm:shadow-lg sm:backdrop-blur">
-            <div className="flex items-center gap-3">
-              <span className="text-muted-foreground text-xs">Lớp</span>
-              <Label htmlFor="sv-guest" className="text-sm font-normal">
-                <Checkbox
-                  id="sv-guest"
-                  checked={f.guest}
-                  onCheckedChange={(v) => set({ guest: v === true })}
-                />
-                Thỉnh giảng
-              </Label>
-              <Label htmlFor="sv-resident" className="text-sm font-normal">
-                <Checkbox
-                  id="sv-resident"
-                  checked={f.resident}
-                  onCheckedChange={(v) => set({ resident: v === true })}
-                />
-                Cơ hữu
-              </Label>
+          </Button>
+          {extraOpen && (
+            <div
+              id="schedule-extra-filters"
+              className="glass-popover schedule-filter-popover absolute top-full right-0 z-50 mt-2 flex max-h-[min(70vh,24rem)] w-[min(46rem,calc(100vw-2rem))] flex-col gap-3 overflow-y-auto rounded-xl border p-3 shadow-xl"
+            >
+              <div className="flex items-center justify-between gap-3 border-b pb-2">
+                <div>
+                  <div className="text-sm font-semibold">Bộ lọc hiển thị</div>
+                  <div className="text-muted-foreground text-xs">Các lựa chọn này chỉ thay đổi nội dung đang xem.</div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setExtraOpen(false)}
+                  aria-label="Đóng bộ lọc thêm"
+                >
+                  <X className="size-4" aria-hidden="true" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-muted-foreground text-xs">Lớp</span>
+                  <Label htmlFor="sv-guest" className="text-sm font-normal">
+                    <Checkbox
+                      id="sv-guest"
+                      checked={f.guest}
+                      onCheckedChange={(v) => set({ guest: v === true })}
+                    />
+                    Thỉnh giảng
+                  </Label>
+                  <Label htmlFor="sv-resident" className="text-sm font-normal">
+                    <Checkbox
+                      id="sv-resident"
+                      checked={f.resident}
+                      onCheckedChange={(v) => set({ resident: v === true })}
+                    />
+                    Cơ hữu
+                  </Label>
+                </div>
+
+                <Label htmlFor="sv-problems" className="text-sm font-normal">
+                  <Checkbox
+                    id="sv-problems"
+                    checked={f.onlyProblems}
+                    onCheckedChange={(v) => set({ onlyProblems: v === true })}
+                  />
+                  Chỉ buổi có vấn đề
+                </Label>
+
+                {/* Chi hien khi DANG xep cho mot chuong trinh - khong co pham vi thi o tick
+                    nay khong co nghia gi. Vua xep xong thi bam mot cai la thay dung phan
+                    minh vua xep, khong phai tu do lai bo loc "Xem" o dau thanh. */}
+                {coPhamVi(phamVi) && (
+                  <Label htmlFor="sv-phamvi" className="text-sm font-normal">
+                    <Checkbox
+                      id="sv-phamvi"
+                      checked={f.chiXemPhamVi}
+                      onCheckedChange={(v) => set({ chiXemPhamVi: v === true })}
+                    />
+                    Chỉ phạm vi đang xếp ({moTaPhamVi(phamVi)})
+                  </Label>
+                )}
+
+                {mode === "grid" && (
+                  <NativeSelect
+                    aria-label="Cách tô màu"
+                    value={f.colorBy}
+                    onChange={(e) => set({ colorBy: e.target.value })}
+                  >
+                    {COLOR_BY_OPTIONS.map((o) => (
+                      <option key={o.key} value={o.key}>Tô màu: {o.label}</option>
+                    ))}
+                  </NativeSelect>
+                )}
+              </div>
             </div>
-
-            <Label htmlFor="sv-problems" className="text-sm font-normal">
-              <Checkbox
-                id="sv-problems"
-                checked={f.onlyProblems}
-                onCheckedChange={(v) => set({ onlyProblems: v === true })}
-              />
-              Chỉ buổi có vấn đề
-            </Label>
-
-            {/* Chi hien khi DANG xep cho mot chuong trinh - khong co pham vi thi o tick
-                nay khong co nghia gi. Vua xep xong thi bam mot cai la thay dung phan
-                minh vua xep, khong phai tu do lai bo loc "Xem" o dau thanh. */}
-            {coPhamVi(phamVi) && (
-              <Label htmlFor="sv-phamvi" className="text-sm font-normal">
-                <Checkbox
-                  id="sv-phamvi"
-                  checked={f.chiXemPhamVi}
-                  onCheckedChange={(v) => set({ chiXemPhamVi: v === true })}
-                />
-                Chỉ phạm vi đang xếp ({moTaPhamVi(phamVi)})
-              </Label>
-            )}
-
-            {mode === "grid" && (
-              <NativeSelect
-                aria-label="Cách tô màu"
-                value={f.colorBy}
-                onChange={(e) => set({ colorBy: e.target.value })}
-              >
-                {COLOR_BY_OPTIONS.map((o) => (
-                  <option key={o.key} value={o.key}>Tô màu: {o.label}</option>
-                ))}
-              </NativeSelect>
-            )}
-          </div>
-        </details>
+          )}
+        </div>
       </div>
     </div>
   );
