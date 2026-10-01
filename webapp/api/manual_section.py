@@ -35,6 +35,7 @@ def api_manual_add_section(data):
     sid = id_moi(data["sections"])
     data["sections"][sid] = {"id": sid, **fields}
     apply_section_time(data, sid, teacher, duration, time_info)
+    data["sections"][sid]["time_source"] = "auto" if time_info is None else "manual"
     ghim_theo_gio_form(data, sid, time_info)
 
     # Lop moi co gio co dinh phai hien tren luoi Thoi khoa bieu NGAY - khong thi
@@ -92,15 +93,32 @@ def api_manual_update_section(data, section_id):
     if khoa:
         return loi(khoa, 409, locked=True)
 
+    auto_time_unchanged = bool(
+        body.get("autoSchedule")
+        and current.get("time_assumed")
+        and incoming_teacher_ids == (current.get("teacher_ids") or [current.get("teacher_id")])
+        and duration == current.get("duration")
+        and fields["room_type"] == current.get("room_type")
+        and fields["program_ids"] == current.get("program_ids")
+        and fields["cohort"] == current.get("cohort")
+        and fields["teaching_mode"] == (current.get("teaching_mode") or "")
+        and fields["location"] == (current.get("location") or "")
+    )
     data["sections"][section_id].update(fields)
     apply_section_time(data, section_id, teacher, duration, time_info)
+    if time_info is None:
+        data["sections"][section_id]["time_source"] = "auto"
+    else:
+        data["sections"][section_id]["time_source"] = (
+            "auto" if body.get("timeSource") == "auto" else "manual")
     ghim_theo_gio_form(data, section_id, time_info)
     # HOC CHUNG la MOT buoi -> cac lop cung nhom phai sang dung gio moi.
     cung_nhom = lan_gio_sang_nhom(data, section_id, time_info)
 
-    # Gio/GV/hoc phan cua lop vua doi -> luoi Thoi khoa bieu phai theo. Truyen
-    # section_id vao bo_vi_tri_cu: gio vua go tay thang vi tri cu tren luoi.
-    dong_bo_ket_qua(data, [section_id, *cung_nhom])
+    # Gio/GV/hoc phan cua lop vua doi -> luoi Thoi khoa bieu phai theo. Khi lop
+    # van dang cho solver va form chi sua metadata, giu vi tri du kien dang co.
+    bo_vi_tri_cu = cung_nhom if auto_time_unchanged else [section_id, *cung_nhom]
+    dong_bo_ket_qua(data, bo_vi_tri_cu)
     save_snapshot()
     return tra_du_lieu(data)
 

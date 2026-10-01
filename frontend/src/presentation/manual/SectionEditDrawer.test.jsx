@@ -145,4 +145,69 @@ describe("SectionEditDrawer", () => {
       periodEnd: 3,
     });
   });
+
+  it("phan biet dang cho xep va gio du kien chua luu", () => {
+    const { unmount } = render(
+      <SectionEditDrawer
+        data={data}
+        section={makeSection({ timeAssumed: true, timeSource: "auto", day: null, periodStart: null, periodEnd: null })}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText(/Đang chờ xếp/)).toBeInTheDocument();
+    expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(0);
+
+    unmount();
+    render(
+      <SectionEditDrawer
+        data={data}
+        section={makeSection({ timeAssumed: true, timeSource: "auto", timePreview: true })}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText(/Giờ dự kiến do hệ thống xếp — chưa lưu/)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { pressed: true })).toHaveLength(3);
+    expect(screen.getAllByRole("button", { pressed: true })[0]).toBeDisabled();
+  });
+
+  it("sua metadata lop da luu gio tu dong khong gui autoSchedule de xoa gio", async () => {
+    const user = userEvent.setup();
+    app.updateManualSection.mockResolvedValue({});
+    render(
+      <SectionEditDrawer
+        data={data}
+        section={makeSection({ timeSource: "auto", timeAssumed: false })}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/Giờ đã lưu, nguồn gốc/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Lưu" }));
+
+    await waitFor(() => expect(app.updateManualSection).toHaveBeenCalled());
+    expect(app.updateManualSection.mock.calls[0][1]).toMatchObject({
+      day: 0,
+      periodStart: 1,
+      periodEnd: 3,
+      timeSource: "auto",
+    });
+    expect(app.updateManualSection.mock.calls[0][1]).not.toHaveProperty("autoSchedule");
+  });
+
+  it("khoa gio hoc chung da chot nhung van cho luu metadata", async () => {
+    const user = userEvent.setup();
+    app.updateManualSection.mockResolvedValue({});
+    render(
+      <SectionEditDrawer
+        data={data}
+        section={makeSection({ timeSource: "auto", hocChungLockedBy: 99 })}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("checkbox", { name: "Để hệ thống tự xếp giờ" })).toBeDisabled();
+    expect(screen.getByText(/Giờ bị khóa vì lớp học chung đã chốt/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Lưu" }));
+    await waitFor(() => expect(app.updateManualSection).toHaveBeenCalled());
+  });
 });

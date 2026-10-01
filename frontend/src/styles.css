@@ -711,7 +711,7 @@ select:focus-visible {
 }
 .tt-hc-btn:hover { background: color-mix(in srgb, #7e22ce 10%, transparent); }
 
-/* Badge HOC CHUNG trong bang 29 cot - bam duoc de tach nhom. */
+/* Badge HOC CHUNG trong bang 17 cot - bam duoc de tach nhom. */
 .xls-hc-badge {
   display: inline-flex;
   align-items: center;
@@ -1730,7 +1730,7 @@ textarea:focus-visible {
 .xls-scroll {
   /* Cuon CA HAI CHIEU, va la khung cuon DUY NHAT cua trang "Du lieu hoc phan".
 
-     Bang mirror 29 cot rong hon man hinh nen luon can overflow-x. Cuon DOC thi
+     Bang mirror 17 cot rong hon man hinh nen luon can overflow-x. Cuon DOC thi
      truoc day de <main> lo (o day chi co overflow-x) - nhung `position: sticky`
      bao gio cung bam vao KHUNG CUON GAN NHAT, ma dat overflow-x da bien chinh
      div nay thanh khung cuon roi (CSS: mot truc khac `visible` thi truc kia tu
@@ -1850,7 +1850,7 @@ textarea:focus-visible {
 
    Ban dau dung vach doc 2px. Bo, vi vien bi RANG CUA khi nguoi dung zoom le:
    chieu cao moi o ra so thap phan, tung o lam tron mot kieu nen vach trong nhu
-   dut khuc. Ma bang 29 cot thi zoom nho lai chinh la phan xa tu nhien. Nen thi
+   dut khuc. Ma bang 17 cot thi zoom nho lai chinh la phan xa tu nhien. Nen thi
    khong co vien de lam tron -> dung vung o moi muc zoom.
 
    Vung "Lop hoc phan" CO Y de tran: no chiem da so cot, to nen ca thi bang
@@ -1869,10 +1869,9 @@ textarea:focus-visible {
 }
 
 /* MOT LOP CO NHIEU GIANG VIEN -> moi nguoi mot dong trong o, dung nhu file Excel
-   goc. Cac o cua khoi giang vien (hoc ham / ho ten / don vi / email / SDT) deu
-   sinh cung so dong theo cung thu tu, nen doc ngang la ra dung bo thong tin cua
-   mot nguoi. Truoc day chi hien nguoi dau danh sach nen email/SDT cua nhung
-   nguoi con lai khong doc duoc o dau tren giao dien. */
+   goc. Hai o cua khoi giang vien (hoc ham / ho ten) deu sinh cung so dong theo
+   cung thu tu, nen doc ngang la ra dung bo thong tin cua mot nguoi. Cac thong tin
+   con lai duoc xem va sua trong popup cua tung giang vien. */
 .xls-table td.xls-gv-cell {
   padding: 0;
   vertical-align: top;
@@ -1991,7 +1990,7 @@ textarea:focus-visible {
 
    Truoc day cot nay in san ca 4 thu (badge + nguoi chot + ngay + ghi chu + nut
    "Bo chot") xep doc, lap lai o MOI hoc phan: rong ~8.5rem cung mot noi dung
-   gan nhu khong doi, trong khi bang co 29 cot va giao vu phai keo ngang de xem
+   gan nhu khong doi, trong khi bang co 17 cot va giao vu phai keo ngang de xem
    thong tin lop. Chi tiet nay khong mat - vao tooltip cua badge (xem
    nhanChot() ben ManualEntryPage.jsx). */
 /* ---- Be rong RIENG cho 4 cot vung "hoc phan" -------------------------------
@@ -1999,7 +1998,7 @@ textarea:focus-visible {
    so dat chung cho ca vung, nen cot "TT" (chi chua 1-3 chu so) va cot "So tin
    chi" (1 chu so) cung rong 130px y nhu cot "Ten hoc phan". Do thuc te truoc khi
    sua: TT 130 · Ma HP 130 · Ten HP 501 · So TC 130 = 891px, chiem gan het man
-   hinh trong khi bang co 29 cot va thong tin lop nam ben phai.
+   hinh trong khi bang co 17 cot va thong tin lop nam ben phai.
 
    min-width PHAI dat lai (khong chi `width`): min-width luon thang width, de
    nguyen 130px thi khai bao width nho hon khong co tac dung nao.
@@ -2043,10 +2042,10 @@ textarea:focus-visible {
 }
 
 /* ---- DONG BANG hang tieu de + 5 cot dau (freeze panes kieu Excel) ----------
-   Bang co 29 cot va vai tram dong: cuon sang phai thi khong con biet dang doc
+   Bang co 17 cot va vai tram dong: cuon sang phai thi khong con biet dang doc
    lop cua mon nao, cuon xuong thi khong con biet cot nao la cot nao. Dong bang
    dung nhung o TRA LOI hai cau do:
-     · doc  - ba tang tieu de
+     · doc  - hai tang tieu de
      · ngang - TT / Ma hoc phan / Ten hoc phan / So tin chi / Chot lich
 
    Ca hai deu bam vao .xls-scroll (khung cuon duy nhat cua trang - xem ghi chu o

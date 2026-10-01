@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, Map as MapIcon, TriangleAlert, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CalendarClock, Map as MapIcon, TriangleAlert, X } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import { buildProblemInbox, filterProblemInbox } from "../../adapters/problemInbox";
 import { buildScheduleView, scopeLabel, SCOPE, DEFAULT_FILTER } from "../../adapters/scheduleView";
@@ -11,8 +11,7 @@ import LessonGridBoard from "../timetable/LessonGridBoard";
 import LessonTable from "../timetable/LessonTable";
 import ProblemInbox from "../schedule/ProblemInbox";
 import DensityNavigator from "../schedule/DensityNavigator";
-import WorkflowStrip from "../schedule/WorkflowStrip";
-import PhamViXepPanel from "../schedule/PhamViXepPanel";
+import SchedulingWorkflowDialog from "../schedule/SchedulingWorkflowDialog";
 import ScheduleToolbar, { ScheduleActions } from "../schedule/ScheduleToolbar";
 import MoveReasonDialog from "../schedule/MoveReasonDialog";
 import SaveMoveDialog from "../schedule/SaveMoveDialog";
@@ -35,6 +34,23 @@ import { cn } from "@/lib/utils";
 // File nay giu TRANG THAI va lap ghep; hai manh tach ra rieng vi tu chung duoc:
 //   adapters/buocGiai.js       luat 3 buoc cua thanh tien trinh
 //   schedule/ScheduleToolbar   thanh loc + cac nut hanh dong
+export function boLocTheoPhamVi(phamVi) {
+  return {
+    scope: SCOPE.ALL,
+    scopeValue: "",
+    khoa: "",
+    guest: true,
+    resident: true,
+    search: "",
+    onlyProblems: false,
+    chiXemPhamVi: Boolean(phamVi),
+  };
+}
+
+export function boLocXemDeKhoiPhuc(filter) {
+  return { ...DEFAULT_FILTER, ...(filter ?? {}), chiXemPhamVi: false };
+}
+
 export default function SchedulePage({ role, filter, onFilterChange }) {
   const {
     data, guestResult, residentResult, loading, error, solveGuest, solveResident,
@@ -64,6 +80,7 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
   const [inboxOpen, setInboxOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
+  const boLocXemTruocKhiXep = useRef(null);
   const canEdit = role !== "viewer";
 
   useEffect(() => {
@@ -91,6 +108,21 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
 
   const f = { ...DEFAULT_FILTER, ...(filter ?? {}) };
   const set = (patch) => onFilterChange({ ...f, ...patch });
+  const handlePhamViChange = (next) => {
+    setPhamVi(next);
+    set(boLocTheoPhamVi(next));
+  };
+  const openSetup = () => {
+    boLocXemTruocKhiXep.current = boLocXemDeKhoiPhuc(f);
+    set(boLocTheoPhamVi(phamVi));
+    setSetupOpen(true);
+  };
+  const handleSetupOpenChange = (open) => {
+    setSetupOpen(open);
+    if (open || !boLocXemTruocKhiXep.current) return;
+    onFilterChange(boLocXemTruocKhiXep.current);
+    boLocXemTruocKhiXep.current = null;
+  };
 
   // pendingMove nam trong deps: vua tha xong la hop thu + mau tren luoi phai
   // tinh lai NGAY theo vi tri moi, khong doi bam Luu moi biet co dam vao ai khong.
@@ -177,7 +209,7 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
     [data, guestResult, residentResult, gd2HetHieuLuc, phamVi, solveGuest, solveResident],
   );
   const completedSteps = steps.filter((step) => step.state === "done").length;
-  const setupWarning = steps.some((step) => step.hint);
+  const setupWarning = steps.some((step) => step.hint || ["blocked", "partial", "error"].includes(step.state));
 
   if (!data) {
     return (
@@ -397,23 +429,24 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
 
       <ScheduleToolbar f={f} set={set} view={view} mode={mode} phamVi={phamVi} />
 
-      {/* "Xep cho ai" doc TRUOC "bam gi" - nen khoi chon pham vi nam tren thanh
-          tien trinh, va ba buoc ben duoi deu dem theo dung pham vi nay. */}
+      {/* "Xep cho ai" doc TRUOC "bam gi" trong popup; bo loc tren toolbar chi
+          quyet dinh lich dang xem, khong thay doi pham vi solver. */}
       {!fullscreen && canEdit && (
-        <section className="space-y-2">
+        <section>
           <button
             type="button"
-            onClick={() => setSetupOpen((open) => !open)}
-            aria-expanded={setupOpen}
+            onClick={openSetup}
+            aria-haspopup="dialog"
             className={cn(
               "glass-panel flex w-full items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors",
               setupWarning && "border-amber-500/60",
             )}
           >
+            <CalendarClock className="text-muted-foreground size-5 shrink-0" aria-hidden="true" />
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold">Xếp lịch</span>
               <span className="text-muted-foreground block text-xs">
-                {completedSteps}/{steps.length} bước hoàn tất · Mở để chọn phạm vi và chạy xếp lịch
+                {completedSteps}/{steps.length} bước hoàn tất · Mở quy trình xếp lịch
               </span>
             </span>
             {setupWarning && (
@@ -422,27 +455,23 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
                 Cần chú ý
               </span>
             )}
-            <ChevronDown
-              className={cn("text-muted-foreground size-4 shrink-0 transition-transform", setupOpen && "rotate-180")}
-              aria-hidden="true"
-            />
           </button>
-          {setupOpen && (
-            <div className="space-y-2">
-              <PhamViXepPanel
-                data={data}
-                phamVi={phamVi}
-                onChange={setPhamVi}
-                disabled={loading}
-                // Con so cua LAN GIAI gan nhat (backend gui kem) - nhung canh bao chi
-                // biet duoc sau khi giai, khong tinh truoc tu du lieu duoc.
-                ketQuaPhamVi={residentResult?.phamVi ?? guestResult?.phamVi ?? null}
-              />
-              <WorkflowStrip steps={steps} canEdit={canEdit} loading={loading} />
-            </div>
-          )}
         </section>
       )}
+
+      <SchedulingWorkflowDialog
+        open={setupOpen}
+        onOpenChange={handleSetupOpenChange}
+        data={data}
+        phamVi={phamVi}
+        onPhamViChange={handlePhamViChange}
+        ketQuaPhamVi={residentResult?.phamVi ?? guestResult?.phamVi ?? null}
+        steps={steps}
+        canEdit={canEdit}
+        loading={loading}
+        error={error}
+        problemInbox={inboxBlock}
+      />
 
       {error && (
         <Notice tone="red" icon={TriangleAlert}>
@@ -514,11 +543,11 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
             <div
               className={cn(
                 "grid items-start gap-2.5 *:min-w-0",
-                view.totalLessons > 0 && "lg:grid-cols-2",
+                view.totalLessons > 0 && !canEdit && "lg:grid-cols-2",
               )}
             >
               {view.totalLessons > 0 && <div className="space-y-2.5">{densityBlock}</div>}
-              <div>{inboxBlock}</div>
+              {!canEdit && <div>{inboxBlock}</div>}
             </div>
           )}
         </div>

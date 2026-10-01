@@ -35,8 +35,8 @@ const CHOT_OPTIONS = [
 // side-panel (SectionEditDrawer) de hoan thien du lieu. Day la NGUON DUY NHAT
 // dua ca day sang "Thoi khoa bieu" thay cho tai Excel.
 //
-// BANG mirror giu nguyen CSS cu (.xls-*): day la ban sao co chu y cua file Excel
-// goc, mat do rat day (29 cot, header 3 tang, rowSpan merge-xuong). Padding
+// BANG tom tat giu nguyen CSS cu (.xls-*): cau truc dua tren file Excel goc,
+// hien 17 cot voi header 2 tang va rowSpan merge-xuong. Padding
 // px-3 py-3 cua shadcn Table se lam no phinh gap may lan va mat cong dung. Chi
 // phan khung (thanh loc, trang thai, nut) chuyen sang design system.
 export default function ManualEntryPage({ role }) {
@@ -350,7 +350,7 @@ export default function ManualEntryPage({ role }) {
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="xls-swatch xls-z-teacher" aria-hidden="true" />
-            nhóm “Kỳ này” → <strong className="text-foreground font-medium">Giảng viên</strong>
+            nhóm “Thông tin giảng viên” → <strong className="text-foreground font-medium">Giảng viên</strong>
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="xls-swatch" aria-hidden="true" />

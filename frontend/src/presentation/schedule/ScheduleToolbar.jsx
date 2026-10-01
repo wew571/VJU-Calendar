@@ -22,6 +22,7 @@ function nhanGio(at) {
 
 export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
   const [extraOpen, setExtraOpen] = useState(false);
+  const setXem = (patch) => set({ ...patch, chiXemPhamVi: false });
   const extraFilterCount = [
     !f.guest || !f.resident,
     f.onlyProblems,
@@ -39,7 +40,7 @@ export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
           <NativeSelect
             id="sv-scope"
             value={f.scope}
-            onChange={(e) => set({ scope: e.target.value, scopeValue: "" })}
+            onChange={(e) => setXem({ scope: e.target.value, scopeValue: "" })}
           >
             <option value={SCOPE.ALL}>Toàn khoa</option>
             <option value={SCOPE.PROGRAM}>Theo chương trình</option>
@@ -58,7 +59,7 @@ export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
             options={view.programs}
             // Doi chuong trinh thi bo khoa dang chon neu chuong trinh moi khong co
             // khoa do - de lai la luoi trong ma nhin van nhu dang co bo loc hop le.
-            onChange={(v) => set({
+            onChange={(v) => setXem({
               scopeValue: v ?? "",
               khoa: !v || view.cohorts.includes(f.khoa) ? f.khoa : "",
             })}
@@ -79,7 +80,7 @@ export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
             searchable
             value={f.khoa || null}
             options={view.cohorts}
-            onChange={(v) => set({ khoa: v ?? "" })}
+            onChange={(v) => setXem({ khoa: v ?? "" })}
           />
         )}
 
@@ -89,13 +90,13 @@ export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
             searchable
             value={f.scopeValue ? String(f.scopeValue) : null}
             options={view.teachers.map((t) => ({ value: String(t.id), label: t.name }))}
-            onChange={(v) => set({ scopeValue: v ?? "" })}
+            onChange={(v) => setXem({ scopeValue: v ?? "" })}
           />
         )}
 
         <ListSearch
           value={f.search}
-          onChange={(v) => set({ search: v })}
+          onChange={(v) => setXem({ search: v })}
           placeholder="Tìm môn, giảng viên, #id"
           className="w-full min-w-48 flex-1 lg:max-w-md"
         />
@@ -145,7 +146,7 @@ export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
                     <Checkbox
                       id="sv-guest"
                       checked={f.guest}
-                      onCheckedChange={(v) => set({ guest: v === true })}
+                      onCheckedChange={(v) => setXem({ guest: v === true })}
                     />
                     Thỉnh giảng
                   </Label>
@@ -153,7 +154,7 @@ export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
                     <Checkbox
                       id="sv-resident"
                       checked={f.resident}
-                      onCheckedChange={(v) => set({ resident: v === true })}
+                      onCheckedChange={(v) => setXem({ resident: v === true })}
                     />
                     Cơ hữu
                   </Label>
@@ -163,7 +164,7 @@ export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
                   <Checkbox
                     id="sv-problems"
                     checked={f.onlyProblems}
-                    onCheckedChange={(v) => set({ onlyProblems: v === true })}
+                    onCheckedChange={(v) => setXem({ onlyProblems: v === true })}
                   />
                   Chỉ buổi có vấn đề
                 </Label>

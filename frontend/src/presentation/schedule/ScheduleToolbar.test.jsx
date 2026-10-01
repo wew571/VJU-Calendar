@@ -37,7 +37,7 @@ describe("ScheduleToolbar", () => {
     expect(screen.getByLabelText("Cách tô màu")).toBeInTheDocument();
 
     await user.click(screen.getByText("Chỉ buổi có vấn đề"));
-    expect(set).toHaveBeenCalledWith({ onlyProblems: true });
+    expect(set).toHaveBeenCalledWith({ onlyProblems: true, chiXemPhamVi: false });
     await user.click(screen.getByRole("button", { name: "Đóng bộ lọc thêm" }));
     expect(trigger).toHaveAttribute("aria-expanded", "false");
   });

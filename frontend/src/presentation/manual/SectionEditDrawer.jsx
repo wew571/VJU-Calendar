@@ -25,7 +25,7 @@ function emptyForm() {
   return {
     teacherIds: [""], courseId: "", classCode: "", program: "",
     ltCredits: "", thCredits: "", cohort: "", expectedStudents: "",
-    duration: "2", autoSchedule: true, day: null, periodStart: null, periodEnd: null,
+    duration: "2", autoSchedule: true, timeSource: "auto", day: null, periodStart: null, periodEnd: null,
     location: "", teachingMode: "", language: "", otherRequirements: "", notes: "",
     coordinatorOverride: "", prevTeacherName: "", prevTeacherOrg: "",
     teachingHoursLt: "", teachingHoursTh: "",
@@ -40,7 +40,9 @@ function formFromClass(c) {
     classCode: c.classCode || "", program: c.programName || "",
     ltCredits: c.ltCredits ?? "", thCredits: c.thCredits ?? "",
     cohort: c.cohort || "", expectedStudents: c.expectedStudents ?? "",
-    duration: String(c.duration ?? "2"), autoSchedule: c.timeAssumed,
+    duration: String(c.duration ?? "2"),
+    autoSchedule: c.timeSource === "auto" || c.timeAssumed,
+    timeSource: c.timeSource || (c.timeAssumed ? "auto" : "fixed"),
     day: c.day, periodStart: c.periodStart, periodEnd: c.periodEnd,
     location: c.location || "", teachingMode: c.teachingMode || "",
     language: c.language || "", otherRequirements: c.otherRequirements || "", notes: c.notes || "",
@@ -85,6 +87,8 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
     : "RESIDENT";
   const maxDayFor = (ids) => Math.min(numDays - 1, teacherTypeFor(ids) === "GUEST" ? 5 : 4);
   const maxDayIndex = maxDayFor(form.teacherIds.filter(Boolean));
+  const timeLocked = Boolean(section?.sectionChot || section?.hocChungLockedBy);
+  const hasDisplayedTime = form.day != null && form.periodStart != null && form.periodEnd != null;
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
   const setDuration = (e) => {
@@ -186,12 +190,14 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
       teachingHoursLt: form.teachingHoursLt === "" ? null : Number(form.teachingHoursLt),
       teachingHoursTh: form.teachingHoursTh === "" ? null : Number(form.teachingHoursTh),
     };
-    if (form.autoSchedule) {
+    if (form.autoSchedule && (!hasDisplayedTime || section?.timeAssumed || section?.timePreview)) {
       payload.autoSchedule = true;
+      payload.timeSource = "auto";
     } else {
       payload.day = form.day;
       payload.periodStart = form.periodStart;
       payload.periodEnd = form.periodEnd;
+      payload.timeSource = form.autoSchedule ? "auto" : "manual";
     }
 
     try {
@@ -504,27 +510,59 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
                   <Checkbox
                     id="sed-auto"
                     checked={form.autoSchedule}
-                    disabled={!!section?.sectionChot}
+                    disabled={timeLocked}
                     onCheckedChange={(v) =>
                       setForm((f) => ({
                         ...f,
                         autoSchedule: v === true,
+                        timeSource: v === true ? "auto" : "manual",
                         day: null, periodStart: null, periodEnd: null,
                       }))
                     }
                   />
                   Để hệ thống tự xếp giờ
                 </Label>
-                {!form.autoSchedule && (
+                {form.autoSchedule && !hasDisplayedTime && (
+                  <Notice tone="slate">
+                    Đang chờ xếp. Lựa chọn này chỉ giao giờ cho solver; hệ thống không tự chạy khi bạn tick hoặc lưu form.
+                  </Notice>
+                )}
+                {form.autoSchedule && hasDisplayedTime && (
+                  <Notice tone={section?.timePreview ? "amber" : "emerald"}>
+                    {section?.timePreview
+                      ? "Giờ dự kiến do hệ thống xếp — chưa lưu thời khoá biểu."
+                      : "Giờ đã lưu, nguồn gốc: Để hệ thống tự xếp giờ."}
+                  </Notice>
+                )}
+                {!form.autoSchedule && section?.timeSource === "auto" && !timeLocked && (
+                  <Notice tone="amber">
+                    Chọn một dải giờ bên dưới sẽ thay giờ do hệ thống xếp bằng giờ nhập tay.
+                  </Notice>
+                )}
+                {hasDisplayedTime && (form.autoSchedule || timeLocked) && (
                   <ClassTimeSlotPicker
                     numDays={numDays}
                     slotsPerDay={slotsPerDay}
                     duration={form.duration}
                     maxDayIndex={maxDayIndex}
-                    disabled={!!section?.sectionChot}
-                    value={form.day != null ? { day: form.day, periodStart: form.periodStart, periodEnd: form.periodEnd } : null}
+                    disabled
+                    value={{ day: form.day, periodStart: form.periodStart, periodEnd: form.periodEnd }}
+                    onChange={() => {}}
+                  />
+                )}
+                {!form.autoSchedule && !timeLocked && (
+                  <ClassTimeSlotPicker
+                    numDays={numDays}
+                    slotsPerDay={slotsPerDay}
+                    duration={form.duration}
+                    maxDayIndex={maxDayIndex}
+                    disabled={false}
+                    value={hasDisplayedTime ? { day: form.day, periodStart: form.periodStart, periodEnd: form.periodEnd } : null}
                     onChange={(v) => setForm((f) => ({ ...f, day: v?.day ?? null, periodStart: v?.periodStart ?? null, periodEnd: v?.periodEnd ?? null }))}
                   />
+                )}
+                {timeLocked && section?.hocChungLockedBy && (
+                  <Notice tone="slate">Giờ bị khóa vì lớp học chung đã chốt; bạn vẫn có thể sửa thông tin khác.</Notice>
                 )}
               </DrawerSection>
             </div>

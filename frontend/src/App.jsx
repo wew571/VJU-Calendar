@@ -71,7 +71,7 @@ function clampPageForRole(page, role) {
 const BLEED_PAGES = new Set(["manual"]);
 
 // Trang TU LO cuon doc thay vi de <main> cuon ca trang (xem `fullHeight` trong
-// AppLayout). "Du lieu hoc phan" can dieu nay de DONG BANG hang tieu de 3 tang +
+// AppLayout). "Du lieu hoc phan" can dieu nay de DONG BANG hang tieu de 2 tang +
 // 5 cot dau cua bang: sticky chi bam duoc vao khung cuon gan nhat, nen chinh
 // khung cuon cua bang phai la thu cuon doc.
 const FULL_HEIGHT_PAGES = new Set(["manual"]);
