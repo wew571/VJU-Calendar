@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DrawerBody, DrawerSection } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+
+const CREDIT_OPTIONS = [1, 2, 3, 4, 5, 10, 12];
 
 function emptyForm() {
   return { code: "", name: "", credits: "" };
@@ -92,13 +95,13 @@ export default function CourseEditDrawer({ course, onClose }) {
               </FormRow>
               <FormRow label="Số tín chỉ">
                 {(id) => (
-                  <Input
-                    id={id}
-                    type="number"
-                    min={0}
-                    value={form.credits}
-                    onChange={set("credits")}
-                  />
+                  <NativeSelect id={id} className="w-full" value={form.credits} onChange={set("credits")}>
+                    <option value="">— Không rõ —</option>
+                    {CREDIT_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                    {form.credits !== "" && !CREDIT_OPTIONS.includes(Number(form.credits)) && (
+                      <option value={form.credits}>{form.credits}</option>
+                    )}
+                  </NativeSelect>
                 )}
               </FormRow>
             </DrawerSection>

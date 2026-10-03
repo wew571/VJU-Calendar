@@ -22,13 +22,13 @@ export function FormRow({ label, hint, required, children, className }) {
         className,
       )}
     >
-      <Label htmlFor={id} className="text-muted-foreground text-xs font-normal">
+      <Label htmlFor={id} className="text-foreground/80 text-sm font-medium">
         {label}
         {required && <span className="text-destructive">*</span>}
       </Label>
       <div className="min-w-0 space-y-1">
         {typeof children === 'function' ? children(id) : children}
-        {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
+        {hint && <p className="text-foreground/70 text-xs">{hint}</p>}
       </div>
     </div>
   );

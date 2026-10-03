@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CourseEditDrawer from "./CourseEditDrawer";
 
@@ -56,5 +56,31 @@ describe("CourseEditDrawer", () => {
       credits: 3,
     }));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("chi cho chon so tin chi tu danh sach co dinh", async () => {
+    const user = userEvent.setup();
+    app.updateManualCourse.mockResolvedValue({});
+    render(
+      <CourseEditDrawer
+        course={{ id: 10, code: "MTH101", name: "Giải tích", credits: 3 }}
+        onClose={vi.fn()}
+      />,
+    );
+
+    const credits = screen.getByRole("combobox", { name: "Số tín chỉ" });
+    expect(credits).toHaveValue("3");
+    expect(within(credits).getAllByRole("option").map((o) => o.value)).toEqual(
+      ["", "1", "2", "3", "4", "5", "10", "12"],
+    );
+
+    await user.selectOptions(credits, "10");
+    await user.click(screen.getByRole("button", { name: "Lưu" }));
+
+    await waitFor(() => expect(app.updateManualCourse).toHaveBeenCalledWith(10, {
+      code: "MTH101",
+      name: "Giải tích",
+      credits: 10,
+    }));
   });
 });
