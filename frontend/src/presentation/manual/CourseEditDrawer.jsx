@@ -95,7 +95,7 @@ export default function CourseEditDrawer({ course, onClose }) {
               </FormRow>
               <FormRow label="Số tín chỉ">
                 {(id) => (
-                  <NativeSelect id={id} className="w-full" value={form.credits} onChange={set("credits")}>
+                  <NativeSelect id={id} containerClassName="w-full" value={form.credits} onChange={set("credits")}>
                     <option value="">— Không rõ —</option>
                     {CREDIT_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
                     {form.credits !== "" && !CREDIT_OPTIONS.includes(Number(form.credits)) && (

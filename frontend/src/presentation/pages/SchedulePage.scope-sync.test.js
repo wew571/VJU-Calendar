@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { buildScheduleView, DEFAULT_FILTER } from "../../adapters/scheduleView";
-import { boLocTheoPhamVi, boLocXemDeKhoiPhuc } from "./SchedulePage";
+import { boLocTheoPhamVi, boLocXemDeKhoiPhuc, openLessonInManual } from "./SchedulePage";
 
 const classes = [
   { sectionId: 1, programParts: ["BCSE"], cohortParts: ["VJU2025"] },
@@ -35,6 +35,83 @@ describe("SchedulePage - đồng bộ phạm vi xếp với lưới", () => {
     expect(boLocXemDeKhoiPhuc(DEFAULT_FILTER)).toEqual(DEFAULT_FILTER);
     expect(boLocXemDeKhoiPhuc({ ...DEFAULT_FILTER, scope: "program", scopeValue: "FTH", chiXemPhamVi: true }))
       .toMatchObject({ scope: "program", scopeValue: "FTH", chiXemPhamVi: false });
+  });
+
+  it("chặn viewer và hỏi trước khi rời lịch có thay đổi chưa lưu", () => {
+    const onOpen = vi.fn();
+    const alert = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const lesson = { id: 1, classCode: "VJU2002-1" };
+
+    expect(openLessonInManual({ role: "viewer", lesson, onOpen })).toBe(false);
+    expect(alert).toHaveBeenCalled();
+    expect(openLessonInManual({ role: "staff", lesson, pendingMove: {}, onOpen })).toBe(false);
+    expect(confirm).toHaveBeenCalled();
+    expect(onOpen).not.toHaveBeenCalled();
+
+    confirm.mockReturnValue(true);
+    expect(openLessonInManual({ role: "staff", lesson, pendingMove: {}, onOpen })).toBe(true);
+    expect(onOpen).toHaveBeenCalledWith([{ id: 1, classCode: "VJU2002-1" }]);
+  });
+
+  it("gửi toàn bộ thành viên của thẻ học chung, kể cả lớp thiếu mã", () => {
+    const onOpen = vi.fn();
+    const lesson = {
+      id: 1,
+      classCode: "VJU2002-1",
+      hocChung: { members: [{ id: 1, classCode: "VJU2002-1" }, { id: 9, classCode: null }] },
+    };
+
+    expect(openLessonInManual({ role: "staff", lesson, onOpen })).toBe(true);
+    expect(onOpen).toHaveBeenCalledWith(lesson.hocChung.members);
+  });
+
+  it("giữ toàn bộ buổi trên lưới nhưng vẫn lọc danh sách bảng theo từ khóa", () => {
+    const view = buildScheduleView({
+      data: {
+        classes: [
+          { sectionId: 1, classCode: "VJU2002-1", programParts: ["BCSE"], cohortParts: ["K68"] },
+          { sectionId: 2, classCode: "VJU2003-1", programParts: ["BCSE"], cohortParts: ["K68"] },
+        ],
+        numDays: 7,
+        slotsPerDay: 12,
+      },
+      guestResult: { lessons: [
+        { id: 1, day: 0, period: 0, duration: 1, teacherType: "GUEST", teacherName: "An", courseName: "Giải tích" },
+        { id: 2, day: 0, period: 1, duration: 1, teacherType: "GUEST", teacherName: "Bình", courseName: "Đại số" },
+      ] },
+      residentResult: null,
+      inbox: { items: [] },
+      filter: { ...DEFAULT_FILTER, search: "VJU2002-1" },
+      phamVi: null,
+    });
+
+    expect(view.gridLessons.map((lesson) => lesson.id)).toEqual([1, 2]);
+    expect(view.lessons.map((lesson) => lesson.id)).toEqual([1]);
+    expect([...view.searchMatchIds]).toEqual([1]);
+    expect(view.grid[0][1]).toBe(1);
+  });
+
+  it("tìm được thành viên không đại diện của thẻ học chung", () => {
+    const sharedLessons = [
+      { id: 1, hocChungId: 5, day: 0, period: 0, duration: 1, teacherType: "GUEST", courseName: "Môn A" },
+      { id: 2, hocChungId: 5, day: 0, period: 0, duration: 1, teacherType: "GUEST", courseName: "Môn B" },
+    ];
+    const view = buildScheduleView({
+      data: { classes: [
+        { sectionId: 1, classCode: "A-1", programParts: [], cohortParts: [] },
+        { sectionId: 2, classCode: "B-1", programParts: [], cohortParts: [] },
+      ] },
+      guestResult: { lessons: sharedLessons },
+      residentResult: null,
+      inbox: { items: [] },
+      filter: { ...DEFAULT_FILTER, search: "B-1" },
+      phamVi: null,
+    });
+
+    expect(view.gridLessons).toHaveLength(1);
+    expect(view.lessons).toHaveLength(1);
+    expect([...view.searchMatchIds]).toEqual([1]);
   });
 
   it("hien dong thoi cac lop BCSE cua hai khoa da chon", () => {

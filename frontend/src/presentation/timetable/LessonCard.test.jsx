@@ -1,5 +1,5 @@
 import { fireEvent, render } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import LessonCard from "./LessonCard";
 
 const lesson = {
@@ -46,6 +46,19 @@ describe("LessonCard popup", () => {
     fireEvent.mouseLeave(bar);
     fireEvent.mouseEnter(bar, { clientX: 490 });
     expect(document.body.querySelector(".lesson-popover")).toHaveClass("flip-left");
+  });
+
+  it("báo đúng buổi được bấm đúp mà không thay hành vi bấm đơn", () => {
+    const onOpenManual = vi.fn();
+    const { container } = render(<LessonCard lesson={lesson} onOpenManual={onOpenManual} />);
+    const bar = container.querySelector(".lesson-bar");
+    bar.getBoundingClientRect = () => centeredRect;
+
+    fireEvent.click(bar);
+    expect(document.body.querySelector(".lesson-popover")).toHaveClass("interactive");
+    expect(onOpenManual).not.toHaveBeenCalled();
+    fireEvent.doubleClick(bar);
+    expect(onOpenManual).toHaveBeenCalledWith(lesson);
   });
 
   it("đổi phía để popup không tràn cạnh phải màn hình", () => {

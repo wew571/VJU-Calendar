@@ -159,7 +159,7 @@ export function buildScheduleView({ data, guestResult, residentResult, inbox, fi
   const daGop = gopHocChung(withFlags);
 
   const q = f.search.trim().toLowerCase();
-  const lessons = daGop.filter((l) => {
+  const gridLessons = daGop.filter((l) => {
     if (l.teacherType === "GUEST" && !f.guest) return false;
     if (l.teacherType === "RESIDENT" && !f.resident) return false;
     if (f.scope === SCOPE.PROGRAM && f.scopeValue && !l.programParts.includes(f.scopeValue)) return false;
@@ -177,27 +177,30 @@ export function buildScheduleView({ data, guestResult, residentResult, inbox, fi
     // FTH nhung muon soi rieng mot GV cua FTH).
     if (f.chiXemPhamVi && coPhamVi(phamVi) && !buoiThuoc(l, phamVi)) return false;
     if (f.onlyProblems && !l.hasProblem) return false;
-    if (!q) return true;
-    return (
-      String(l.id) === q ||
-      (l.courseName ?? "").toLowerCase().includes(q) ||
-      (l.teacherName ?? "").toLowerCase().includes(q) ||
-      (l.programLabel ?? "").toLowerCase().includes(q) ||
-      l.cohortParts.some((k) => k.toLowerCase().includes(q)) ||
-      // The gop: tim duoc qua ten/ma lop cua BAT KY mon cung hoc chung
-      (l.hocChung?.members ?? []).some(
-        (m) => (m.courseName ?? "").toLowerCase().includes(q)
-          || (m.classCode ?? "").toLowerCase().includes(q),
-      )
-    );
+    return true;
   });
+  const matchesSearch = (l) => !q || (
+    String(l.id) === q ||
+    (l.classCode ?? "").toLowerCase().includes(q) ||
+    (l.courseName ?? "").toLowerCase().includes(q) ||
+    (l.teacherName ?? "").toLowerCase().includes(q) ||
+    (l.programLabel ?? "").toLowerCase().includes(q) ||
+    l.cohortParts.some((k) => k.toLowerCase().includes(q)) ||
+    (l.hocChung?.members ?? []).some(
+      (m) => String(m.id) === q
+        || (m.courseName ?? "").toLowerCase().includes(q)
+        || (m.classCode ?? "").toLowerCase().includes(q),
+    )
+  );
+  const lessons = q ? gridLessons.filter(matchesSearch) : gridLessons;
+  const searchMatchIds = new Set(q ? lessons.map((lesson) => lesson.id) : []);
 
   // --- Bang mat do: moi o = so buoi DANG HIEN dang dien ra o thoi diem do ---
   const grid = Array.from({ length: numDays }, () => new Array(slotsPerDay).fill(0));
   const idsAt = Array.from({ length: numDays }, () =>
     Array.from({ length: slotsPerDay }, () => []),
   );
-  for (const l of lessons) {
+  for (const l of gridLessons) {
     if (l.day == null || l.period == null) continue;
     for (let k = 0; k < (l.duration || 1); k++) {
       const p = l.period + k;
@@ -236,14 +239,16 @@ export function buildScheduleView({ data, guestResult, residentResult, inbox, fi
 
   return {
     lessons,
+    gridLessons,
+    searchMatchIds,
     totalLessons: withFlags.length,
     // Dem lop CUA KHOA: buoi cua don vi khac dieu phoi (boQua) co mat tren luoi
     // de khong ai xep de vao, nhung no khong phai phan viec cua khoa nen khong
     // duoc cong vao con so tien do.
-    guestCount: lessons.filter((l) => l.teacherType === "GUEST" && !l.boQua).length,
-    residentCount: lessons.filter((l) => l.teacherType === "RESIDENT" && !l.boQua).length,
-    donViKhacCount: lessons.filter((l) => l.boQua).length,
-    problemCount: lessons.filter((l) => l.hasProblem).length,
+    guestCount: gridLessons.filter((l) => l.teacherType === "GUEST" && !l.boQua).length,
+    residentCount: gridLessons.filter((l) => l.teacherType === "RESIDENT" && !l.boQua).length,
+    donViKhacCount: gridLessons.filter((l) => l.boQua).length,
+    problemCount: gridLessons.filter((l) => l.hasProblem).length,
     grid,
     idsAt,
     maxDensity,

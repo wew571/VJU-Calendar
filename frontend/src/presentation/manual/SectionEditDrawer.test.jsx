@@ -94,6 +94,20 @@ describe("SectionEditDrawer", () => {
     expect(screen.getByRole("button", { name: /Học phần/ })).toHaveTextContent("MTH102 — Đại số tuyến tính");
   });
 
+  it("tìm giảng viên theo tên trong từng ô chọn", async () => {
+    const user = userEvent.setup();
+    render(<SectionEditDrawer data={data} section={makeSection()} onClose={vi.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: /GV cơ hữu/ }));
+    const search = screen.getByPlaceholderText("Tìm tên giảng viên…");
+    await user.type(search, "thỉnh giảng");
+    const menu = screen.getByRole("menu");
+    expect(within(menu).getByText(/GV thỉnh giảng/)).toBeInTheDocument();
+    expect(within(menu).queryByText(/GV cơ hữu/)).not.toBeInTheDocument();
+    await user.click(within(menu).getByText(/GV thỉnh giảng/));
+    expect(screen.getByRole("button", { name: /GV thỉnh giảng/ })).toBeInTheDocument();
+  });
+
   it("xoa gio dang chon khi doi so tiet lam sai do dai", async () => {
     const user = userEvent.setup();
     render(<SectionEditDrawer data={data} section={makeSection()} onClose={vi.fn()} />);
@@ -116,8 +130,8 @@ describe("SectionEditDrawer", () => {
       />,
     );
 
-    const teacherSelect = screen.getAllByRole("combobox").find((select) => select.value === "2");
-    await user.selectOptions(teacherSelect, "1");
+    await user.click(screen.getByRole("button", { name: /GV thỉnh giảng/ }));
+    await user.click(within(screen.getByRole("menu")).getByText(/GV cơ hữu/));
 
     expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(0);
     expect(screen.getByText("Bấm một ô để chọn đủ 3 tiết liên tiếp trong cùng ngày.")).toBeInTheDocument();

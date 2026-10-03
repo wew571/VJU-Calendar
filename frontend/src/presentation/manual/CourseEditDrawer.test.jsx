@@ -58,6 +58,23 @@ describe("CourseEditDrawer", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it("giữ và lưu được mức tín chỉ cũ ngoài danh sách", async () => {
+    const user = userEvent.setup();
+    app.updateManualCourse.mockResolvedValue({});
+    render(
+      <CourseEditDrawer
+        course={{ id: 10, code: "MTH101", name: "Giải tích", credits: 7 }}
+        onClose={vi.fn()}
+      />,
+    );
+
+    const credits = screen.getByRole("combobox", { name: "Số tín chỉ" });
+    expect(credits).toHaveValue("7");
+    expect(within(credits).getByRole("option", { name: "7" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Lưu" }));
+    await waitFor(() => expect(app.updateManualCourse).toHaveBeenCalledWith(10, expect.objectContaining({ credits: 7 })));
+  });
+
   it("chi cho chon so tin chi tu danh sach co dinh", async () => {
     const user = userEvent.setup();
     app.updateManualCourse.mockResolvedValue({});
@@ -70,6 +87,7 @@ describe("CourseEditDrawer", () => {
 
     const credits = screen.getByRole("combobox", { name: "Số tín chỉ" });
     expect(credits).toHaveValue("3");
+    expect(credits.parentElement).toHaveClass("w-full");
     expect(within(credits).getAllByRole("option").map((o) => o.value)).toEqual(
       ["", "1", "2", "3", "4", "5", "10", "12"],
     );

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Maximize2, Minimize2, TriangleAlert, X } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import SubmissionWindowGrid from "../submissions/SubmissionWindowGrid";
+import { FilterSelect } from "@/components/shared/filter-select";
 import { FormRow } from "@/components/shared/form-row";
 import { Notice } from "@/components/shared/notice";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, Di
 import { DrawerBody, DrawerSection } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
+
+const TITLE_SUGGESTIONS = ["ThS.", "TS.", "PGS.TS.", "GS.TS"];
 
 function suggestTeacherType(org) {
   const t = (org || "").toLowerCase();
@@ -155,11 +158,15 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
           <DrawerSection title="Thông tin giảng viên">
             <FormRow label="Học hàm/học vị">
               {(id) => (
-                <Input
+                <FilterSelect
                   id={id}
-                  value={form.title}
-                  onChange={setField("title")}
-                  placeholder="TS., PGS.TS… (không bắt buộc)"
+                  label="— Chưa có —"
+                  emptyLabel="— Chưa có —"
+                  full
+                  modal={false}
+                  value={form.title || null}
+                  options={TITLE_SUGGESTIONS}
+                  onChange={(title) => setForm((current) => ({ ...current, title: title ?? "" }))}
                 />
               )}
             </FormRow>

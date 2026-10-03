@@ -10,8 +10,8 @@ vi.mock("../../context/AppDataContext", () => ({
 }));
 
 const teachers = [
-  { id: 1, name: "GV thỉnh giảng", type: "GUEST", org: "Ngoài trường", availabilitySlots: [1] },
-  { id: 2, name: "GV cơ hữu", type: "RESIDENT", org: "VJU", availabilitySlots: [] },
+  { id: 1, name: "GV thỉnh giảng", nameRaw: "GV thỉnh giảng", title: "Chuyên gia", type: "GUEST", org: "Ngoài trường", availabilitySlots: [1] },
+  { id: 2, name: "GV cơ hữu", nameRaw: "GV cơ hữu", title: "TS.", type: "RESIDENT", org: "VJU", availabilitySlots: [] },
   { id: 3, name: "GV không có lớp", type: "RESIDENT", org: "VJU", availabilitySlots: [2] },
   { id: 4, name: "Phòng Đào tạo điều phối", type: "GUEST", isPlaceholder: true, availabilitySlots: [] },
 ];
@@ -21,10 +21,26 @@ beforeEach(() => {
     data: { teachers, classes: [] },
     loading: false,
     generateAllTeacherAvailability: vi.fn().mockResolvedValue({ generatedTeacherCount: 3 }),
+    updateManualTeacher: vi.fn().mockResolvedValue({}),
+    addManualTeacher: vi.fn(),
+    generateTeacherAvailability: vi.fn(),
   };
 });
 
 describe("TeacherAvailabilityPage - Khai toàn bộ giờ rảnh", () => {
+  it("chuyển hiệu ứng kính đỏ theo đúng tab đang chọn", async () => {
+    const user = userEvent.setup();
+    render(<TeacherAvailabilityPage role="editor" />);
+    const guest = screen.getByRole("tab", { name: /thỉnh giảng/ });
+    const resident = screen.getByRole("tab", { name: /cơ hữu/ });
+
+    expect(guest).toHaveClass("teacher-type-tab-active");
+    expect(resident).not.toHaveClass("teacher-type-tab-active");
+    await user.click(resident);
+    expect(resident).toHaveClass("teacher-type-tab-active");
+    expect(guest).not.toHaveClass("teacher-type-tab-active");
+  });
+
   it("đặt nút ngay cạnh ô tìm kiếm và chỉ hiện cho người được sửa", () => {
     const { rerender } = render(<TeacherAvailabilityPage role="editor" />);
     const search = screen.getByRole("textbox", { name: /Tìm tên, email, đơn vị/i });
@@ -97,6 +113,28 @@ describe("TeacherAvailabilityPage - Khai toàn bộ giờ rảnh", () => {
     expect(screen.getByRole("button", { name: /Khai toàn bộ giờ rảnh/i })).toBeDisabled();
   });
 
+  it("chỉ chọn học hàm/học vị trong bốn lựa chọn cố định rồi lưu đúng title", async () => {
+    const user = userEvent.setup();
+    render(<TeacherAvailabilityPage role="editor" />);
+
+    await user.click(screen.getByRole("cell", { name: /GV thỉnh giảng/ }));
+    const dialog = screen.getByRole("dialog", { name: "Sửa giảng viên #1" });
+    const title = within(dialog).getByRole("button", { name: "Học hàm/học vị" });
+    await user.click(title);
+    const menu = screen.getByRole("menu");
+    expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      "— Chưa có —",
+      "ThS.",
+      "TS.",
+      "PGS.TS.",
+      "GS.TS",
+    ]);
+    await user.click(within(menu).getByText("TS."));
+    await user.click(within(dialog).getByRole("button", { name: "Lưu thông tin" }));
+
+    await waitFor(() => expect(appData.updateManualTeacher).toHaveBeenCalledWith(1, expect.objectContaining({ title: "TS." })));
+  });
+
   it("mở popup sửa giảng viên ở giữa màn hình và cho phép mở rộng, thu nhỏ", async () => {
     const user = userEvent.setup();
     appData.data = {
@@ -111,7 +149,7 @@ describe("TeacherAvailabilityPage - Khai toàn bộ giờ rảnh", () => {
     };
     render(<TeacherAvailabilityPage role="editor" />);
 
-    await user.click(screen.getByText("GV thỉnh giảng"));
+    await user.click(screen.getByRole("cell", { name: /GV thỉnh giảng/ }));
     const dialog = screen.getByRole("dialog", { name: "Sửa giảng viên #1" });
     expect(dialog).toHaveClass("teacher-edit-dialog", "manual-edit-glass", "w-[min(1000px,calc(100vw-2rem))]", "h-[min(600px,calc(100dvh-2rem))]");
     const body = dialog.querySelector(".grid-cols-1");

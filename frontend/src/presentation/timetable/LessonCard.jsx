@@ -22,7 +22,7 @@ const POPOVER_SPACE = 322;
 // mau = phan loai (groupColor tu LessonGridBoard), vien do khi highlighted =
 // canh bao, luon de len tren khong doi mau nen.
 const LessonCard = memo(function LessonCard({
-  lesson, isHighlighted, onClearOverride, onTachHocChung, groupColor, onPickProblem, detailed = false,
+  lesson, isHighlighted, onClearOverride, onTachHocChung, groupColor, onPickProblem, onOpenManual, detailed = false,
   canDrag = false, onDragStart, onDragEnd,
 }) {
   const problems = lesson.problems ?? [];
@@ -159,6 +159,7 @@ const LessonCard = memo(function LessonCard({
         onMouseEnter={showPopover}
         onMouseLeave={hidePopover}
         onClick={toggleLock}
+        onDoubleClick={() => onOpenManual?.(lesson)}
       >
         {detailed && (
           <span className="lb-body">

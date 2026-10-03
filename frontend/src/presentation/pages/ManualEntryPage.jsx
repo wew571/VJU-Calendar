@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Eraser, Eye, EyeOff, GraduationCap, Lock, Plus, RotateCcw, TriangleAlert, Upload } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import SectionEditDrawer from "../manual/SectionEditDrawer";
@@ -15,6 +15,16 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import SectionTable, { STATUS_META } from "../manual/SectionTable";
 
 const PAGE_STEP = 25;
+
+export const DEFAULT_MANUAL_VIEW_STATE = {
+  search: "",
+  programFilter: "",
+  cohortFilter: "",
+  hienBoQua: false,
+  statusFilter: "",
+  chotFilter: "",
+  targetSectionIds: null,
+};
 
 // STATUS_META dung chung voi bang - xem manual/SectionTable.jsx.
 const STATUS_OPTIONS = Object.entries(STATUS_META).map(([value, m]) => ({
@@ -39,23 +49,39 @@ const CHOT_OPTIONS = [
 // hien 17 cot voi header 2 tang va rowSpan merge-xuong. Padding
 // px-3 py-3 cua shadcn Table se lam no phinh gap may lan va mat cong dung. Chi
 // phan khung (thanh loc, trang thai, nut) chuyen sang design system.
-export default function ManualEntryPage({ role }) {
+export default function ManualEntryPage({
+  role,
+  viewState,
+  onViewStateChange,
+  focusRequest,
+  onFocusHandled,
+}) {
   const { data, loading, initManual, doClearManualTimes, doBoChotSection,
           doBoHocChung, doBoQua } = useAppData();
   const canEdit = role !== "viewer";
+  const [localViewState, setLocalViewState] = useState(DEFAULT_MANUAL_VIEW_STATE);
+  const currentViewState = { ...DEFAULT_MANUAL_VIEW_STATE, ...(viewState ?? localViewState) };
+  const updateViewState = (patch) => {
+    const next = typeof patch === "function" ? patch(currentViewState) : { ...currentViewState, ...patch };
+    setLocalViewState(next);
+    onViewStateChange?.(next);
+  };
+  const {
+    search, programFilter, cohortFilter, hienBoQua, statusFilter, chotFilter, targetSectionIds,
+  } = currentViewState;
+  const setSearch = (searchValue) => updateViewState({ search: searchValue, targetSectionIds: null });
+  const setProgramFilter = (value) => updateViewState({ programFilter: value });
+  const setCohortFilter = (value) => updateViewState({ cohortFilter: value });
+  const setHienBoQua = (value) => updateViewState({ hienBoQua: value });
+  const setStatusFilter = (value) => updateViewState({ statusFilter: value });
+  const setChotFilter = (value) => updateViewState({ chotFilter: value });
 
   // Da BO lenh refreshData() luc mount o day: AppDataProvider nay nap du lieu
   // ngay khi mo app cho MOI trang, khong rieng trang nay. Giu lai chi lam goi
   // /api/data hai lan o lan tai dau tien.
 
-  const [search, setSearch] = useState("");
-  const [programFilter, setProgramFilter] = useState("");
-  const [cohortFilter, setCohortFilter] = useState("");
   // Lop do DON VI KHAC dieu phoi va da bam bo qua: an khoi bang - do dung la cai
   // giao vu muon. Van mo xem lai duoc de bo danh dau khi nham.
-  const [hienBoQua, setHienBoQua] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("");
-  const [chotFilter, setChotFilter] = useState("");
   // Lop hoc phan dang mo hop thoai chot (null = dong).
   const [chotSection, setChotSection] = useState(null);
   const [boChotSection, setBoChotSection] = useState(null);
@@ -69,6 +95,26 @@ export default function ManualEntryPage({ role }) {
 
   const isManualMode = data?.sourceLabel === "Nhập liệu thủ công";
   const classes = data?.classes || [];
+  const handledFocusRef = useRef(null);
+
+  useEffect(() => {
+    if (!focusRequest || handledFocusRef.current === focusRequest.seq) return;
+    const ids = new Set(focusRequest.targets.map((target) => String(target.id)));
+    const targets = classes.filter((item) => ids.has(String(item.sectionId)));
+    if (targets.length !== ids.size) return;
+    handledFocusRef.current = focusRequest.seq;
+    updateViewState({
+      search: focusRequest.targets.map((target) => target.classCode || `#${target.id}`).join(", "),
+      targetSectionIds: focusRequest.targets.map((target) => target.id),
+      programFilter: programFilter && targets.every((item) => (item.programParts ?? []).includes(programFilter)) ? programFilter : "",
+      cohortFilter: cohortFilter && targets.every((item) => (item.cohortParts ?? []).includes(cohortFilter)) ? cohortFilter : "",
+      statusFilter: statusFilter && targets.every((item) => item.status === statusFilter) ? statusFilter : "",
+      chotFilter: chotFilter && targets.every((item) => chotFilter === "roi" ? item.sectionChot : !item.sectionChot) ? chotFilter : "",
+      hienBoQua: hienBoQua || targets.some((item) => item.boQua),
+    });
+    setLimit(Math.max(PAGE_STEP, targets.length));
+    onFocusHandled?.(focusRequest.seq);
+  }, [focusRequest?.seq, classes]);
 
   // O GHEP ("BCSE+MJM", "VJU2023+VJU2024") = lop cua CA HAI -> danh sach chon la
   // cac ma DON (backend tach san o programParts/cohortParts). Nho vay chon "BCSE"
@@ -88,18 +134,20 @@ export default function ManualEntryPage({ role }) {
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const targetIds = targetSectionIds ? new Set(targetSectionIds.map(String)) : null;
     return classes.filter((c) => {
+      if (targetIds && !targetIds.has(String(c.sectionId))) return false;
       if (c.boQua && !hienBoQua) return false;
       if (programFilter && !(c.programParts ?? []).includes(programFilter)) return false;
       if (cohortFilter && !(c.cohortParts ?? []).includes(cohortFilter)) return false;
       if (statusFilter && c.status !== statusFilter) return false;
       if (chotFilter === "roi" && !c.sectionChot) return false;
       if (chotFilter === "chua" && c.sectionChot) return false;
-      if (!q) return true;
+      if (targetIds || !q) return true;
       return [c.courseName, c.classCode, c.teacherName, String(c.sectionId)]
         .some((v) => (v || "").toLowerCase().includes(q));
     });
-  }, [classes, search, programFilter, cohortFilter, statusFilter, chotFilter, hienBoQua]);
+  }, [classes, search, programFilter, cohortFilter, statusFilter, chotFilter, hienBoQua, targetSectionIds]);
 
   // Hai con so cho khoi "don vi khac dieu phoi" ngay tren bang.
   const soBoQua = useMemo(() => classes.filter((c) => c.boQua).length, [classes]);

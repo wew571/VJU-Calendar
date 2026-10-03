@@ -51,7 +51,20 @@ export function boLocXemDeKhoiPhuc(filter) {
   return { ...DEFAULT_FILTER, ...(filter ?? {}), chiXemPhamVi: false };
 }
 
-export default function SchedulePage({ role, filter, onFilterChange }) {
+export function openLessonInManual({ role, lesson, pendingMove, onOpen }) {
+  if (role === "viewer") {
+    window.alert("Vai trò Xem thôi không có quyền mở Dữ liệu học phần.");
+    return false;
+  }
+  if (pendingMove && !window.confirm("Thao tác kéo-thả chưa được lưu và sẽ mất nếu rời lịch. Tiếp tục?")) {
+    return false;
+  }
+  const targets = lesson.hocChung?.members ?? [{ id: lesson.id, classCode: lesson.classCode }];
+  onOpen?.(targets.map(({ id, classCode }) => ({ id, classCode })));
+  return true;
+}
+
+export default function SchedulePage({ role, filter, onFilterChange, onOpenManualSections }) {
   const {
     data, guestResult, residentResult, loading, error, solveGuest, solveResident,
     phamVi, setPhamVi,
@@ -142,7 +155,8 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
     [inbox, data, f.scope, f.scopeValue, f.khoa, f.chiXemPhamVi, phamVi],
   );
 
-  const legend = useMemo(() => buildLegend(view.lessons, f.colorBy), [view.lessons, f.colorBy]);
+  const legendLessons = mode === "grid" ? view.gridLessons : view.lessons;
+  const legend = useMemo(() => buildLegend(legendLessons, f.colorBy), [legendLessons, f.colorBy]);
 
   // XUAT LUOI ra Excel. Gui thang cai `view` dang render (da loc, da chia cot,
   // da to mau) nen file ra khop DUNG man hinh - xem adapters/xuatLuoi.js.
@@ -152,10 +166,13 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
   // se ra mot ten file dai vo nghia).
   const handleXuatLuoi = async () => {
     try {
+      const exportView = mode === "grid"
+        ? { ...view, lessons: view.gridLessons, filter: { ...view.filter, search: "" } }
+        : view;
       await scheduler.exportLuoi(dungDuLieuXuatLuoi({
-        view,
+        view: exportView,
         label: nhanHocKy(data),
-        moTaBoLoc: moTaBoLocDangDung(view, data, phamVi),
+        moTaBoLoc: moTaBoLocDangDung(exportView, data, phamVi),
       }));
     } catch (e) {
       window.alert(`Xuất lưới thất bại: ${e.message}`);
@@ -167,13 +184,14 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
   // "keo xong se ra sao" truoc khi bam Luu, khong the chi bam nut ma khong thay
   // gi doi tren luoi.
   const displayLessons = useMemo(() => {
-    if (!pendingMove) return view.lessons;
-    return view.lessons.map((l) =>
+    const source = mode === "grid" ? view.gridLessons : view.lessons;
+    if (!pendingMove) return source;
+    return source.map((l) =>
       l.id === pendingMove.sectionId
         ? { ...l, day: pendingMove.toDay, period: pendingMove.toPeriod, slot: pendingMove.toSlot, pendingSave: true }
         : l,
     );
-  }, [view.lessons, pendingMove]);
+  }, [mode, view.gridLessons, view.lessons, pendingMove]);
 
   const fromLabel = pendingMove
     ? slotRangeLabel(pendingMove.fromSlot, pendingMove.lesson.duration || 1, view.slotsPerDay)
@@ -226,6 +244,8 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
       ? activeProblem.sectionIds
       : activeCell
       ? view.idsAt[activeCell.day]?.[activeCell.period] ?? []
+      : mode === "grid" && f.search.trim() && view.searchMatchIds.size > 0
+      ? view.searchMatchIds
       : [],
   );
 
@@ -254,7 +274,7 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
     // Chon buoi DAU TIEN cua vu ma thuc su co mat tren luoi: vu "trung giang
     // vien" co 2 buoi (mot bi bo lai, mot da xep) va buoi bi bo lai khong co o
     // nao de cuon toi.
-    const tren = new Set(view.lessons.map((l) => l.id));
+    const tren = new Set(view.gridLessons.map((l) => l.id));
     const dich = (item.sectionIds || []).find((id) => tren.has(id));
     if (dich != null) setScrollTarget((truoc) => ({ id: dich, seq: (truoc?.seq ?? 0) + 1 }));
   };
@@ -265,7 +285,7 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
   // ngay tren luoi (qua displayLessons). "Luu" o day CHi luu ban ghi TAM, khong
   // phai luu vao backend.
   const handleDropLesson = (sectionId, toSlot) => {
-    const lesson = view.lessons.find((l) => l.id === sectionId);
+    const lesson = view.gridLessons.find((l) => l.id === sectionId);
     if (!lesson || lesson.slot === toSlot) return; // tha lai dung cho cu - bo qua
     setPendingMove({
       sectionId, lesson,
@@ -311,6 +331,12 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
     setSaveConfirmOpen(false);
     setMoveDialog(null);
   };
+  const handleOpenManual = (lesson) => openLessonInManual({
+    role,
+    lesson,
+    pendingMove,
+    onOpen: onOpenManualSections,
+  });
 
   const densityBlock = (
     <>
@@ -366,7 +392,7 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
             <span className="text-muted-foreground text-[11px] font-semibold tracking-wide uppercase">Đang xem</span>
             <strong className="text-foreground text-base">{scopeLabel(view, data)}</strong>
             <span className="text-muted-foreground text-sm tabular-nums">
-              {view.lessons.length}/{view.totalLessons} buổi
+              {displayLessons.length}/{view.totalLessons} buổi
             </span>
             {view.problemCount > 0 && (
               <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-700">
@@ -509,6 +535,9 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
             </Notice>
           ) : mode === "grid" ? (
             <>
+              {f.search.trim() && view.searchMatchIds.size === 0 && (
+                <Notice tone="slate">Không có buổi nào khớp từ khóa; lưới vẫn giữ nguyên để bạn tiếp tục đối chiếu.</Notice>
+              )}
               <LessonGridBoard
                 lessons={displayLessons}
                 numDays={view.numDays}
@@ -516,6 +545,7 @@ export default function SchedulePage({ role, filter, onFilterChange }) {
                 highlightedIds={highlighted}
                 colorBy={f.colorBy}
                 onPickProblem={pickProblem}
+                onOpenManual={handleOpenManual}
                 scrollTarget={scrollTarget}
                 detailed={fullscreen}
                 // BUG DA SUA: truoc day gate them "&& !pendingMove" o day -

@@ -359,18 +359,20 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
               const gv = teachers.find((t) => String(t.id) === String(tid));
               return (
                 <div key={`${tid}-${i}`} className="flex items-start gap-2">
-                  <NativeSelect
-                    className="w-full"
-                    value={tid}
-                    onChange={(e) => setTeacherAt(i, e.target.value)}
-                  >
-                    <option value="">— Chọn giảng viên —</option>
-                    {teachers.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name} · {t.type === "GUEST" ? "Thỉnh giảng" : "Cơ hữu"}
-                      </option>
-                    ))}
-                  </NativeSelect>
+                  <FilterSelect
+                    label="— Chọn giảng viên —"
+                    emptyLabel="— Chọn giảng viên —"
+                    searchPlaceholder="Tìm tên giảng viên…"
+                    searchable
+                    full
+                    modal={false}
+                    value={tid || null}
+                    options={teachers.map((t) => ({
+                      value: String(t.id),
+                      label: `${t.name} · ${t.type === "GUEST" ? "Thỉnh giảng" : "Cơ hữu"}`,
+                    }))}
+                    onChange={(teacherId) => setTeacherAt(i, teacherId ?? "")}
+                  />
                   {gv && onOpenTeacher && (
                     <Button
                       type="button"
