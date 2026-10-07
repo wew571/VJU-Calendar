@@ -64,14 +64,18 @@ describe("SectionTable", () => {
     };
   });
 
-  it("chi hien 17 cot tom tat va gop hai moc tiet thanh mot dai", () => {
+  it("chi hien 16 cot tom tat, doi TT thanh ID va bo cot So tiet", () => {
     renderTable([makeRow()]);
 
     const table = screen.getByRole("table");
     expect(within(table).getByRole("columnheader", { name: "Tiết giảng dạy" })).toBeInTheDocument();
     expect(within(table).getByText("2 - 5")).toBeInTheDocument();
     expect(table.querySelector("thead").rows).toHaveLength(2);
-    expect(table.querySelector("tbody .xls-row").cells).toHaveLength(17);
+    expect(table.querySelector("tbody .xls-row").cells).toHaveLength(16);
+    expect(within(table).getByRole("columnheader", { name: "ID" })).toBeInTheDocument();
+    expect(within(table).queryByRole("columnheader", { name: "TT" })).not.toBeInTheDocument();
+    expect(within(table).queryByRole("columnheader", { name: "Số tiết" })).not.toBeInTheDocument();
+    expect(table.querySelector("tbody .xls-row").cells[0]).toHaveTextContent("20");
 
     for (const header of ["Phân bổ TC", "Tiết đầu", "Tiết cuối", "Kỳ trước (để đối chiếu)", "Kỳ này", "Số giờ dạy", "Hình thức", "Ngôn ngữ", "Yêu cầu khác", "Ghi chú"]) {
       expect(within(table).queryByRole("columnheader", { name: header })).not.toBeInTheDocument();
@@ -92,7 +96,7 @@ describe("SectionTable", () => {
     })]);
 
     const row = screen.getByRole("table").querySelector("tbody .xls-row");
-    for (const index of [8, 10, 11, 14, 15, 16]) {
+    for (const index of [7, 9, 10, 13, 14, 15]) {
       expect(row.cells[index]).toHaveTextContent("—");
     }
     expect(row).not.toHaveTextContent("2 -");
@@ -114,9 +118,44 @@ describe("SectionTable", () => {
     expect(screen.getByRole("button", { name: "Trần Thị B" })).toHaveClass("xls-gv-venh");
   });
 
-  it("de thong bao bang rong phu du 17 cot", () => {
+  it("de thong bao bang rong phu du 16 cot", () => {
     renderTable([]);
 
-    expect(screen.getByText("Chưa có lớp nào khớp bộ lọc.")).toHaveAttribute("colspan", "17");
+    expect(screen.getByText("Chưa có lớp nào khớp bộ lọc.")).toHaveAttribute("colspan", "16");
+  });
+
+  it("mo dung popup theo vung bam va giu hanh dong rieng cua chot lich", () => {
+    const sectionHandler = vi.fn();
+    const courseHandler = vi.fn((_id, event) => event.stopPropagation());
+    const onChot = vi.fn();
+    renderTable([makeRow()], {
+      onOpenSection: (id) => () => sectionHandler(id),
+      onOpenCourse: (id) => (event) => courseHandler(id, event),
+      onChot,
+    });
+
+    const row = screen.getByRole("table").querySelector("tbody .xls-row");
+    for (const index of [0, 1, 2, 3]) fireEvent.click(row.cells[index]);
+    expect(courseHandler).toHaveBeenCalledTimes(4);
+    expect(courseHandler).toHaveBeenCalledWith(10, expect.anything());
+    expect(sectionHandler).not.toHaveBeenCalled();
+
+    for (const index of [5, 6, 7, 8, 9, 10, 13, 14, 15]) fireEvent.click(row.cells[index]);
+    expect(sectionHandler).toHaveBeenCalledTimes(9);
+    expect(sectionHandler).toHaveBeenCalledWith(20);
+
+    fireEvent.click(screen.getByRole("button", { name: "Chốt lớp học phần" }));
+    expect(onChot).toHaveBeenCalledOnce();
+    expect(sectionHandler).toHaveBeenCalledTimes(9);
+  });
+
+  it("giu thao tac rieng cua badge hoc chung", () => {
+    const onBoHocChung = vi.fn();
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderTable([makeRow({ hocChungId: 5, hocChungWith: [21] })], { onBoHocChung });
+
+    fireEvent.click(screen.getByRole("button", { name: /học chung ×2/ }));
+    expect(onBoHocChung).toHaveBeenCalledWith(5);
+    confirm.mockRestore();
   });
 });

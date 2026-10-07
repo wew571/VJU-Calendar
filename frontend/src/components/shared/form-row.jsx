@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
  * `children` nhận một hàm `(id) => node` để nhãn gắn đúng vào ô nhập; truyền
  * node thẳng cũng được khi ô nhập tự lo nhãn (vd nhóm 2 ô LT/TH).
  */
-export function FormRow({ label, hint, required, children, className }) {
+export function FormRow({ label, hint, error, required, children, className }) {
   const id = useId();
 
   return (
@@ -28,6 +28,7 @@ export function FormRow({ label, hint, required, children, className }) {
       </Label>
       <div className="min-w-0 space-y-1">
         {typeof children === 'function' ? children(id) : children}
+        {error && <p role="alert" className="text-destructive text-xs">{error}</p>}
         {hint && <p className="text-foreground/70 text-xs">{hint}</p>}
       </div>
     </div>

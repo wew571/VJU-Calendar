@@ -90,6 +90,7 @@ export default function ManualEntryPage({
   // domain co 1 form rieng (SectionEditDrawer/TeacherEditDrawer/CourseEditDrawer),
   // mo dung form theo O nguoi dung click trong bang, khong dong tat ca vao 1 form.
   const [drawer, setDrawer] = useState(null);
+  const [teacherPopupId, setTeacherPopupId] = useState(null);
   const [importOpen, setImportOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
@@ -216,8 +217,9 @@ export default function ManualEntryPage({
   const selectedSection = drawer?.type === "section" && drawer.id !== "new"
     ? classes.find((c) => c.sectionId === drawer.id) || null
     : null;
-  const selectedTeacher = drawer?.type === "teacher" && drawer.id !== "new"
-    ? (data?.teachers || []).find((t) => t.id === drawer.id) || null
+  const selectedTeacherId = teacherPopupId ?? (drawer?.type === "teacher" ? drawer.id : null);
+  const selectedTeacher = selectedTeacherId != null && selectedTeacherId !== "new"
+    ? (data?.teachers || []).find((t) => t.id === selectedTeacherId) || null
     : null;
   const selectedCourse = drawer?.type === "course" && drawer.id !== "new"
     ? (data?.courses || []).find((c) => c.id === drawer.id) || null
@@ -488,23 +490,24 @@ export default function ManualEntryPage({
         <SectionEditDrawer
           data={data}
           section={selectedSection}
-          onClose={() => setDrawer(null)}
+          onClose={() => { setTeacherPopupId(null); setDrawer(null); }}
           onDuplicated={(newId) => setDrawer({ type: "section", id: newId })}
-          // Bam "Giờ dạy" canh mot giang vien trong lop -> chuyen sang ngan cua
-          // chinh nguoi do (co muc khai gio co the day).
-          onOpenTeacher={(id) => setDrawer({ type: "teacher", id })}
+          // Bam "Giờ dạy" canh mot giang vien trong lop -> mo popup cua
+          // chinh nguoi do (co muc khai gio co the day) tren popup Sua lop.
+          onOpenTeacher={setTeacherPopupId}
         />
       )}
-      {drawer?.type === "teacher" && (
+      {(drawer?.type === "teacher" || (drawer?.type === "section" && teacherPopupId != null)) && (
         <TeacherEditDrawer
           data={data}
           teacher={selectedTeacher}
-          onClose={() => setDrawer(null)}
+          onClose={() => { setTeacherPopupId(null); if (drawer?.type === "teacher") setDrawer(null); }}
         />
       )}
       {drawer?.type === "course" && (
         <CourseEditDrawer
           course={selectedCourse}
+          classes={classes}
           onClose={() => setDrawer(null)}
         />
       )}

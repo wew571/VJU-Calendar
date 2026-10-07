@@ -13,10 +13,11 @@ vi.mock("../../context/AppDataContext", () => ({
       sourceLabel: "Nhập liệu thủ công",
       numSections: 1,
       numTeachers: 1,
-      teachers: [],
+      teachers: [{ id: 3, name: "GV A" }],
       courses: [],
       classes: [{
         sectionId: 7,
+        teacherIds: [3],
         classCode: "MTH101-1",
         courseName: "Giải tích",
         programParts: ["BCSE"],
@@ -35,14 +36,23 @@ vi.mock("../../context/AppDataContext", () => ({
 
 vi.mock("../manual/SectionTable", () => ({
   STATUS_META: {},
-  default: ({ rows, onBoChot }) => (
-    <button type="button" onClick={(event) => onBoChot(rows[0])(event)}>
-      Mở bỏ chốt
-    </button>
+  default: ({ rows, onBoChot, onOpenSection }) => (
+    <>
+      <button type="button" onClick={(event) => onBoChot(rows[0])(event)}>Mở bỏ chốt</button>
+      <button type="button" onClick={onOpenSection(rows[0].sectionId)}>Mở lớp</button>
+    </>
   ),
 }));
-vi.mock("../manual/SectionEditDrawer", () => ({ default: () => null }));
-vi.mock("../manual/TeacherEditDrawer", () => ({ default: () => null }));
+vi.mock("../manual/SectionEditDrawer", () => ({
+  default: ({ onOpenTeacher }) => (
+    <div data-testid="section-popup"><button type="button" onClick={() => onOpenTeacher(3)}>Giờ dạy</button></div>
+  ),
+}));
+vi.mock("../manual/TeacherEditDrawer", () => ({
+  default: ({ teacher, onClose }) => (
+    <div data-testid="teacher-popup">Giảng viên #{teacher?.id}<button type="button" onClick={onClose}>Đóng giảng viên</button></div>
+  ),
+}));
 vi.mock("../manual/CourseEditDrawer", () => ({ default: () => null }));
 vi.mock("../manual/ImportExcelDialog", () => ({ default: () => null }));
 vi.mock("../manual/ExportExcelDialog", () => ({ default: () => null }));
@@ -50,6 +60,18 @@ vi.mock("../manual/ChotCourseDialog", () => ({ default: () => null }));
 
 describe("ManualEntryPage - dialog bỏ chốt", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("giữ popup Sửa lớp khi mở và đóng Giờ dạy giảng viên", async () => {
+    const user = userEvent.setup();
+    render(<ManualEntryPage role="editor" />);
+    await user.click(screen.getByRole("button", { name: "Mở lớp" }));
+    await user.click(screen.getByRole("button", { name: "Giờ dạy" }));
+    expect(screen.getByTestId("section-popup")).toBeInTheDocument();
+    expect(screen.getByTestId("teacher-popup")).toHaveTextContent("Giảng viên #3");
+    await user.click(screen.getByRole("button", { name: "Đóng giảng viên" }));
+    expect(screen.queryByTestId("teacher-popup")).not.toBeInTheDocument();
+    expect(screen.getByTestId("section-popup")).toBeInTheDocument();
+  });
 
   it("huy khong goi API, xac nhan moi bo chot dung lop", async () => {
     const user = userEvent.setup();

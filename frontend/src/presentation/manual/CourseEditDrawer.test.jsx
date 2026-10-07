@@ -46,16 +46,52 @@ describe("CourseEditDrawer", () => {
     );
 
     const name = screen.getByRole("textbox", { name: /Tên học phần/ });
-    await user.clear(name);
-    await user.type(name, "Giải tích nâng cao");
+    expect(name).toHaveAttribute("readonly");
+    expect(name).toHaveValue("Giải tích");
+    expect(screen.getByRole("textbox", { name: "Mã học phần" })).toHaveAttribute("readonly");
+    await user.type(name, " nâng cao");
     await user.click(screen.getByRole("button", { name: "Lưu" }));
 
     await waitFor(() => expect(app.updateManualCourse).toHaveBeenCalledWith(10, {
       code: "MTH101",
-      name: "Giải tích nâng cao",
+      name: "Giải tích",
       credits: 3,
     }));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("them hoc phan moi van nhap duoc ma va ten", async () => {
+    const user = userEvent.setup();
+    app.addManualCourse.mockResolvedValue({});
+    render(<CourseEditDrawer course={null} classes={[]} onClose={vi.fn()} />);
+
+    expect(screen.getByRole("textbox", { name: "Mã học phần" })).not.toHaveAttribute("readonly");
+    expect(screen.getByRole("textbox", { name: "Tổng số lớp học phần" })).toHaveValue("0");
+    await user.type(screen.getByRole("textbox", { name: "Mã học phần" }), "IT101");
+    await user.type(screen.getByRole("textbox", { name: /Tên học phần/ }), "Nhập môn");
+    await user.click(screen.getByRole("button", { name: "Lưu" }));
+
+    await waitFor(() => expect(app.addManualCourse).toHaveBeenCalledWith({
+      code: "IT101", name: "Nhập môn", credits: null,
+    }));
+  });
+
+  it("dem tong so lop theo ma lop khac nhau tren toan bo du lieu cua hoc phan", () => {
+    const course = { id: 10, code: "VJU2002", name: "Môn", credits: 3 };
+    const classes = [
+      { sectionId: 1, courseId: 10, classCode: "VJU2002-1" },
+      { sectionId: 2, courseId: 10, classCode: " VJU2002-1 " },
+      { sectionId: 3, courseId: 10, classCode: "VJU2002-2", boQua: true },
+      { sectionId: 4, courseId: 10, classCode: "" },
+      { sectionId: 5, courseId: 10, classCode: null },
+      { sectionId: 6, courseId: 11, classCode: "OTHER-1" },
+    ];
+    const { unmount } = render(<CourseEditDrawer course={course} classes={classes} onClose={vi.fn()} />);
+    expect(screen.getByRole("textbox", { name: "Tổng số lớp học phần" })).toHaveValue("4");
+    unmount();
+
+    render(<CourseEditDrawer course={{ ...course, id: 99 }} classes={classes} onClose={vi.fn()} />);
+    expect(screen.getByRole("textbox", { name: "Tổng số lớp học phần" })).toHaveValue("0");
   });
 
   it("giữ và lưu được mức tín chỉ cũ ngoài danh sách", async () => {

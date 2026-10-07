@@ -168,9 +168,7 @@ describe("TeacherAvailabilityPage - Khai toàn bộ giờ rảnh", () => {
     expect(within(dialog).queryByText(/Tick MỌI tiết giảng viên rảnh/)).not.toBeInTheDocument();
     expect(within(dialog).queryByText(/Kéo để quét cả vùng/)).not.toBeInTheDocument();
 
-    await user.click(within(dialog).getByRole("button", { name: "Mở rộng popup" }));
-    expect(dialog).toHaveClass("w-[calc(100vw-2rem)]");
-    await user.click(within(dialog).getByRole("button", { name: "Thu nhỏ popup" }));
-    expect(dialog).toHaveClass("w-[min(1000px,calc(100vw-2rem))]");
+    expect(within(dialog).queryByRole("button", { name: /Mở rộng popup|Thu nhỏ popup/ })).not.toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Đóng" })).toBeInTheDocument();
   });
 });

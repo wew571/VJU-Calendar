@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CopyPlus, Plus, TriangleAlert, Trash2, X } from "lucide-react";
+import { ChevronDown, CopyPlus, Plus, TriangleAlert, Trash2, X } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import ClassTimeSlotPicker from "./ClassTimeSlotPicker";
 import { FilterSelect } from "@/components/shared/filter-select";
@@ -8,6 +8,7 @@ import { Notice } from "@/components/shared/notice";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DrawerBody, DrawerSection } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,88 @@ import { NativeSelect } from "@/components/ui/native-select";
 
 const LOCATION_OPTIONS = ["Hòa Lạc", "Mỹ Đình", "Khác"];
 const TEACHING_MODE_OPTIONS = ["Trực tiếp", "Trực tuyến", "LMS"];
+const PROGRAM_OPTIONS = ["BCSE", "BICA", "BJS", "Chung", "ECE", "ESAS", "ESCT", "FTH", "MJM"];
+const DURATION_OPTIONS = [1, 2, 3, 4];
+const MAX_STUDENTS = 100;
+const MAX_TEACHING_HOURS = 50;
+
+const joinPair = (parts) => parts.filter(Boolean).join("+");
+const splitCohorts = (value) => [...new Set((value || "").split(/[+,;/]/).map((part) => part.trim()).filter(Boolean))];
+const splitPrograms = (value) => {
+  const raw = value || "";
+  const parts = [];
+  let start = 0;
+  let depth = 0;
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] === "(") depth++;
+    else if (raw[i] === ")") depth = Math.max(0, depth - 1);
+    else if (depth === 0 && (raw[i] === "+" || raw[i] === ".")) {
+      parts.push(raw.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  parts.push(raw.slice(start).trim());
+  return [...new Set(parts.filter(Boolean))];
+};
+const programForSave = (value) => joinPair(splitPrograms(value));
+
+function MultiValueSelect({ id, label, parts, options, onToggle }) {
+  const display = joinPair(parts);
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger
+        id={id}
+        aria-label={label}
+        className="glass-control border-input hover:bg-accent focus-visible:ring-ring/50 flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-md border px-3 text-sm focus-visible:ring-[3px] focus-visible:outline-none"
+      >
+        <span className="truncate" title={display || undefined}>{display || "— Không —"}</span>
+        <ChevronDown className="text-muted-foreground size-3.5 shrink-0" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        className="grid max-h-[min(16rem,calc(100dvh-2rem))] w-[min(20rem,calc(100vw-2rem))] grid-cols-3 gap-1 overflow-y-auto"
+        onWheel={(event) => { event.currentTarget.scrollTop += event.deltaY; }}
+      >
+        {options.length === 0 && <span className="text-muted-foreground col-span-3 px-2 py-1.5 text-sm">Chưa có lựa chọn</span>}
+        {options.map((option) => (
+          <DropdownMenuCheckboxItem
+            key={option}
+            checked={parts.includes(option)}
+            className={option.length > 8 ? "col-span-3" : ""}
+            onCheckedChange={(checked) => onToggle(option, checked)}
+            onSelect={(event) => event.preventDefault()}
+          >
+            {option}
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+const isBlank = (v) => v === "" || v == null;
+const validInt = (v, max) => /^\d+$/.test(String(v).trim()) && Number(v) <= max;
+const validNumber = (v, max) => /^\d+(\.\d+)?$/.test(String(v).trim()) && Number(v) <= max;
+
+// Gioi han CHI ap cho thao tac luu tay (khop webapp/domain/sections.py:
+// kiem_tra_gioi_han_nhap_tay) - du lieu cu tu Excel vuot gioi han van duoc XEM,
+// nhung bam Luu / "Them buoi khac" thi phai sua lai.
+function validateLimits(form, section) {
+  const errors = {};
+  if (!DURATION_OPTIONS.includes(Number(form.duration))) {
+    errors.duration = section?.sectionChot
+      ? "Số tiết cũ vượt giới hạn 1–4 và lớp đang chốt: cần bỏ chốt lớp trước khi sửa và lưu."
+      : "Số tiết / buổi phải là 1, 2, 3 hoặc 4 — hãy chọn lại.";
+  }
+  if (!isBlank(form.expectedStudents) && !validInt(form.expectedStudents, MAX_STUDENTS)) {
+    errors.expectedStudents = `Số SV dự kiến phải là số nguyên từ 0 đến ${MAX_STUDENTS} hoặc để trống.`;
+  }
+  if ((!isBlank(form.teachingHoursLt) && !validNumber(form.teachingHoursLt, MAX_TEACHING_HOURS))
+    || (!isBlank(form.teachingHoursTh) && !validNumber(form.teachingHoursTh, MAX_TEACHING_HOURS))) {
+    errors.teachingHours = `Mỗi ô Số giờ dạy (LT / TH) phải từ 0 đến ${MAX_TEACHING_HOURS} hoặc để trống.`;
+  }
+  return errors;
+}
 
 function suggestTeacherType(org) {
   const t = (org || "").toLowerCase();
@@ -62,6 +145,7 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
   const { loading, addManualTeacher, addManualSection, updateManualSection, deleteManualSection, doBoQua } = useAppData();
   const [form, setForm] = useState(section ? formFromClass(section) : emptyForm());
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showAddTeacher, setShowAddTeacher] = useState(false);
   const [newTeacher, setNewTeacher] = useState({ name: "", org: "", teacherType: "GUEST" });
 
@@ -74,11 +158,24 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
   useEffect(() => {
     setForm(section ? formFromClass(section) : emptyForm());
     setError(null);
+    setFieldErrors({});
     setShowAddTeacher(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sectionKey]);
 
   const teachers = data?.teachers || [];
+  const programParts = splitPrograms(form.program);
+  const cohortParts = splitCohorts(form.cohort);
+  const programOptions = [...new Set([...PROGRAM_OPTIONS, ...programParts.filter(Boolean)])];
+  const cohortOptions = [...new Set((data?.classes || [])
+    .flatMap((c) => c.cohortParts?.length ? c.cohortParts : (c.cohort || "").split(/[+,;/]/))
+    .map((part) => part.trim()).filter(Boolean))]
+    .sort().reverse();
+  for (const part of cohortParts) if (part && !cohortOptions.includes(part)) cohortOptions.push(part);
+  const togglePart = (key, split) => (part, checked) => setForm((current) => {
+    const parts = split(current[key]);
+    return { ...current, [key]: joinPair(checked ? [...parts, part] : parts.filter((p) => p !== part)) };
+  });
   const courses = data?.courses || [];
   const numDays = data?.numDays ?? 7;
   const slotsPerDay = data?.slotsPerDay ?? 12;
@@ -90,9 +187,18 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
   const timeLocked = Boolean(section?.sectionChot || section?.hocChungLockedBy);
   const hasDisplayedTime = form.day != null && form.periodStart != null && form.periodEnd != null;
 
-  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const clearFieldError = (key) => setFieldErrors((errs) => {
+    if (!errs[key]) return errs;
+    const { [key]: _removed, ...rest } = errs;
+    return rest;
+  });
+  const set = (key) => (e) => {
+    clearFieldError(key === "teachingHoursLt" || key === "teachingHoursTh" ? "teachingHours" : key);
+    setForm((f) => ({ ...f, [key]: e.target.value }));
+  };
   const setDuration = (e) => {
     const duration = e.target.value;
+    clearFieldError("duration");
     setForm((f) => {
       if (section?.sectionChot || f.day == null) return { ...f, duration };
       const selectedLength = f.periodEnd - f.periodStart + 1;
@@ -144,8 +250,11 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
     setError(null);
     if (!form.teacherIds.filter(Boolean).length) return setError("Chưa chọn giảng viên.");
     if (!form.courseId) return setError("Chưa chọn học phần.");
+    const limitErrors = validateLimits(form, section);
+    setFieldErrors(limitErrors);
+    if (Object.keys(limitErrors).length) return setError("Có ô nhập chưa hợp lệ — xem thông báo đỏ dưới từng ô.");
     const duration = Number(form.duration);
-    if (!Number.isInteger(duration) || duration <= 0 || duration > slotsPerDay) {
+    if (duration > slotsPerDay) {
       return setError(`Số tiết mỗi buổi dạy phải là số nguyên từ 1 đến ${slotsPerDay}.`);
     }
     if (!form.autoSchedule && (form.day == null || form.periodStart == null || form.periodEnd == null)) {
@@ -177,10 +286,10 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
     const payload = {
       teacherIds: form.teacherIds.filter(Boolean).map(Number),
       courseId: Number(form.courseId),
-      classCode: form.classCode.trim(), program: form.program.trim(),
+      classCode: form.classCode.trim(), program: programForSave(form.program),
       ltCredits: form.ltCredits === "" ? 0 : Number(form.ltCredits),
       thCredits: form.thCredits === "" ? 0 : Number(form.thCredits),
-      cohort: form.cohort.trim(),
+      cohort: joinPair(splitCohorts(form.cohort)),
       expectedStudents: form.expectedStudents === "" ? null : Number(form.expectedStudents),
       duration: Number(form.duration),
       location: form.location, teachingMode: form.teachingMode,
@@ -225,15 +334,18 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
     if (!form.teacherIds.filter(Boolean).length || !form.courseId) {
       return setError("Cần chọn học phần và giảng viên trước khi nhân bản.");
     }
+    const limitErrors = validateLimits(form, section);
+    setFieldErrors(limitErrors);
+    if (Object.keys(limitErrors).length) return setError("Có ô nhập chưa hợp lệ — xem thông báo đỏ dưới từng ô.");
     const payload = {
       teacherIds: form.teacherIds.filter(Boolean).map(Number),
       courseId: Number(form.courseId),
-      classCode: form.classCode.trim(), program: form.program.trim(),
+      classCode: form.classCode.trim(), program: programForSave(form.program),
       ltCredits: form.ltCredits === "" ? 0 : Number(form.ltCredits),
       thCredits: form.thCredits === "" ? 0 : Number(form.thCredits),
-      cohort: form.cohort.trim(),
+      cohort: joinPair(splitCohorts(form.cohort)),
       expectedStudents: form.expectedStudents === "" ? null : Number(form.expectedStudents),
-      duration: Number(form.duration) || 2,
+      duration: Number(form.duration),
       location: form.location, teachingMode: form.teachingMode,
       language: form.language.trim(), otherRequirements: form.otherRequirements.trim(),
       notes: form.notes.trim(), coordinatorOverride: form.coordinatorOverride.trim(),
@@ -300,10 +412,16 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
 
           <DrawerSection title="Lớp học phần">
             <FormRow label="Mã lớp">
-              {(id) => <Input id={id} value={form.classCode} onChange={set("classCode")} placeholder="IT101.1" />}
+              {(id) => <Input id={id} value={form.classCode} onChange={set("classCode")} placeholder="IT101.1" readOnly={Boolean(section)} />}
             </FormRow>
             <FormRow label="Chương trình (CTĐT)">
-              {(id) => <Input id={id} value={form.program} onChange={set("program")} placeholder="BCSE" />}
+              {(id) => (
+                <MultiValueSelect
+                  id={id} label="Chương trình (CTĐT)"
+                  parts={programParts} options={programOptions}
+                  onToggle={togglePart("program", splitPrograms)}
+                />
+              )}
             </FormRow>
             <FormRow label="Phân bổ TC (LT / TH)">
               <div className="flex gap-2">
@@ -312,21 +430,48 @@ export default function SectionEditDrawer({ data, section, onClose, onDuplicated
               </div>
             </FormRow>
             <FormRow label="Khóa">
-              {(id) => <Input id={id} value={form.cohort} onChange={set("cohort")} placeholder="K68" />}
+              {(id) => (
+                <MultiValueSelect
+                  id={id} label="Khóa"
+                  parts={cohortParts} options={cohortOptions}
+                  onToggle={togglePart("cohort", splitCohorts)}
+                />
+              )}
             </FormRow>
-            <FormRow label="Số SV dự kiến">
-              {(id) => <Input id={id} type="number" min={0} value={form.expectedStudents} onChange={set("expectedStudents")} />}
+            <FormRow label="Số SV dự kiến" error={fieldErrors.expectedStudents}>
+              {(id) => (
+                <Input
+                  id={id}
+                  type="number"
+                  value={form.expectedStudents}
+                  onChange={set("expectedStudents")}
+                  aria-invalid={Boolean(fieldErrors.expectedStudents)}
+                />
+              )}
             </FormRow>
-            <FormRow label="Số tiết / buổi" required>
-              {(id) => <Input id={id} type="number" min={1} max={slotsPerDay} required value={form.duration} onChange={setDuration} />}
+            <FormRow label="Số tiết / buổi" required error={fieldErrors.duration}>
+              {(id) => (
+                <NativeSelect
+                  id={id}
+                  containerClassName="w-full"
+                  value={form.duration}
+                  onChange={setDuration}
+                  aria-invalid={Boolean(fieldErrors.duration)}
+                >
+                  {!DURATION_OPTIONS.includes(Number(form.duration)) && (
+                    <option value={form.duration}>{form.duration} — vượt giới hạn, hãy chọn lại</option>
+                  )}
+                  {DURATION_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
+                </NativeSelect>
+              )}
             </FormRow>
           </DrawerSection>
 
           <DrawerSection title="Giờ dạy & hình thức">
-            <FormRow label="Số giờ dạy (LT / TH)">
+            <FormRow label="Số giờ dạy (LT / TH)" error={fieldErrors.teachingHours}>
               <div className="flex gap-2">
-                <Input type="number" min={0} value={form.teachingHoursLt} onChange={set("teachingHoursLt")} placeholder="Lý thuyết" />
-                <Input type="number" min={0} value={form.teachingHoursTh} onChange={set("teachingHoursTh")} placeholder="Thực hành" />
+                <Input type="number" step="any" value={form.teachingHoursLt} onChange={set("teachingHoursLt")} placeholder="Lý thuyết" aria-label="Số giờ dạy lý thuyết" />
+                <Input type="number" step="any" value={form.teachingHoursTh} onChange={set("teachingHoursTh")} placeholder="Thực hành" aria-label="Số giờ dạy thực hành" />
               </div>
             </FormRow>
             <FormRow label="Địa điểm giảng dạy">

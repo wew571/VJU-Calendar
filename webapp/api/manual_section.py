@@ -8,7 +8,7 @@ from domain.chot import khoa_vi_da_chot
 from domain.hoc_chung import don_nhom_hong, kiem_tra_sua_lop
 from domain.luoi import dong_bo_ket_qua
 from domain.pinning import ghim_theo_gio_form, lan_gio_sang_nhom
-from domain.sections import don_ma_lop_sau_xoa, id_moi, validate_section_body
+from domain.sections import don_ma_lop_sau_xoa, id_moi, kiem_tra_gioi_han_nhap_tay, validate_section_body
 from domain.time_rules import apply_section_time
 from snapshot import save_snapshot
 from state import STATE
@@ -28,6 +28,9 @@ def api_manual_add_section(data):
       xep theo khung gio ranh da khai bao, chua ai khai thi tu do ca tuan."""
     body = request.get_json(force=True)
 
+    err = kiem_tra_gioi_han_nhap_tay(body)
+    if err:
+        return loi(err)
     fields, teacher, duration, time_info, err = validate_section_body(data, body)
     if err:
         return loi(err)
@@ -57,6 +60,9 @@ def api_manual_update_section(data, section_id):
     if section_id not in data["sections"]:
         return loi(f"Không tìm thấy lớp id={section_id}.")
     body = request.get_json(force=True)
+    err = kiem_tra_gioi_han_nhap_tay(body)
+    if err:
+        return loi(err)
     current = data["sections"][section_id]
     try:
         raw_teacher_ids = body.get("teacherIds")

@@ -21,7 +21,18 @@ function formFromCourse(c) {
 // Form RIENG cho 1 hoc phan (Ma HP/Ten HP/So TC) - tach khoi SectionEditDrawer
 // vi day la thong tin dung CHUNG cho nhieu lop, sua o day anh huong tat ca lop
 // thuoc hoc phan nay (khong gan voi 1 lop cu the).
-export default function CourseEditDrawer({ course, onClose }) {
+function demSoLop(classes, courseId) {
+  if (courseId == null) return 0;
+  const keys = new Set();
+  (classes || []).forEach((c) => {
+    if (c.courseId !== courseId) return;
+    const code = (c.classCode || "").trim();
+    keys.add(code ? `code:${code}` : `section:${c.sectionId}`);
+  });
+  return keys.size;
+}
+
+export default function CourseEditDrawer({ course, classes, onClose }) {
   const { loading, addManualCourse, updateManualCourse } = useAppData();
   const [form, setForm] = useState(course ? formFromCourse(course) : emptyForm());
   const [error, setError] = useState(null);
@@ -79,7 +90,7 @@ export default function CourseEditDrawer({ course, onClose }) {
             <DrawerSection title="Học phần">
               <FormRow label="Mã học phần">
                 {(id) => (
-                  <Input id={id} value={form.code} onChange={set("code")} placeholder="IT101" />
+                  <Input id={id} value={form.code} onChange={set("code")} placeholder="IT101" readOnly={Boolean(course)} />
                 )}
               </FormRow>
               <FormRow label="Tên học phần" required>
@@ -90,6 +101,7 @@ export default function CourseEditDrawer({ course, onClose }) {
                     onChange={set("name")}
                     placeholder="Nhập môn Công nghệ thông tin"
                     required
+                    readOnly={Boolean(course)}
                   />
                 )}
               </FormRow>
@@ -103,6 +115,9 @@ export default function CourseEditDrawer({ course, onClose }) {
                     )}
                   </NativeSelect>
                 )}
+              </FormRow>
+              <FormRow label="Tổng số lớp học phần">
+                {(id) => <Input id={id} value={demSoLop(classes, course?.id)} readOnly />}
               </FormRow>
             </DrawerSection>
           </DrawerBody>

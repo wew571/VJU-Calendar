@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Maximize2, Minimize2, TriangleAlert, X } from "lucide-react";
+import { TriangleAlert, X } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import SubmissionWindowGrid from "../submissions/SubmissionWindowGrid";
 import { FilterSelect } from "@/components/shared/filter-select";
@@ -24,7 +24,7 @@ function emptyForm() {
 function formFromTeacher(t) {
   return {
     name: t.nameRaw || "", org: t.org || "", title: t.title || "",
-    email: t.email || "", phone: t.phone || "", teacherType: t.type,
+    email: t.email || "", phone: t.phone == null ? "" : String(t.phone), teacherType: t.type,
   };
 }
 
@@ -41,7 +41,7 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
   const [form, setForm] = useState(teacher ? formFromTeacher(teacher) : emptyForm());
   const [typeTouched, setTypeTouched] = useState(Boolean(teacher));
   const [error, setError] = useState(null);
-  const [expanded, setExpanded] = useState(false);
+  const [phoneError, setPhoneError] = useState(null);
   const teacherKey = teacher?.id ?? "new";
 
   useEffect(() => {
@@ -49,6 +49,7 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
     setForm(teacher ? formFromTeacher(teacher) : emptyForm());
     setTypeTouched(Boolean(teacher));
     setError(null);
+    setPhoneError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teacherKey]);
 
@@ -73,10 +74,15 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
   const handleSaveInfo = async (e) => {
     e.preventDefault();
     setError(null);
+    setPhoneError(null);
     if (!form.name.trim()) return setError("Chưa nhập Họ tên.");
+    if (!/^[0-9]{0,10}$/.test(form.phone)) {
+      setPhoneError("Số điện thoại chỉ gồm chữ số 0-9, tối đa 10 chữ số.");
+      return setError("Số điện thoại chưa hợp lệ — hãy sửa lại trước khi lưu.");
+    }
     const payload = {
       name: form.name.trim(), org: form.org.trim(), title: form.title.trim(),
-      email: form.email.trim(), phone: form.phone.trim(), teacherType: form.teacherType,
+      email: form.email.trim(), phone: form.phone, teacherType: form.teacherType,
     };
     try {
       if (teacherId != null) {
@@ -119,9 +125,7 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className={`teacher-edit-dialog manual-edit-glass flex max-w-none flex-col gap-0 overflow-hidden p-0 ${expanded
-          ? "h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)]"
-          : "h-[min(600px,calc(100dvh-2rem))] w-[min(1000px,calc(100vw-2rem))]"}`}
+        className="teacher-edit-dialog manual-edit-glass flex h-[min(600px,calc(100dvh-2rem))] w-[min(1000px,calc(100vw-2rem))] max-w-none flex-col gap-0 overflow-hidden p-0"
       >
         <DialogHeader className="flex shrink-0 flex-row items-center justify-between gap-3 border-b px-5 py-3">
           <div className="min-w-0">
@@ -130,21 +134,10 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
             </DialogTitle>
             <DialogDescription className="sr-only">Chỉnh sửa thông tin giảng viên.</DialogDescription>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <button
-              type="button"
-              className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring/50 inline-flex size-8 items-center justify-center rounded-md transition-colors focus-visible:ring-[3px] focus-visible:outline-none"
-              aria-label={expanded ? "Thu nhỏ popup" : "Mở rộng popup"}
-              aria-pressed={expanded}
-              onClick={() => setExpanded((value) => !value)}
-            >
-              {expanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
-            </button>
-            <DialogClose className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring/50 inline-flex size-8 items-center justify-center rounded-md transition-colors focus-visible:ring-[3px] focus-visible:outline-none">
-              <X className="size-4" />
-              <span className="sr-only">Đóng</span>
-            </DialogClose>
-          </div>
+          <DialogClose className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring/50 inline-flex size-8 shrink-0 items-center justify-center rounded-md transition-colors focus-visible:ring-[3px] focus-visible:outline-none">
+            <X className="size-4" />
+            <span className="sr-only">Đóng</span>
+          </DialogClose>
         </DialogHeader>
         <DrawerBody className={`grid grid-cols-1 !space-y-0 !overflow-y-auto !p-0 ${teacherId != null ? "min-[900px]:grid-cols-2 min-[900px]:!overflow-hidden" : ""}`}>
           <div className="min-h-0 min-w-0 space-y-5 px-5 py-4 min-[900px]:overflow-y-auto">
@@ -242,12 +235,14 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
                 />
               )}
             </FormRow>
-            <FormRow label="Số điện thoại">
+            <FormRow label="Số điện thoại" error={phoneError}>
               {(id) => (
                 <Input
                   id={id}
+                  inputMode="numeric"
+                  aria-invalid={Boolean(phoneError)}
                   value={form.phone}
-                  onChange={setField("phone")}
+                  onChange={(e) => { setPhoneError(null); setField("phone")(e); }}
                   placeholder="Không bắt buộc"
                 />
               )}

@@ -69,6 +69,9 @@ export function FilterSelect({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
+        onWheel={modal ? undefined : (event) => {
+          event.currentTarget.scrollTop += event.deltaY;
+        }}
         className={cn(
           'max-h-80 min-w-48 max-w-[calc(100vw-1.5rem)] overflow-y-auto',
           full && 'w-[var(--radix-dropdown-menu-trigger-width)]',

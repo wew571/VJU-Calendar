@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import SectionEditDrawer from "./SectionEditDrawer";
 
@@ -94,6 +94,15 @@ describe("SectionEditDrawer", () => {
     expect(screen.getByRole("button", { name: /Học phần/ })).toHaveTextContent("MTH102 — Đại số tuyến tính");
   });
 
+  it("cuộn danh sách học phần trong popup bằng con lăn chuột", async () => {
+    const user = userEvent.setup();
+    render(<SectionEditDrawer data={data} section={makeSection()} onClose={vi.fn()} />);
+    await user.click(screen.getByRole("button", { name: /Học phần/ }));
+    const menu = screen.getByRole("menu");
+    fireEvent.wheel(menu, { deltaY: 120 });
+    expect(menu.scrollTop).toBe(120);
+  });
+
   it("tìm giảng viên theo tên trong từng ô chọn", async () => {
     const user = userEvent.setup();
     render(<SectionEditDrawer data={data} section={makeSection()} onClose={vi.fn()} />);
@@ -112,9 +121,8 @@ describe("SectionEditDrawer", () => {
     const user = userEvent.setup();
     render(<SectionEditDrawer data={data} section={makeSection()} onClose={vi.fn()} />);
 
-    const duration = screen.getByRole("spinbutton", { name: /Số tiết \/ buổi/ });
-    await user.clear(duration);
-    await user.type(duration, "2");
+    const duration = screen.getByRole("combobox", { name: /Số tiết \/ buổi/ });
+    await user.selectOptions(duration, "2");
 
     expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(0);
     expect(screen.getByText("Bấm một ô để chọn đủ 2 tiết liên tiếp trong cùng ngày.")).toBeInTheDocument();
@@ -223,5 +231,216 @@ describe("SectionEditDrawer", () => {
     expect(screen.getByText(/Giờ bị khóa vì lớp học chung đã chốt/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Lưu" }));
     await waitFor(() => expect(app.updateManualSection).toHaveBeenCalled());
+  });
+
+  describe("gioi han va o chon", () => {
+    const withClasses = { ...data, classes: [
+      { sectionId: 1, cohort: "VJU2024" }, { sectionId: 2, cohort: "VJU2025" }, { sectionId: 3, cohort: "" },
+    ] };
+
+    it("chi khoa Ma lop khi sua, them lop moi van nhap duoc", () => {
+      const { unmount } = render(<SectionEditDrawer data={data} section={makeSection()} onClose={vi.fn()} />);
+      expect(screen.getByRole("textbox", { name: "Mã lớp" })).toHaveAttribute("readonly");
+      unmount();
+      render(<SectionEditDrawer data={data} section={null} onClose={vi.fn()} />);
+      expect(screen.getByRole("textbox", { name: "Mã lớp" })).not.toHaveAttribute("readonly");
+    });
+
+    it("tick nhiều chương trình trên một menu gọn và lưu với dấu cộng", async () => {
+      const user = userEvent.setup();
+      app.updateManualSection.mockResolvedValue({});
+      render(<SectionEditDrawer data={data} section={makeSection({ programName: "BCSE" })} onClose={vi.fn()} />);
+
+      const trigger = screen.getByRole("button", { name: "Chương trình (CTĐT)" });
+      expect(trigger).toHaveTextContent("BCSE");
+      await user.click(trigger);
+      const menu = screen.getByRole("menu");
+      expect(menu).toHaveClass("grid-cols-3");
+      expect(within(menu).getByRole("menuitemcheckbox", { name: "BCSE" })).toHaveAttribute("aria-checked", "true");
+      await user.click(within(menu).getByRole("menuitemcheckbox", { name: "MJM" }));
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+      await user.click(within(menu).getByRole("menuitemcheckbox", { name: "ECE" }));
+      expect(trigger).toHaveTextContent("BCSE+MJM+ECE");
+      await user.click(within(menu).getByRole("menuitemcheckbox", { name: "MJM" }));
+      expect(trigger).toHaveTextContent("BCSE+ECE");
+      await user.click(within(menu).getByRole("menuitemcheckbox", { name: "MJM" }));
+      await user.click(trigger);
+      await user.click(screen.getByRole("button", { name: "Lưu" }));
+      await waitFor(() => expect(app.updateManualSection).toHaveBeenCalled());
+      expect(app.updateManualSection.mock.calls[0][1]).toMatchObject({ program: "BCSE+ECE+MJM", classCode: "MTH101-1" });
+    });
+
+    it("tick nhiều khóa trong menu gọn, giữ khóa cũ và lưu với dấu cộng", async () => {
+      const user = userEvent.setup();
+      app.updateManualSection.mockResolvedValue({});
+      render(<SectionEditDrawer data={withClasses} section={makeSection({ cohort: "K68+K69" })} onClose={vi.fn()} />);
+      const trigger = screen.getByRole("button", { name: "Khóa" });
+      expect(trigger).toHaveTextContent("K68+K69");
+      await user.click(trigger);
+      const menu = screen.getByRole("menu");
+      expect(menu).toHaveClass("grid-cols-3");
+      expect(within(menu).getAllByRole("menuitemcheckbox")).toHaveLength(4);
+      expect(within(menu).getAllByRole("menuitemcheckbox", { checked: true })).toHaveLength(2);
+      await user.click(within(menu).getByRole("menuitemcheckbox", { name: "VJU2025" }));
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+      expect(trigger).toHaveTextContent("K68+K69+VJU2025");
+      await user.click(within(menu).getByRole("menuitemcheckbox", { name: "K68" }));
+      expect(trigger).toHaveTextContent("K69+VJU2025");
+      await user.click(trigger);
+      await user.click(screen.getByRole("button", { name: "Lưu" }));
+      await waitFor(() => expect(app.updateManualSection).toHaveBeenCalled());
+      expect(app.updateManualSection.mock.calls[0][1]).toMatchObject({ cohort: "K69+VJU2025" });
+    });
+
+    it("đọc dữ liệu ghép cũ, đổi dấu chấm sang dấu cộng và giữ được cả ba chương trình", async () => {
+      const user = userEvent.setup();
+      app.updateManualSection.mockResolvedValue({});
+      render(<SectionEditDrawer data={data} section={makeSection({ programName: "FTH.ESAS+MJM" })} onClose={vi.fn()} />);
+      const trigger = screen.getByRole("button", { name: "Chương trình (CTĐT)" });
+      expect(trigger).toHaveTextContent("FTH+ESAS+MJM");
+      await user.click(trigger);
+      expect(within(screen.getByRole("menu")).getAllByRole("menuitemcheckbox", { checked: true })).toHaveLength(3);
+      await user.click(trigger);
+      await user.click(screen.getByRole("button", { name: "Lưu" }));
+      await waitFor(() => expect(app.updateManualSection).toHaveBeenCalled());
+      expect(app.updateManualSection.mock.calls[0][1].program).toBe("FTH+ESAS+MJM");
+    });
+
+    it("giữ nguyên chú thích CTĐT cũ khi lưu và cho tick thêm chương trình", async () => {
+      const user = userEvent.setup();
+      app.updateManualSection.mockResolvedValue({});
+      render(<SectionEditDrawer data={data} section={makeSection({ programName: "BICA (+ESCT)" })} onClose={vi.fn()} />);
+      const trigger = screen.getByRole("button", { name: "Chương trình (CTĐT)" });
+      await user.click(trigger);
+      expect(within(screen.getByRole("menu")).getByRole("menuitemcheckbox", { name: "BICA (+ESCT)" })).toHaveAttribute("aria-checked", "true");
+      await user.click(within(screen.getByRole("menu")).getByRole("menuitemcheckbox", { name: "MJM" }));
+      expect(trigger).toHaveTextContent("BICA (+ESCT)+MJM");
+      await user.click(trigger);
+      await user.click(screen.getByRole("button", { name: "Lưu" }));
+      await waitFor(() => expect(app.updateManualSection).toHaveBeenCalled());
+      expect(app.updateManualSection.mock.calls[0][1].program).toBe("BICA (+ESCT)+MJM");
+    });
+
+    it("tách dữ liệu Khóa cũ nhiều hơn hai mục, bỏ trùng và lưu thành dấu cộng", async () => {
+      const user = userEvent.setup();
+      app.updateManualSection.mockResolvedValue({});
+      render(<SectionEditDrawer data={withClasses} section={makeSection({ cohort: "K68;K69/VJU2024;K68" })} onClose={vi.fn()} />);
+      const trigger = screen.getByRole("button", { name: "Khóa" });
+      expect(trigger).toHaveTextContent("K68+K69+VJU2024");
+      await user.click(trigger);
+      expect(within(screen.getByRole("menu")).getAllByRole("menuitemcheckbox", { checked: true })).toHaveLength(3);
+      await user.click(trigger);
+      await user.click(screen.getByRole("button", { name: "Lưu" }));
+      await waitFor(() => expect(app.updateManualSection).toHaveBeenCalled());
+      expect(app.updateManualSection.mock.calls[0][1].cohort).toBe("K68+K69+VJU2024");
+    });
+
+    it("menu Khóa dài cuộn bên trong mà không làm dài popup Sửa lớp", async () => {
+      const user = userEvent.setup();
+      const manyClasses = { ...data, classes: Array.from({ length: 24 }, (_, index) => ({ cohort: `VJU${2000 + index}` })) };
+      render(<SectionEditDrawer data={manyClasses} section={makeSection()} onClose={vi.fn()} />);
+      await user.click(screen.getByRole("button", { name: "Khóa" }));
+      const menu = screen.getByRole("menu");
+      expect(menu).toHaveClass("overflow-y-auto", "grid-cols-3");
+      expect(within(menu).getAllByRole("menuitemcheckbox")).toHaveLength(25);
+      fireEvent.wheel(menu, { deltaY: 120 });
+      expect(menu.scrollTop).toBe(120);
+      expect(screen.getByRole("dialog", { name: "Sửa lớp MTH101-1" })).toHaveClass("h-[min(750px,calc(100dvh-2rem))]");
+    });
+
+    it("Khóa không có lựa chọn khi chưa có lớp nào", async () => {
+      const user = userEvent.setup();
+      render(<SectionEditDrawer data={data} section={null} onClose={vi.fn()} />);
+      const trigger = screen.getByRole("button", { name: "Khóa" });
+      expect(trigger).toHaveTextContent("— Không —");
+      await user.click(trigger);
+      expect(within(screen.getByRole("menu")).queryAllByRole("menuitemcheckbox")).toHaveLength(0);
+      expect(within(screen.getByRole("menu")).getByText("Chưa có lựa chọn")).toBeInTheDocument();
+    });
+
+    it("So tiet chi cho chon 1-4", () => {
+      render(<SectionEditDrawer data={data} section={makeSection()} onClose={vi.fn()} />);
+      const duration = screen.getByRole("combobox", { name: /Số tiết \/ buổi/ });
+      expect(within(duration).getAllByRole("option").map((o) => o.value)).toEqual(["1", "2", "3", "4"]);
+    });
+
+    it("so tiet cu > 4 hien ro, buoc chon lai va chan ca Luu lan Them buoi khac", async () => {
+      const user = userEvent.setup();
+      render(<SectionEditDrawer data={data} section={makeSection({ duration: 5, periodEnd: 5 })} onClose={vi.fn()} />);
+
+      const duration = screen.getByRole("combobox", { name: /Số tiết \/ buổi/ });
+      expect(duration).toHaveValue("5");
+      expect(within(duration).getByRole("option", { name: /5 — vượt giới hạn/ })).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Lưu" }));
+      expect(screen.getByText(/Số tiết \/ buổi phải là 1, 2, 3 hoặc 4/)).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /Thêm buổi khác/ }));
+      expect(app.updateManualSection).not.toHaveBeenCalled();
+      expect(app.addManualSection).not.toHaveBeenCalled();
+
+      await user.selectOptions(duration, "3");
+      expect(screen.queryByText(/Số tiết \/ buổi phải là 1, 2, 3 hoặc 4/)).not.toBeInTheDocument();
+    });
+
+    it("lop da chot co so tiet cu > 4 bao can bo chot truoc", async () => {
+      const user = userEvent.setup();
+      render(
+        <SectionEditDrawer
+          data={data}
+          section={makeSection({ duration: 5, periodEnd: 5, sectionChot: { by: "Giáo vụ" } })}
+          onClose={vi.fn()}
+        />,
+      );
+      await user.click(screen.getByRole("button", { name: "Lưu" }));
+      expect(screen.getByText(/cần bỏ chốt lớp trước khi sửa và lưu/)).toBeInTheDocument();
+      expect(app.updateManualSection).not.toHaveBeenCalled();
+    });
+
+    it.each([["100", true], ["0", true], ["", true], ["101", false], ["-1", false], ["1.5", false]])(
+      "So SV du kien %s -> hop le: %s", async (value, ok) => {
+        const user = userEvent.setup();
+        app.updateManualSection.mockResolvedValue({});
+        render(<SectionEditDrawer data={data} section={makeSection({ expectedStudents: "" })} onClose={vi.fn()} />);
+        const field = screen.getByRole("spinbutton", { name: "Số SV dự kiến" });
+        if (value) await user.type(field, value);
+        await user.click(screen.getByRole("button", { name: "Lưu" }));
+        if (ok) await waitFor(() => expect(app.updateManualSection).toHaveBeenCalled());
+        else {
+          expect(screen.getByText(/Số SV dự kiến phải là số nguyên từ 0 đến 100/)).toBeInTheDocument();
+          expect(app.updateManualSection).not.toHaveBeenCalled();
+        }
+      },
+    );
+
+    it("moi o so gio day LT/TH co gioi han 50 rieng, khong cong don", async () => {
+      const user = userEvent.setup();
+      app.updateManualSection.mockResolvedValue({});
+      render(<SectionEditDrawer data={data} section={makeSection()} onClose={vi.fn()} />);
+      const lt = screen.getByRole("spinbutton", { name: "Số giờ dạy lý thuyết" });
+      const th = screen.getByRole("spinbutton", { name: "Số giờ dạy thực hành" });
+
+      await user.type(lt, "50");
+      await user.type(th, "50");
+      await user.click(screen.getByRole("button", { name: "Lưu" }));
+      await waitFor(() => expect(app.updateManualSection).toHaveBeenCalled());
+      expect(app.updateManualSection.mock.calls[0][1]).toMatchObject({ teachingHoursLt: 50, teachingHoursTh: 50 });
+
+      app.updateManualSection.mockClear();
+      await user.clear(th);
+      await user.type(th, "51");
+      await user.click(screen.getByRole("button", { name: "Lưu" }));
+      expect(screen.getByText(/Mỗi ô Số giờ dạy \(LT \/ TH\) phải từ 0 đến 50/)).toBeInTheDocument();
+      expect(app.updateManualSection).not.toHaveBeenCalled();
+    });
+
+    it("buoc sua gia tri cu vuot gioi han du chi sua truong khac", async () => {
+      const user = userEvent.setup();
+      render(<SectionEditDrawer data={data} section={makeSection({ expectedStudents: 250, teachingHoursLt: 80 })} onClose={vi.fn()} />);
+
+      expect(screen.getByRole("spinbutton", { name: "Số SV dự kiến" })).toHaveValue(250);
+      await user.click(screen.getByRole("button", { name: "Lưu" }));
+      expect(app.updateManualSection).not.toHaveBeenCalled();
+      expect(screen.getAllByRole("alert").length).toBeGreaterThanOrEqual(2);
+    });
   });
 });

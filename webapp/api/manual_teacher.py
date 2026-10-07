@@ -2,6 +2,7 @@
 """GIANG VIEN nhap tay: them moi va sua (ke ca khung gio ranh)."""
 
 import copy
+import re
 
 from flask import Blueprint, request
 
@@ -16,6 +17,21 @@ from snapshot import save_snapshot
 from state import STATE
 
 bp = Blueprint("manual_teacher", __name__)
+
+_SDT_HOP_LE = re.compile(r"[0-9]{0,10}")
+
+
+def _loi_so_dien_thoai(body):
+    """So dien thoai tuy chon: chi chu so 0-9, toi da 10. Chi kiem khi body CO
+    truong `phone` (PATCH luu gio ranh khong gui phone). So cu tu Excel khong hop
+    le van duoc HIEN THI, nhung luu thong tin GV thi phai sua lai."""
+    if "phone" not in body:
+        return None
+    phone = body.get("phone")
+    phone = "" if phone is None else phone
+    if not isinstance(phone, str) or not _SDT_HOP_LE.fullmatch(phone):
+        return "Số điện thoại chỉ gồm chữ số 0-9, tối đa 10 chữ số."
+    return None
 
 
 @bp.post("/api/manual/teacher")
@@ -37,6 +53,9 @@ def api_manual_add_teacher(data):
     teacher_type = body.get("teacherType")
     if teacher_type not in ("GUEST", "RESIDENT"):
         return loi("teacherType phải là 'GUEST' hoặc 'RESIDENT'.")
+    err = _loi_so_dien_thoai(body)
+    if err:
+        return loi(err)
 
     slots = []
     if teacher_type == "GUEST":
@@ -72,6 +91,9 @@ def api_manual_update_teacher(data, teacher_id):
         return loi(f"Không tìm thấy giảng viên id={teacher_id}.")
     body = request.get_json(force=True)
 
+    err = _loi_so_dien_thoai(body)
+    if err:
+        return loi(err)
     if "name" in body:
         name = (body.get("name") or "").strip()
         if not name:

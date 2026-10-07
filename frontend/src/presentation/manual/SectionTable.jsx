@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from "react";
 import { Lock, LockOpen } from "lucide-react";
 import { Pill } from "@/components/shared/pill";
 
-// BANG TOM TAT 17 COT tu file Excel ke hoach giang day - trai tim cua man "Du
+// BANG TOM TAT 16 COT tu file Excel ke hoach giang day - trai tim cua man "Du
 // lieu hoc phan". Tach khoi ManualEntryPage vi day la mot khoi tu chung: nhan
 // danh sach lop da loc, ve ra bang, bao ra ngoai khi nguoi dung bam.
 //
@@ -143,17 +143,12 @@ export default function SectionTable({
           co them 4 o merge con dong sau khong, nen chi so cot lech nhau. */}
       <thead>
         <tr>
-          <th rowSpan={2} className="xls-z-course xls-c-tt">TT</th>
+          <th rowSpan={2} className="xls-z-course xls-c-tt">ID</th>
           <th rowSpan={2} className="xls-z-course xls-c-ma">Mã học phần</th>
           <th rowSpan={2} className="xls-z-course xls-c-ten">Tên học phần</th>
           <th rowSpan={2} className="xls-z-course xls-c-tc">Số tín chỉ</th>
           <th rowSpan={2} className="xls-z-course xls-chot-head">Chốt lịch</th>
           <th rowSpan={2}>Mã lớp học phần</th>
-          {/* SO TIET moi buoi day - dung vi tri nhu trong file Excel (cot ngay
-              sau "Mã lớp học phần"). Truoc day bang bo qua cot nay hoan toan,
-              nen giao vu dien so tiet vao file xong khong co cho nao doi chieu
-              xem he thong doc duoc chua. */}
-          <th rowSpan={2}>Số tiết</th>
           <th rowSpan={2}>Khóa</th>
           <th rowSpan={2}>CTĐT</th>
           <th rowSpan={2}>Số SV dự kiến</th>
@@ -249,16 +244,6 @@ export default function SectionTable({
                   </button>
                 )}
               </td>
-              {/* durationAssumed = file bo trong CA gio hoc lan o "Số tiết", he
-                  thong tam suy ra (webapp/domain/excel_rows.doan_so_tiet). Danh
-                  dau bang "?" chu khong giau di: con so van phai hien de xep lich
-                  doc duoc, nhung giao vu phai phan biet duoc cai nao la that. */}
-              <td className={c.durationAssumed ? "xls-doan" : undefined}
-                  title={c.durationAssumed
-                    ? "Hệ thống tạm suy ra — file bỏ trống cả giờ học lẫn ô “Số tiết”. Mở lớp để xác nhận."
-                    : undefined}>
-                {c.duration ?? "—"}{c.durationAssumed && <span className="xls-doan-dau"> ?</span>}
-              </td>
               <td>{c.cohort || "—"}</td>
               <td>{c.programLabel || "—"}</td>
               <td>{c.expectedStudents ?? "—"}</td>
@@ -312,7 +297,7 @@ export default function SectionTable({
       {rows.length === 0 && (
         <tbody>
           <tr>
-            <td colSpan={17} className="text-muted-foreground p-6 text-center">
+            <td colSpan={16} className="text-muted-foreground p-6 text-center">
               Chưa có lớp nào khớp bộ lọc.
             </td>
           </tr>
