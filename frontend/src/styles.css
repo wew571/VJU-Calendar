@@ -855,6 +855,12 @@ select:focus-visible {
   box-shadow: 0 3px 12px rgba(220, 38, 38, .35);
 }
 
+/* Tim khong ra buoi nao: mo toan bo luoi, khong cho hover "ro lai". */
+.schedv2-grid-table.search-nomatch .lesson-bar {
+  opacity: .2;
+  filter: saturate(.3);
+}
+
 .lesson-bar.dimmed {
   opacity: .55;
 }

@@ -23,7 +23,7 @@ const POPOVER_SPACE = 322;
 // canh bao, luon de len tren khong doi mau nen.
 const LessonCard = memo(function LessonCard({
   lesson, isHighlighted, onClearOverride, onTachHocChung, groupColor, onPickProblem, onOpenManual, detailed = false,
-  canDrag = false, onDragStart, onDragEnd,
+  canDrag = false, onDragStart, onDragEnd, suppressPopover = false,
 }) {
   const problems = lesson.problems ?? [];
   const barRef = useRef(null);
@@ -64,15 +64,16 @@ const LessonCard = memo(function LessonCard({
     setRect(r);
     setFlipLeft(nextFlip);
   };
-  const showPopover = (e) => { measure(e.clientX); setHover(true); };
+  const showPopover = (e) => { if (suppressPopover) return; measure(e.clientX); setHover(true); };
   const keepPopover = () => { measure(); setHover(true); };
   const hidePopover = () => setHover(false);
   const toggleLock = () => {
+    if (suppressPopover) return;
     measure();
     setLocked((l) => !l);
   };
 
-  const visible = hover || locked;
+  const visible = !suppressPopover && (hover || locked);
 
   // Dong popover NGAY khi bat dau keo - neu khong, popup mo tu truoc (do hover
   // hoac da bam giu) se troi lai giua man hinh trong luc the dang duoc keo di,

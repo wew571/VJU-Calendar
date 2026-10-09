@@ -2,10 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarClock, Map as MapIcon, TriangleAlert, X } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import { buildProblemInbox, filterProblemInbox } from "../../adapters/problemInbox";
-import { buildScheduleView, scopeLabel, SCOPE, DEFAULT_FILTER } from "../../adapters/scheduleView";
-import { teacherReportedHours } from "../../adapters/submissionQueue";
+import { buildScheduleView, scopeLabel, DEFAULT_FILTER } from "../../adapters/scheduleView";
 import { buildSteps } from "../../adapters/buocGiai";
-import ReportedHoursPanel from "../teacher/ReportedHoursPanel";
 import { STATUS_COLORS, buildLegend } from "../../adapters/colorGrouping";
 import LessonGridBoard from "../timetable/LessonGridBoard";
 import LessonTable from "../timetable/LessonTable";
@@ -36,9 +34,8 @@ import { cn } from "@/lib/utils";
 //   schedule/ScheduleToolbar   thanh loc + cac nut hanh dong
 export function boLocTheoPhamVi(phamVi) {
   return {
-    scope: SCOPE.ALL,
-    scopeValue: "",
-    khoa: "",
+    programs: [],
+    khoas: [],
     guest: true,
     resident: true,
     search: "",
@@ -152,7 +149,7 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
   // se lam buoi ngoai pham vi mat danh dau khi doi bo loc.
   const inboxHien = useMemo(
     () => filterProblemInbox(inbox, data, f, phamVi),
-    [inbox, data, f.scope, f.scopeValue, f.khoa, f.chiXemPhamVi, phamVi],
+    [inbox, data, f.programs, f.khoas, f.chiXemPhamVi, phamVi],
   );
 
   const legendLessons = mode === "grid" ? view.gridLessons : view.lessons;
@@ -199,17 +196,6 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
   const toLabel = pendingMove
     ? slotRangeLabel(pendingMove.toSlot, pendingMove.lesson.duration || 1, view.slotsPerDay)
     : "";
-
-  // Chi tinh khi dang loc ve dung 1 giang vien.
-  const teacherId = f.scope === SCOPE.TEACHER && f.scopeValue ? f.scopeValue : null;
-  const hours = useMemo(
-    () => (data && teacherId ? teacherReportedHours(data, teacherId) : null),
-    [data, teacherId],
-  );
-  const selectedTeacher = useMemo(
-    () => (data && teacherId ? (data.teachers ?? []).find((t) => String(t.id) === String(teacherId)) : null),
-    [data, teacherId],
-  );
 
   // Phai o TREN nhanh thoat "chua co du lieu" ben duoi - hook chay co dieu kien
   // la vi pham rules of hooks.
@@ -260,9 +246,8 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
     set({
       onlyProblems: false,
       search: "",
-      scope: SCOPE.ALL,
-      scopeValue: "",
-      khoa: "",
+      programs: [],
+      khoas: [],
       guest: true,
       resident: true,
     });
@@ -348,9 +333,6 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
           setActiveProblem(null);
         }}
       />
-      {hours && selectedTeacher && (
-        <ReportedHoursPanel teacher={selectedTeacher} hours={hours} />
-      )}
     </>
   );
 
@@ -464,13 +446,12 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
             onClick={openSetup}
             aria-haspopup="dialog"
             className={cn(
-              "glass-panel flex w-full items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors",
-              setupWarning && "border-amber-500/60",
+              "glass-panel flex w-full items-center gap-3 rounded-xl border border-red-500/60 bg-red-500/10 px-3.5 py-2.5 text-left shadow-[0_0_0_1px_rgba(239,68,68,.15),0_4px_16px_-4px_rgba(239,68,68,.35)] backdrop-blur-md transition-colors hover:border-red-500 hover:bg-red-500/20 dark:bg-red-500/15 dark:hover:bg-red-500/25",
             )}
           >
-            <CalendarClock className="text-muted-foreground size-5 shrink-0" aria-hidden="true" />
+            <CalendarClock className="size-5 shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold">Xếp lịch</span>
+              <span className="block text-sm font-semibold text-red-700 dark:text-red-300">Xếp lịch</span>
               <span className="text-muted-foreground block text-xs">
                 {completedSteps}/{steps.length} bước hoàn tất · Mở quy trình xếp lịch
               </span>
@@ -536,13 +517,18 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
           ) : mode === "grid" ? (
             <>
               {f.search.trim() && view.searchMatchIds.size === 0 && (
-                <Notice tone="slate">Không có buổi nào khớp từ khóa; lưới vẫn giữ nguyên để bạn tiếp tục đối chiếu.</Notice>
+                <Notice tone="slate">Không có buổi nào khớp từ khóa; lưới được làm mờ để bạn tiếp tục đối chiếu.</Notice>
               )}
               <LessonGridBoard
                 lessons={displayLessons}
                 numDays={view.numDays}
                 slotsPerDay={view.slotsPerDay}
                 highlightedIds={highlighted}
+                searchState={
+                  activeProblem || activeCell || !f.search.trim()
+                    ? null
+                    : view.searchMatchIds.size > 0 ? "match" : "none"
+                }
                 colorBy={f.colorBy}
                 onPickProblem={pickProblem}
                 onOpenManual={handleOpenManual}

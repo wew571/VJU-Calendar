@@ -22,9 +22,8 @@ const lessons = classes.map((section, index) => ({
 describe("SchedulePage - đồng bộ phạm vi xếp với lưới", () => {
   it("bật xem đúng phạm vi gần nhất khi mở hoặc thay đổi Xếp cho", () => {
     expect(boLocTheoPhamVi({ programs: ["BCSE"], cohorts: ["VJU2025", "VJU2024"] })).toEqual({
-      scope: "all",
-      scopeValue: "",
-      khoa: "",
+      programs: [],
+      khoas: [],
       guest: true,
       resident: true,
       search: "",
@@ -33,8 +32,23 @@ describe("SchedulePage - đồng bộ phạm vi xếp với lưới", () => {
     });
     expect(boLocTheoPhamVi(null).chiXemPhamVi).toBe(false);
     expect(boLocXemDeKhoiPhuc(DEFAULT_FILTER)).toEqual(DEFAULT_FILTER);
-    expect(boLocXemDeKhoiPhuc({ ...DEFAULT_FILTER, scope: "program", scopeValue: "FTH", chiXemPhamVi: true }))
-      .toMatchObject({ scope: "program", scopeValue: "FTH", chiXemPhamVi: false });
+    expect(boLocXemDeKhoiPhuc({ ...DEFAULT_FILTER, programs: ["FTH"], chiXemPhamVi: true }))
+      .toMatchObject({ programs: ["FTH"], chiXemPhamVi: false });
+  });
+
+  it("chọn nhiều chương trình/khoá: hợp trong mỗi ô, giao giữa hai ô", () => {
+    const run = (filter) => buildScheduleView({
+      data: { classes, numDays: 7, slotsPerDay: 12 },
+      guestResult: { lessons },
+      residentResult: null,
+      inbox: { items: [] },
+      filter: { ...DEFAULT_FILTER, ...filter },
+      phamVi: null,
+    });
+    expect(run({ programs: ["BCSE", "FTH"] }).lessons.map((l) => l.id)).toEqual([1, 2, 3, 4]);
+    expect(run({ programs: ["BCSE"], khoas: ["VJU2025", "VJU2024"] }).lessons.map((l) => l.id)).toEqual([1, 2]);
+    expect(run({ programs: ["FTH"] }).cohorts).toEqual(["VJU2025"]);
+    expect(run({}).cohortsFor(["BCSE"])).toEqual(["VJU2025", "VJU2024", "VJU2023"]);
   });
 
   it("chặn viewer và hỏi trước khi rời lịch có thay đổi chưa lưu", () => {

@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Download, LayoutGrid, Maximize2, Minimize2, RotateCcw, Rows3, Save, SlidersHorizontal, X } from "lucide-react";
-import { SCOPE } from "../../adapters/scheduleView";
 import { coPhamVi, moTa as moTaPhamVi } from "../../adapters/phamVi";
 import { COLOR_BY_OPTIONS } from "../../adapters/colorGrouping";
-import { FilterSelect } from "@/components/shared/filter-select";
+import { MultiFilterSelect } from "@/components/shared/multi-filter-select";
 import { ListSearch } from "@/components/shared/list-search";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,66 +32,29 @@ export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
   return (
     <div className={cn("glass-panel relative rounded-xl border p-2.5", extraOpen && "z-40")}>
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-2">
-          <Label htmlFor="sv-scope" className="text-muted-foreground text-xs font-medium">
-            Xem
-          </Label>
-          <NativeSelect
-            id="sv-scope"
-            value={f.scope}
-            onChange={(e) => setXem({ scope: e.target.value, scopeValue: "" })}
-          >
-            <option value={SCOPE.ALL}>Toàn khoa</option>
-            <option value={SCOPE.PROGRAM}>Theo chương trình</option>
-            <option value={SCOPE.TEACHER}>Theo giảng viên</option>
-          </NativeSelect>
-        </div>
-
-        {/* Hai danh sach nay dai (19 chuong trinh, hang chuc GV) nen dung
-            FilterSelect co o tim; scopeValue rong = khong loc, dung bang nghia
-            "Tat ca" ma FilterSelect hien cho value===null. */}
-        {f.scope === SCOPE.PROGRAM && (
-          <FilterSelect
-            label="Tất cả chương trình"
-            searchable
-            value={f.scopeValue || null}
-            options={view.programs}
-            // Doi chuong trinh thi bo khoa dang chon neu chuong trinh moi khong co
-            // khoa do - de lai la luoi trong ma nhin van nhu dang co bo loc hop le.
-            onChange={(v) => setXem({
-              scopeValue: v ?? "",
-              khoa: !v || view.cohorts.includes(f.khoa) ? f.khoa : "",
-            })}
-          />
-        )}
-
-        {/* KHOA khong phai mot che do xem rieng ma la o loc THU HAI, ghep voi
-            chuong trinh: "FTH · VJU2024" moi la mot nhom nguoi hoc that: sinh vien
-            FTH khoa 2024. Danh sach khoa da duoc buildScheduleView loc theo chuong
-            trinh dang chon, y het o "Xep cho" (PhamViXepPanel).
-
-            Van hien khi dang xem "Toan khoa" - do la nghia cu cua "Theo khoá", giu
-            lai de link cu khong mat duong. An o man loc theo giang vien: khi da soi
-            MOT nguoi thi khoa khong con la cau hoi. */}
-        {f.scope !== SCOPE.TEACHER && (
-          <FilterSelect
-            label="Tất cả khoá"
-            searchable
-            value={f.khoa || null}
-            options={view.cohorts}
-            onChange={(v) => setXem({ khoa: v ?? "" })}
-          />
-        )}
-
-        {f.scope === SCOPE.TEACHER && (
-          <FilterSelect
-            label="Tất cả giảng viên"
-            searchable
-            value={f.scopeValue ? String(f.scopeValue) : null}
-            options={view.teachers.map((t) => ({ value: String(t.id), label: t.name }))}
-            onChange={(v) => setXem({ scopeValue: v ?? "" })}
-          />
-        )}
+        {/* Xem theo chuong trinh + khoa, chon nhieu. Rong = khong loc ("Tat ca").
+            "FTH · VJU2024" la mot nhom nguoi hoc that; danh sach khoa da duoc
+            buildScheduleView loc theo cac chuong trinh dang chon. */}
+        <Label className="text-muted-foreground text-xs font-medium">Xem</Label>
+        <MultiFilterSelect
+          label="Tất cả chương trình"
+          searchable
+          values={f.programs}
+          options={view.programs}
+          // Doi chuong trinh thi bo cac khoa khong con thuoc chuong trinh moi - de
+          // lai la luoi trong ma nhin van nhu dang co bo loc hop le.
+          onChange={(programs) => {
+            const hopLe = view.cohortsFor(programs);
+            setXem({ programs, khoas: f.khoas.filter((k) => hopLe.includes(k)) });
+          }}
+        />
+        <MultiFilterSelect
+          label="Tất cả khoá"
+          searchable
+          values={f.khoas}
+          options={view.cohorts}
+          onChange={(khoas) => setXem({ khoas })}
+        />
 
         <ListSearch
           value={f.search}

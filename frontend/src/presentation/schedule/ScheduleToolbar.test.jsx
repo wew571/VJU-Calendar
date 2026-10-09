@@ -7,7 +7,7 @@ import ScheduleToolbar, { ScheduleActions } from "./ScheduleToolbar";
 const view = {
   programs: ["FTH", "BCSE"],
   cohorts: ["VJU2026", "VJU2025"],
-  teachers: [{ id: 1, name: "Nguyễn Văn A" }],
+  cohortsFor: () => ["VJU2026", "VJU2025"],
   lessons: [{ id: 1 }],
 };
 
@@ -25,7 +25,8 @@ describe("ScheduleToolbar", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Xem")).toHaveValue("all");
+    expect(screen.getByRole("button", { name: "Tất cả chương trình" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Xem")).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText("Tìm môn, giảng viên, #id")).toBeInTheDocument();
     const trigger = screen.getByRole("button", { name: "Bộ lọc thêm" });
     expect(trigger).toHaveAttribute("aria-expanded", "false");
