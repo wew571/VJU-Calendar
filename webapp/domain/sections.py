@@ -46,7 +46,7 @@ def empty_manual_data():
 
 
 MAX_SO_TIET_BUOI = 4
-MAX_SO_SV_DU_KIEN = 100
+MAX_SO_SV_DU_KIEN = 200
 MAX_SO_GIO_DAY = 50
 _SO_NGUYEN = re.compile(r"^\d+$")
 _SO_THUC = re.compile(r"^\d+(\.\d+)?$")
@@ -68,7 +68,7 @@ def _doc_so(value, nguyen):
 
 def kiem_tra_gioi_han_nhap_tay(body):
     """Gioi han RIENG cho thao tac LUU TAY (POST/PATCH /api/manual/section, ke ca
-    "Them buoi khac"): So tiet/buoi 1..4, So SV du kien 0..100 (hoac trong), moi o
+    "Them buoi khac"): So tiet/buoi 1..4, So SV du kien 0..200 (hoac trong), moi o
     So gio day LT/TH 0..50 (hoac trong, KHONG cong hai o). Tra ve thong bao loi
     hoac None. KHONG goi o duong nap Excel - du lieu cu vuot gioi han van duoc nhap."""
     duration = _doc_so(body.get("duration"), True)

@@ -18,7 +18,7 @@ const LOCATION_OPTIONS = ["Hòa Lạc", "Mỹ Đình", "Khác"];
 const TEACHING_MODE_OPTIONS = ["Trực tiếp", "Trực tuyến", "LMS"];
 const PROGRAM_OPTIONS = ["BCSE", "BICA", "BJS", "Chung", "ECE", "ESAS", "ESCT", "FTH", "MJM"];
 const DURATION_OPTIONS = [1, 2, 3, 4];
-const MAX_STUDENTS = 100;
+const MAX_STUDENTS = 200;
 const MAX_TEACHING_HOURS = 50;
 
 const joinPair = (parts) => parts.filter(Boolean).join("+");

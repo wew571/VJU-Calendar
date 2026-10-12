@@ -396,7 +396,7 @@ describe("SectionEditDrawer", () => {
       expect(app.updateManualSection).not.toHaveBeenCalled();
     });
 
-    it.each([["100", true], ["0", true], ["", true], ["101", false], ["-1", false], ["1.5", false]])(
+    it.each([["200", true], ["150", true], ["0", true], ["", true], ["201", false], ["-1", false], ["1.5", false]])(
       "So SV du kien %s -> hop le: %s", async (value, ok) => {
         const user = userEvent.setup();
         app.updateManualSection.mockResolvedValue({});
@@ -406,7 +406,7 @@ describe("SectionEditDrawer", () => {
         await user.click(screen.getByRole("button", { name: "Lưu" }));
         if (ok) await waitFor(() => expect(app.updateManualSection).toHaveBeenCalled());
         else {
-          expect(screen.getByText(/Số SV dự kiến phải là số nguyên từ 0 đến 100/)).toBeInTheDocument();
+          expect(screen.getByText(/Số SV dự kiến phải là số nguyên từ 0 đến 200/)).toBeInTheDocument();
           expect(app.updateManualSection).not.toHaveBeenCalled();
         }
       },

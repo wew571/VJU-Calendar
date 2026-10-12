@@ -54,7 +54,7 @@ def payload(**overrides):
 
 @pytest.mark.parametrize("override", [
     {"duration": 4}, {"duration": 1},
-    {"expectedStudents": 100}, {"expectedStudents": 0}, {"expectedStudents": ""},
+    {"expectedStudents": 200}, {"expectedStudents": 150}, {"expectedStudents": 0}, {"expectedStudents": ""},
     {"teachingHoursLt": 50, "teachingHoursTh": 50}, {"teachingHoursLt": 12.5},
 ])
 def test_gia_tri_trong_gioi_han_duoc_luu(client, override):
@@ -63,7 +63,7 @@ def test_gia_tri_trong_gioi_han_duoc_luu(client, override):
 
 @pytest.mark.parametrize("override", [
     {"duration": 5}, {"duration": 0}, {"duration": 2.5}, {"duration": "x"},
-    {"expectedStudents": 101}, {"expectedStudents": -1}, {"expectedStudents": "abc"},
+    {"expectedStudents": 201}, {"expectedStudents": -1}, {"expectedStudents": "abc"},
     {"teachingHoursLt": 51}, {"teachingHoursTh": 51}, {"teachingHoursLt": -1},
 ])
 def test_gia_tri_vuot_gioi_han_bi_chan_va_khong_ghi_mot_phan(client, override):
@@ -76,13 +76,13 @@ def test_sua_lop_cu_vuot_gioi_han_phai_sua_lai_truoc_khi_luu(client):
     sid = client.post("/api/manual/section", json=payload()).get_json()["classes"][0]["sectionId"]
     section = STATE["data"]["sections"][sid]
     section["duration"] = 5
-    section["expected_students"] = 150
+    section["expected_students"] = 250
 
-    bad = client.patch(f"/api/manual/section/{sid}", json=payload(duration=5, expectedStudents=150))
+    bad = client.patch(f"/api/manual/section/{sid}", json=payload(duration=5, expectedStudents=250))
     assert bad.status_code == 400
     assert section["duration"] == 5
 
-    fixed = client.patch(f"/api/manual/section/{sid}", json=payload(duration=3, expectedStudents=100))
+    fixed = client.patch(f"/api/manual/section/{sid}", json=payload(duration=3, expectedStudents=150))
     assert fixed.status_code == 200
     assert section["duration"] == 3
 
