@@ -141,8 +141,11 @@ def run_tests():
         r = client.patch('/api/manual/course/999', json={"name": "Y"})
         log("TC-23", "PATCH học phần không tồn tại", r.status_code == 400)
 
-        r = client.patch('/api/manual/course/2', json={"name": "Lập trình nâng cao", "credits": 2})
+        r = client.patch('/api/manual/course/2', json={"name": "Lập trình nâng cao 2"})
         log("TC-24", "PATCH học phần hợp lệ", r.status_code == 200)
+
+        r = client.patch('/api/manual/course/2', json={"credits": 2})
+        log("TC-24b", "PATCH đổi tín chỉ bị từ chối", r.status_code == 400)
 
         # ==========================================
         # E. NHẬP TAY SECTION (LỚP HỌC PHẦN) (TC-25 -> TC-42)

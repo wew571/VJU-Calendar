@@ -6,6 +6,8 @@ import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { cn } from '@/lib/utils';
 
 const SIDEBAR_KEY = 'tkb_sidebar_collapsed';
+// Khop `duration-200` cua <aside> trong app-sidebar.jsx.
+const SIDEBAR_ANIMATION_MS = 200;
 
 /**
  * Man "Thoi khoa bieu" chua luoi tuan + hop thu van de, "Du lieu hoc phan" chua
@@ -66,7 +68,21 @@ export function AppLayout({
 
   const effectiveCollapsed = wide ? (wideOverride ?? true) : collapsed;
 
+  // Trang Thoi khoa bieu co hang tram o kinh (backdrop-filter) ma be ngang doi
+  // moi khung hinh khi sidebar truot -> trinh duyet phai lam mo lai tung o moi
+  // frame nen giat. Chi trong luc sidebar dang chuyen dong, theme.css tam bo
+  // blur o VUNG NOI DUNG (sidebar/topbar van kinh); xong thi kinh tro lai.
+  const [sidebarMoving, setSidebarMoving] = useState(false);
+  const movingTimer = useRef(null);
+  useEffect(() => () => clearTimeout(movingTimer.current), []);
+  function markSidebarMoving() {
+    setSidebarMoving(true);
+    clearTimeout(movingTimer.current);
+    movingTimer.current = setTimeout(() => setSidebarMoving(false), SIDEBAR_ANIMATION_MS + 60);
+  }
+
   function setCollapsed(v) {
+    if (page === 'schedule' && v !== effectiveCollapsed) markSidebarMoving();
     // Chi ghi nho thoi quen o trang thuong. Thu gon tu dong o trang rong la do
     // bo cuc bat buoc, khong phai y muon cua nguoi dung - ghi lai se lam ho bi
     // sidebar thu gon o moi trang khac ma khong hieu tai sao.
@@ -115,7 +131,10 @@ export function AppLayout({
   }, [title, crumbs]);
 
   return (
-    <div className="liquid-canvas liquid-shell flex h-dvh flex-col">
+    <div
+      className="liquid-canvas liquid-shell flex h-dvh flex-col"
+      data-sidebar-moving={sidebarMoving ? 'true' : undefined}
+    >
       <DemoBanner />
       <AppTopbar
         collapsed={effectiveCollapsed}

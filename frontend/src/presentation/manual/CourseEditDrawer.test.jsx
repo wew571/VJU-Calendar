@@ -34,32 +34,52 @@ describe("CourseEditDrawer", () => {
     expect(screen.queryByText("Sửa ở đây áp dụng cho tất cả lớp thuộc học phần này.")).not.toBeInTheDocument();
   });
 
-  it("giu nguyen luong sua va luu hoc phan", async () => {
+  it("sua duoc Ma/Ten khi khong co lop da chot va khong gui tin chi", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     app.updateManualCourse.mockResolvedValue({});
     render(
       <CourseEditDrawer
         course={{ id: 10, code: "MTH101", name: "Giải tích", credits: 3 }}
+        classes={[{ sectionId: 1, courseId: 10, classCode: "MTH101-1", sectionChot: null }]}
         onClose={onClose}
       />,
     );
 
     const name = screen.getByRole("textbox", { name: /Tên học phần/ });
-    expect(name).toHaveAttribute("readonly");
-    expect(name).toHaveValue("Giải tích");
-    expect(screen.getByRole("textbox", { name: "Mã học phần" })).toHaveAttribute("readonly");
+    const code = screen.getByRole("textbox", { name: "Mã học phần" });
+    expect(name).not.toHaveAttribute("readonly");
+    expect(code).not.toHaveAttribute("readonly");
     await user.type(name, " nâng cao");
+    await user.clear(code);
+    await user.type(code, "MTH102");
     await user.click(screen.getByRole("button", { name: "Lưu" }));
 
     await waitFor(() => expect(app.updateManualCourse).toHaveBeenCalledWith(10, {
-      code: "MTH101",
-      name: "Giải tích",
-      credits: 3,
+      code: "MTH102",
+      name: "Giải tích nâng cao",
     }));
     expect(onClose).toHaveBeenCalled();
   });
 
+  it("khoa sua Ma/Ten khi co it nhat 1 lop da chot", async () => {
+    const user = userEvent.setup();
+    render(
+      <CourseEditDrawer
+        course={{ id: 10, code: "MTH101", name: "Giải tích", credits: 3 }}
+        classes={[
+          { sectionId: 1, courseId: 10, classCode: "MTH101-1", sectionChot: { by: "gv" } },
+          { sectionId: 2, courseId: 10, classCode: "MTH101-2", sectionChot: null },
+        ]}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("textbox", { name: /Tên học phần/ })).toHaveAttribute("readonly");
+    expect(screen.getByRole("textbox", { name: "Mã học phần" })).toHaveAttribute("readonly");
+    expect(screen.getByText(/đã có 1 lớp đã chốt/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Lưu" }));
+    expect(app.updateManualCourse).not.toHaveBeenCalled();
+  });
   it("them hoc phan moi van nhap duoc ma va ten", async () => {
     const user = userEvent.setup();
     app.addManualCourse.mockResolvedValue({});
@@ -94,47 +114,32 @@ describe("CourseEditDrawer", () => {
     expect(screen.getByRole("textbox", { name: "Tổng số lớp học phần" })).toHaveValue("0");
   });
 
-  it("giữ và lưu được mức tín chỉ cũ ngoài danh sách", async () => {
-    const user = userEvent.setup();
-    app.updateManualCourse.mockResolvedValue({});
+  it("so tin chi chi xem trong form sua, giu muc cu ngoai danh sach", () => {
     render(
       <CourseEditDrawer
         course={{ id: 10, code: "MTH101", name: "Giải tích", credits: 7 }}
         onClose={vi.fn()}
       />,
     );
-
     const credits = screen.getByRole("combobox", { name: "Số tín chỉ" });
     expect(credits).toHaveValue("7");
-    expect(within(credits).getByRole("option", { name: "7" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Lưu" }));
-    await waitFor(() => expect(app.updateManualCourse).toHaveBeenCalledWith(10, expect.objectContaining({ credits: 7 })));
+    expect(credits).toBeDisabled();
   });
 
-  it("chi cho chon so tin chi tu danh sach co dinh", async () => {
+  it("form them hoc phan van chon duoc so tin chi tu danh sach co dinh", async () => {
     const user = userEvent.setup();
-    app.updateManualCourse.mockResolvedValue({});
-    render(
-      <CourseEditDrawer
-        course={{ id: 10, code: "MTH101", name: "Giải tích", credits: 3 }}
-        onClose={vi.fn()}
-      />,
-    );
+    app.addManualCourse.mockResolvedValue({});
+    render(<CourseEditDrawer course={null} classes={[]} onClose={vi.fn()} />);
 
     const credits = screen.getByRole("combobox", { name: "Số tín chỉ" });
-    expect(credits).toHaveValue("3");
+    expect(credits).not.toBeDisabled();
     expect(credits.parentElement).toHaveClass("w-full");
     expect(within(credits).getAllByRole("option").map((o) => o.value)).toEqual(
       ["", "1", "2", "3", "4", "5", "10", "12"],
     );
-
     await user.selectOptions(credits, "10");
+    await user.type(screen.getByRole("textbox", { name: /Tên học phần/ }), "X");
     await user.click(screen.getByRole("button", { name: "Lưu" }));
-
-    await waitFor(() => expect(app.updateManualCourse).toHaveBeenCalledWith(10, {
-      code: "MTH101",
-      name: "Giải tích",
-      credits: 10,
-    }));
+    await waitFor(() => expect(app.addManualCourse).toHaveBeenCalledWith({ code: "", name: "X", credits: 10 }));
   });
 });

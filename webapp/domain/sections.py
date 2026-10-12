@@ -226,6 +226,42 @@ def don_ma_lop_sau_xoa(data, course_id, ma_lop_da_xoa):
             s["class_code"] = f"{tien_to}{so - 1:0{do_dai}d}"
 
 
+def ke_hoach_doi_ma_lop(data, course_id, ma_cu, ma_moi):
+    """Lap KE HOACH (khong ghi) doi ma lop khi doi ma hoc phan `ma_cu` -> `ma_moi`.
+
+    Chi lop co ma dung mau "<ma_cu>-<so>" duoc danh lai thanh "<ma_moi>-1", "-2"...
+    theo thu tu on dinh (so cu tang dan, roi id lop nho nhat), KHONG bo so. Cac buoi
+    cua cung 1 lop dang CUNG ma lop thi nhan cung ma moi (khong tach lop). Ma tuy
+    chinh/khong dung mau (ke ca khong co hau to) giu nguyen va duoc bao lai.
+
+    Tra ve (doi, giu, loi): doi = {section_id: ma_moi}, giu = danh sach ma bi giu
+    nguyen, loi = str neu ma moi se trung voi ma lop khac (khi do khong duoc luu)."""
+    cua_hp = [s for s in data["sections"].values() if s.get("course_id") == course_id]
+    mau = re.compile(rf"^{re.escape(ma_cu)}-(\d+)$") if ma_cu else None
+    nhom = {}
+    giu = []
+    for s in sorted(cua_hp, key=lambda x: x["id"]):
+        ma = (s.get("class_code") or "").strip()
+        m = mau.match(ma) if mau else None
+        if m:
+            nhom.setdefault(ma, {"so": int(m.group(1)), "ids": []})["ids"].append(s["id"])
+        elif ma and ma not in giu:
+            giu.append(ma)
+    doi = {}
+    thu_tu = sorted(nhom.values(), key=lambda g: (g["so"], g["ids"][0]))
+    for i, g in enumerate(thu_tu, 1):
+        for sid in g["ids"]:
+            doi[sid] = f"{ma_moi}-{i}"
+    moi = set(m.lower() for m in doi.values())
+    for s in data["sections"].values():
+        if s["id"] in doi:
+            continue
+        ma = (s.get("class_code") or "").strip().lower()
+        if ma and ma in moi:
+            return doi, giu, f"Mã lớp \"{s.get('class_code')}\" đã tồn tại, không thể đổi mã học phần sang \"{ma_moi}\"."
+    return doi, giu, None
+
+
 def khoa_lop(data, s):
     """Khoa nhan dien MOT LOP de biet gop them co bi trung: ma lop + hoc phan +
     GV chinh + gio. Trung ca 4 thu nay thi gan nhu chac chan la nap lai dung dong

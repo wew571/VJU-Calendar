@@ -205,3 +205,32 @@ def test_hang_loat_khong_co_giang_vien_that_tra_400(client):
 
     assert res.status_code == 400
     assert res.get_json()["error"]
+
+
+def _lop_dang_day(slot=1, duration=2):
+    STATE["data"]["courses"][1] = {"id": 1, "code": "TEST101", "name": "Mon test", "credits": 3}
+    STATE["data"]["program_faculty"]["Chung"] = 0
+    STATE["data"]["sections"][1] = {
+        "id": 1, "course_id": 1, "course_name": "Mon test", "teacher_id": 1, "teacher_ids": [1],
+        "teacher_type": "GUEST", "duration": duration, "time_assumed": False,
+        "original_slot": slot, "room_type": "LT", "program": "Chung", "program_ids": [],
+        "class_code": "", "cohort": "",
+    }
+
+
+def test_patch_gio_ranh_trung_gio_dang_day_bi_tu_choi_va_giu_nguyen_du_lieu(client):
+    _lop_dang_day(slot=1, duration=2)
+    STATE["data"]["manual_teacher_windows"][1] = [5, 6]
+    res = client.patch("/api/manual/teacher/1", json={"name": "Ten moi", "availability": [0, 2, 5]})
+    assert res.status_code == 400
+    assert "đang dạy" in res.get_json()["error"]
+    assert STATE["data"]["manual_teacher_windows"][1] == [5, 6]
+    assert STATE["data"]["teachers"][1]["name"] == "GV test"
+    assert STATE["data"]["sections"][1]["original_slot"] == 1
+
+
+def test_patch_gio_ranh_o_trong_van_luu_duoc(client):
+    _lop_dang_day(slot=1, duration=2)
+    res = client.patch("/api/manual/teacher/1", json={"availability": [0, 3, 4]})
+    assert res.status_code == 200
+    assert STATE["data"]["manual_teacher_windows"][1] == [0, 3, 4]

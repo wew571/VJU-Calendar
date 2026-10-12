@@ -44,16 +44,26 @@ export default function CourseEditDrawer({ course, classes, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseKey]);
 
+  // Chot nam o TUNG LOP: chi can 1 lop con da chot la khoa sua Ma/Ten hoc phan.
+  const soLopChot = course
+    ? (classes || []).filter((c) => c.courseId === course.id && c.sectionChot).length
+    : 0;
+  const daChot = soLopChot > 0;
+  const lyDoKhoa = `Không thể sửa Mã/Tên học phần vì đã có ${soLopChot} lớp đã chốt. Hãy bỏ chốt hết các lớp trước.`;
+
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const handleSave = async (e) => {
     e.preventDefault();
     setError(null);
     if (!form.name.trim()) return setError("Chưa nhập Tên học phần.");
-    const payload = {
-      code: form.code.trim(), name: form.name.trim(),
-      credits: form.credits === "" ? null : Number(form.credits),
-    };
+    if (course && daChot) return setError(lyDoKhoa);
+    const payload = course
+      ? { code: form.code.trim(), name: form.name.trim() }
+      : {
+          code: form.code.trim(), name: form.name.trim(),
+          credits: form.credits === "" ? null : Number(form.credits),
+        };
     try {
       if (course) await updateManualCourse(course.id, payload);
       else await addManualCourse(payload);
@@ -86,11 +96,16 @@ export default function CourseEditDrawer({ course, classes, onClose }) {
                 {error}
               </Notice>
             )}
+            {course && daChot && (
+              <Notice tone="amber" icon={TriangleAlert}>
+                {lyDoKhoa}
+              </Notice>
+            )}
 
             <DrawerSection title="Học phần">
               <FormRow label="Mã học phần">
                 {(id) => (
-                  <Input id={id} value={form.code} onChange={set("code")} placeholder="IT101" readOnly={Boolean(course)} />
+                  <Input id={id} value={form.code} onChange={set("code")} placeholder="IT101" readOnly={Boolean(course) && daChot} />
                 )}
               </FormRow>
               <FormRow label="Tên học phần" required>
@@ -101,13 +116,13 @@ export default function CourseEditDrawer({ course, classes, onClose }) {
                     onChange={set("name")}
                     placeholder="Nhập môn Công nghệ thông tin"
                     required
-                    readOnly={Boolean(course)}
+                    readOnly={Boolean(course) && daChot}
                   />
                 )}
               </FormRow>
               <FormRow label="Số tín chỉ">
                 {(id) => (
-                  <NativeSelect id={id} containerClassName="w-full" value={form.credits} onChange={set("credits")}>
+                  <NativeSelect id={id} containerClassName="w-full" value={form.credits} onChange={set("credits")} disabled={Boolean(course)}>
                     <option value="">— Không rõ —</option>
                     {CREDIT_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
                     {form.credits !== "" && !CREDIT_OPTIONS.includes(Number(form.credits)) && (

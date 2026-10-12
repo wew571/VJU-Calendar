@@ -7,7 +7,7 @@ import re
 from flask import Blueprint, request
 
 from api.common import can_du_lieu, loi, tra_du_lieu
-from domain.availability import parse_availability_slots
+from domain.availability import loi_gio_ranh_trung_gio_day, parse_availability_slots
 from domain.availability_generator import generate_teacher_availability
 from domain.hoc_chung import tach_nhom_khong_hop_le
 from domain.luoi import dong_bo_ket_qua
@@ -94,22 +94,29 @@ def api_manual_update_teacher(data, teacher_id):
     err = _loi_so_dien_thoai(body)
     if err:
         return loi(err)
-    if "name" in body:
-        name = (body.get("name") or "").strip()
-        if not name:
-            return loi("Họ tên không được để trống.")
-        teacher["name"] = name
-    for field in ("org", "title", "email", "phone"):
-        if field in body:
-            teacher[field] = (body.get(field) or "").strip()
-    if "teacherType" in body:
-        if body["teacherType"] not in ("GUEST", "RESIDENT"):
-            return loi("teacherType phải là 'GUEST' hoặc 'RESIDENT'.")
-        teacher["type"] = body["teacherType"]
+    # Kiem tra het truoc khi ghi bat ky field nao: bi tu choi thi du lieu da luu
+    # giu nguyen, khong luu do dang (vd doi ten roi moi bao loi gio ranh).
+    slots = None
     if "availability" in body:
         slots, err = parse_availability_slots(data, body)
         if err:
             return loi(err)
+        err = loi_gio_ranh_trung_gio_day(data, teacher_id, slots)
+        if err:
+            return loi(err)
+    if "name" in body and not (body.get("name") or "").strip():
+        return loi("Họ tên không được để trống.")
+    if "teacherType" in body and body["teacherType"] not in ("GUEST", "RESIDENT"):
+        return loi("teacherType phải là 'GUEST' hoặc 'RESIDENT'.")
+
+    if "name" in body:
+        teacher["name"] = body["name"].strip()
+    for field in ("org", "title", "email", "phone"):
+        if field in body:
+            teacher[field] = (body.get(field) or "").strip()
+    if "teacherType" in body:
+        teacher["type"] = body["teacherType"]
+    if slots is not None:
         data.setdefault("manual_teacher_windows", {})[teacher_id] = slots
 
     dem_lai_so_gv(data)
