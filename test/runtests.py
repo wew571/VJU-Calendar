@@ -7,7 +7,7 @@ import sys
 import shutil
 import json
 
-webapp_dir = os.path.dirname(os.path.abspath(__file__))
+webapp_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "webapp"))
 if webapp_dir not in sys.path:
     sys.path.insert(0, webapp_dir)
 

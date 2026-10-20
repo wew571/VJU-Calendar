@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildSteps } from "./buocGiai";
+import { buildSteps } from "@/adapters/buocGiai";
 
 function makeData({ submissions = [], classes = [] } = {}) {
   return {

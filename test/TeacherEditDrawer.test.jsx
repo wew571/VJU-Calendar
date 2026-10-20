@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import TeacherEditDrawer from "./TeacherEditDrawer";
+import TeacherEditDrawer from "@/presentation/manual/TeacherEditDrawer";
 
 const app = vi.hoisted(() => ({
   addManualTeacher: vi.fn(),
@@ -9,7 +9,7 @@ const app = vi.hoisted(() => ({
   generateTeacherAvailability: vi.fn(),
 }));
 
-vi.mock("../../context/AppDataContext", () => ({
+vi.mock("@/context/AppDataContext", () => ({
   useAppData: () => ({ loading: false, ...app }),
 }));
 

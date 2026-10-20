@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import CourseEditDrawer from "./CourseEditDrawer";
+import CourseEditDrawer from "@/presentation/manual/CourseEditDrawer";
 
 const app = vi.hoisted(() => ({
   addManualCourse: vi.fn(),
   updateManualCourse: vi.fn(),
 }));
 
-vi.mock("../../context/AppDataContext", () => ({
+vi.mock("@/context/AppDataContext", () => ({
   useAppData: () => ({ loading: false, ...app }),
 }));
 

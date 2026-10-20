@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildScheduleView, DEFAULT_FILTER } from "../../adapters/scheduleView";
-import { boLocTheoPhamVi, boLocXemDeKhoiPhuc, openLessonInManual } from "./SchedulePage";
+import { buildScheduleView, DEFAULT_FILTER } from "@/adapters/scheduleView";
+import { boLocTheoPhamVi, boLocXemDeKhoiPhuc, openLessonInManual } from "@/presentation/pages/SchedulePage";
 
 const classes = [
   { sectionId: 1, programParts: ["BCSE"], cohortParts: ["VJU2025"] },

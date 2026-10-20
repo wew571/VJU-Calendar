@@ -1,6 +1,6 @@
 import { fireEvent, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import LessonCard from "./LessonCard";
+import LessonCard from "@/presentation/timetable/LessonCard";
 
 const lesson = {
   id: 1,

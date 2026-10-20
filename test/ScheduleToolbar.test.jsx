@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { DEFAULT_FILTER } from "../../adapters/scheduleView";
-import ScheduleToolbar, { ScheduleActions } from "./ScheduleToolbar";
+import { DEFAULT_FILTER } from "@/adapters/scheduleView";
+import ScheduleToolbar, { ScheduleActions } from "@/presentation/schedule/ScheduleToolbar";
 
 const view = {
   programs: ["FTH", "BCSE"],

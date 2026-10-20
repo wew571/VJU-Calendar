@@ -84,6 +84,13 @@ export function buildScheduleView({ data, guestResult, residentResult, inbox, fi
   const programPartsById = new Map((data?.classes ?? []).map((c) => [c.sectionId, c.programParts ?? []]));
   // Si so - the HOC CHUNG cong don de biet phong phai chua bao nhieu nguoi.
   const sinhVienById = new Map((data?.classes ?? []).map((c) => [c.sectionId, c.expectedStudents]));
+  // "O giang vien la mot DON VI dieu phoi" (Phong Dao tao, JLE...) - khac boQua:
+  // boQua la co giao vu DA bam bo qua, con donViDieuPhoi chi la nhan dien du lieu.
+  // Lop ung vien chua bam bo qua van hien "Phong Dao tao dieu phoi" o cot GV nen
+  // bang TKB khong duoc ghi loai "Thinh giang" cho no (xem LessonTable).
+  const donViDieuPhoiById = new Map(
+    (data?.classes ?? []).map((c) => [c.sectionId, !!c.donViDieuPhoi]),
+  );
 
   const withFlags = all.map((l) => {
     const ovMap = l.teacherType === "RESIDENT" ? residentOverrides : guestOverrides;
@@ -91,6 +98,7 @@ export function buildScheduleView({ data, guestResult, residentResult, inbox, fi
     return {
       ...l,
       classCode: classCodeById.get(l.id) || null,
+      donViDieuPhoi: donViDieuPhoiById.get(l.id) ?? false,
       cohortParts: cohortById.get(l.id) ?? [],
       programParts: programPartsById.get(l.id) ?? [],
       problems: problemMap.get(l.id) ?? [],

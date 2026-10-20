@@ -2,7 +2,7 @@ import { useState } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import ManualEntryPage from "./ManualEntryPage";
+import ManualEntryPage from "@/presentation/pages/ManualEntryPage";
 
 const classes = [
   { sectionId: 1, classCode: "VJU2002-1", courseName: "Môn A", programParts: ["BCSE"], cohortParts: ["K68"], status: "ready_auto", sectionChot: null },
@@ -10,7 +10,7 @@ const classes = [
   { sectionId: 3, classCode: "VJU2002-1", courseName: "Môn ngoài nhóm", programParts: ["BCSE"], cohortParts: ["K68"], status: "ready_auto", sectionChot: null },
 ];
 
-vi.mock("../../context/AppDataContext", () => ({
+vi.mock("@/context/AppDataContext", () => ({
   useAppData: () => ({
     data: { sourceLabel: "Nhập liệu thủ công", classes, teachers: [], courses: [] },
     loading: false,
@@ -22,19 +22,19 @@ vi.mock("../../context/AppDataContext", () => ({
   }),
 }));
 
-vi.mock("../manual/SectionTable", () => ({
+vi.mock("@/presentation/manual/SectionTable", () => ({
   STATUS_META: {
     ready_auto: { label: "Tự động xếp", tone: "amber" },
     ready_fixed: { label: "Có giờ cố định", tone: "emerald" },
   },
   default: ({ rows }) => <div data-testid="rows">{rows.map((row) => row.sectionId).join(",")}</div>,
 }));
-vi.mock("../manual/SectionEditDrawer", () => ({ default: () => null }));
-vi.mock("../manual/TeacherEditDrawer", () => ({ default: () => null }));
-vi.mock("../manual/CourseEditDrawer", () => ({ default: () => null }));
-vi.mock("../manual/ImportExcelDialog", () => ({ default: () => null }));
-vi.mock("../manual/ExportExcelDialog", () => ({ default: () => null }));
-vi.mock("../manual/ChotCourseDialog", () => ({ default: () => null }));
+vi.mock("@/presentation/manual/SectionEditDrawer", () => ({ default: () => null }));
+vi.mock("@/presentation/manual/TeacherEditDrawer", () => ({ default: () => null }));
+vi.mock("@/presentation/manual/CourseEditDrawer", () => ({ default: () => null }));
+vi.mock("@/presentation/manual/ImportExcelDialog", () => ({ default: () => null }));
+vi.mock("@/presentation/manual/ExportExcelDialog", () => ({ default: () => null }));
+vi.mock("@/presentation/manual/ChotCourseDialog", () => ({ default: () => null }));
 
 beforeAll(() => {
   globalThis.ResizeObserver = class {

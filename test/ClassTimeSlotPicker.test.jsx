@@ -2,7 +2,7 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import ClassTimeSlotPicker from "./ClassTimeSlotPicker";
+import ClassTimeSlotPicker from "@/presentation/manual/ClassTimeSlotPicker";
 
 function Harness(props) {
   const [value, setValue] = useState(props.value ?? null);

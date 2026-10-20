@@ -132,6 +132,21 @@ const LessonCard = memo(function LessonCard({
     color: color.text,
   };
 
+  // Chu thich day du cua thanh - dung chung cho title (tooltip he thong) va
+  // aria-label (nguoi dung ban phim/doc man hinh nghe duoc dung noi dung nay).
+  const nhanThe =
+    (lesson.boQua ? "[Đơn vị khác điều phối — khoa không xếp] " : "")
+    + (lesson.hocChung
+      ? `HỌC CHUNG ${lesson.hocChung.count} môn: `
+        + lesson.hocChung.members
+            .map((m) => `${m.classCode || `#${m.id}`} ${m.courseName}`)
+            .join(" + ")
+        + (lesson.hocChung.tongSV ? ` — tổng ${lesson.hocChung.tongSV} SV` : "")
+      : `${label} ${lesson.courseName}`)
+    + (problems.length > 0
+      ? ` — ${problems.map((p) => PROBLEM_META[p.type].label).join(", ")}`
+      : "");
+
   return (
     <>
       <div
@@ -144,19 +159,24 @@ const LessonCard = memo(function LessonCard({
         onDragEnd={canDrag ? onDragEnd : undefined}
         // Tooltip he thong: doc duoc ngay ca truoc khi popover kip hien, va la
         // duong doc du phong khi khong dung duoc chuot.
-        title={
-          (lesson.boQua ? "[Đơn vị khác điều phối — khoa không xếp] " : "")
-          + (lesson.hocChung
-            ? `HỌC CHUNG ${lesson.hocChung.count} môn: `
-              + lesson.hocChung.members
-                  .map((m) => `${m.classCode || `#${m.id}`} ${m.courseName}`)
-                  .join(" + ")
-              + (lesson.hocChung.tongSV ? ` — tổng ${lesson.hocChung.tongSV} SV` : "")
-            : `${label} ${lesson.courseName}`)
-          + (problems.length > 0
-            ? ` — ${problems.map((p) => PROBLEM_META[p.type].label).join(", ")}`
-            : "")
-        }
+        title={nhanThe}
+        // BAN PHIM: thanh la div nen tu no khong focus duoc. Tab den -> popover
+        // hien nhu hover; Enter/Space -> "giu" popup mo (nhu click); Esc -> dong.
+        role="button"
+        tabIndex={0}
+        aria-label={nhanThe}
+        aria-expanded={locked}
+        onFocus={() => { if (!suppressPopover) { measure(); setHover(true); } }}
+        onBlur={() => setHover(false)}
+        onKeyDown={(e) => {
+          if (suppressPopover) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault(); // Space mac dinh cuon trang
+            toggleLock();
+          } else if (e.key === "Escape" && locked) {
+            setLocked(false);
+          }
+        }}
         onMouseEnter={showPopover}
         onMouseLeave={hidePopover}
         onClick={toggleLock}

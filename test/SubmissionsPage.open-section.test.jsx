@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import SubmissionsPage from "./SubmissionsPage";
+import SubmissionsPage from "@/presentation/pages/SubmissionsPage";
 
 const base = { programLabel: "BCSE", programParts: ["BCSE"], coordinator: "DPV", roomType: "LT", duration: 2, state: "UNREPORTED", windowSlots: [], isEmpty: true };
 const sq = {
@@ -19,11 +19,11 @@ const sq = {
   rows: [{ ...base, sectionId: 33, courseName: "Môn trùng tên", teacherName: "GV A" }],
 };
 
-vi.mock("../../adapters/submissionQueue", async (orig) => ({
+vi.mock("@/adapters/submissionQueue", async (orig) => ({
   ...(await orig()),
   analyzeSubmissions: () => sq,
 }));
-vi.mock("../../context/AppDataContext", () => ({
+vi.mock("@/context/AppDataContext", () => ({
   useAppData: () => ({
     data: {
       classes: [{ sectionId: 11 }, { sectionId: 22 }, { sectionId: 33 }],
@@ -34,7 +34,7 @@ vi.mock("../../context/AppDataContext", () => ({
     updateManualTeacher: vi.fn(),
   }),
 }));
-vi.mock("../manual/SectionEditDrawer", () => ({
+vi.mock("@/presentation/manual/SectionEditDrawer", () => ({
   default: ({ section }) => <div data-testid="drawer">Sửa lớp {section.sectionId}</div>,
 }));
 

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { AppDataProvider, useAppData } from "./AppDataContext";
+import { AppDataProvider, useAppData } from "@/context/AppDataContext";
 
 const mocks = vi.hoisted(() => ({
   generateAll: vi.fn(),
@@ -10,13 +10,13 @@ const mocks = vi.hoisted(() => ({
   log: vi.fn(),
 }));
 
-vi.mock("../services/schedulerService", () => ({
+vi.mock("@/services/schedulerService", () => ({
   generateAllTeacherAvailability: mocks.generateAll,
   getData: mocks.getData,
   getResults: mocks.getResults,
 }));
 
-vi.mock("./EventLogContext", () => ({
+vi.mock("@/context/EventLogContext", () => ({
   useEventLog: () => ({ log: mocks.log }),
 }));
 

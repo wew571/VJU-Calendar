@@ -277,6 +277,23 @@
     --xls-hd-purple: #6b21a8;
   }
 
+  /* `.dark .data-table th` ở trên đổi mọi tiêu đề bảng thành nền muted + chữ
+     muted-foreground — trên nền đỏ/tím của bảng này chỉ còn ~2,7:1. Trả lại
+     bảng màu tiêu đề riêng (biến --xls-hd-* dark ở trên) và chữ trắng; các
+     rule kính bên dưới vẫn đè nền bán trong suốt như cũ. */
+  .dark .xls-table thead th {
+    background: var(--xls-hd-main);
+    color: #fff;
+  }
+
+  .dark .xls-table thead tr:nth-child(2) > th {
+    background: var(--xls-hd-purple);
+  }
+
+  .dark .xls-table thead tr:nth-child(2) > th.xls-z-teacher {
+    background: var(--xls-hd-sub-red);
+  }
+
   .dark .xls-swatch {
     border-color: var(--border);
   }

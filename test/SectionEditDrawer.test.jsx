@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import SectionEditDrawer from "./SectionEditDrawer";
+import SectionEditDrawer from "@/presentation/manual/SectionEditDrawer";
 
 const app = vi.hoisted(() => ({
   updateManualSection: vi.fn(),
@@ -11,7 +11,7 @@ const app = vi.hoisted(() => ({
   doBoQua: vi.fn(),
 }));
 
-vi.mock("../../context/AppDataContext", () => ({
+vi.mock("@/context/AppDataContext", () => ({
   useAppData: () => ({ loading: false, ...app }),
 }));
 

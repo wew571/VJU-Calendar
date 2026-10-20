@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import SectionTable from "./SectionTable";
+import SectionTable from "@/presentation/manual/SectionTable";
 
 function makeRow(overrides = {}) {
   return {

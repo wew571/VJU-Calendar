@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ThemeSwitcher } from "@/components/layout/theme-switcher";
-import { GLASS_KEY, MODE_KEY, loadTheme, setTheme } from "./theme";
+import { GLASS_KEY, MODE_KEY, loadTheme, setTheme } from "@/lib/theme";
 
 describe("theme", () => {
   beforeEach(() => {

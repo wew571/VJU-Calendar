@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import SubmissionWindowGrid from "./SubmissionWindowGrid";
+import SubmissionWindowGrid from "@/presentation/submissions/SubmissionWindowGrid";
 
 // Thu 4 (idx 2) tiet 6 (idx 5) = slot 2*12+5 = 29 dang day.
 const props = { numDays: 6, slotsPerDay: 12, initialSlots: [], teachingSlots: [29], allowEmpty: true };

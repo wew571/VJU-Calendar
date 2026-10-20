@@ -2,7 +2,7 @@
 """Test endpoint POST /api/manual/teacher/<id>/generate-availability - xem
 api/manual_teacher.py va PROMPT-THEM-CHUC-NANG-GIO-RANH-GIANG-VIEN.md muc 6.4.
 
-Chay: cd webapp && py -m pytest test_api_generate_availability.py -q
+Chay: py -m pytest test/test_api_generate_availability.py -q
 
 KHONG dung file snapshot that: monkeypatch save_snapshot thanh no-op (giong
 kiem_tra_nhom_sinh_vien.py) va tu dung STATE truc tiep thay vi nap file.

@@ -1,9 +1,9 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import SchedulingWorkflowDialog from "./SchedulingWorkflowDialog";
+import SchedulingWorkflowDialog from "@/presentation/schedule/SchedulingWorkflowDialog";
 
-vi.mock("./PhamViXepPanel", () => ({
+vi.mock("@/presentation/schedule/PhamViXepPanel", () => ({
   default: () => <div>Xếp cho: Toàn khoa</div>,
 }));
 

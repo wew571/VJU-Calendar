@@ -1,4 +1,3 @@
-import { TriangleAlert } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { AppTopbar } from '@/components/layout/app-topbar';
@@ -27,7 +26,7 @@ function loadCollapsed() {
 
 /**
  * App-shell phong cach e-gov (dong bo app Nhap hoc VJU):
- * bang canh bao demo -> topbar trang -> [sidebar 2 cap | page header + noi dung].
+ * topbar trang -> [sidebar 2 cap | page header + noi dung].
  */
 export function AppLayout({
   page,
@@ -135,7 +134,6 @@ export function AppLayout({
       className="liquid-canvas liquid-shell flex h-dvh flex-col"
       data-sidebar-moving={sidebarMoving ? 'true' : undefined}
     >
-      <DemoBanner />
       <AppTopbar
         collapsed={effectiveCollapsed}
         onToggleSidebar={onToggleSidebar}
@@ -207,23 +205,6 @@ export function AppLayout({
           </main>
         </div>
       </div>
-    </div>
-  );
-}
-
-/**
- * Canh bao "cong cu demo" - truoc day nam trong Header/Footer bang chu in hoa.
- * Dat o day theo dung cho ImpersonationBar cua reference: bang mau ho phach vat
- * ngang tren cung, khong the bo qua nhung cung khong chiem cho cua noi dung.
- */
-function DemoBanner() {
-  return (
-    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-amber-500 px-4 py-1.5 text-center text-[13px] font-medium text-amber-950">
-      <TriangleAlert className="size-4 shrink-0" />
-      <span>
-        <b>Công cụ nội bộ — không dùng để vận hành chính thức.</b> Kết quả xếp
-        lịch chỉ mang tính tham khảo cho giáo vụ khoa.
-      </span>
     </div>
   );
 }

@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarClock, Map as MapIcon, TriangleAlert, X } from "lucide-react";
+import { CalendarClock, LayoutGrid, Map as MapIcon, Sheet, TriangleAlert, X } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import { buildProblemInbox, filterProblemInbox } from "../../adapters/problemInbox";
 import { buildScheduleView, scopeLabel, DEFAULT_FILTER } from "../../adapters/scheduleView";
 import { buildSteps } from "../../adapters/buocGiai";
 import { STATUS_COLORS, buildLegend } from "../../adapters/colorGrouping";
 import LessonGridBoard from "../timetable/LessonGridBoard";
+import ProgramSheetBoard from "../timetable/ProgramSheetBoard";
 import LessonTable from "../timetable/LessonTable";
 import ProblemInbox from "../schedule/ProblemInbox";
 import DensityNavigator from "../schedule/DensityNavigator";
@@ -87,6 +88,11 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
   // the van la thanh mau, de cung mot man khong cho ra ngay nay co chu ngay kia
   // khong (be rong cot phu thuoc so lop chong gio cua tung ngay).
   const [fullscreen, setFullscreen] = useState(false);
+  // Trong toan man hinh: "sheet" = bang chuong trinh kieu sheet giay (hang
+  // ngay/tiet/gio, cot chuong trinh theo khoa - de doc nhu TKB phat hanh);
+  // "grid" = luoi the chi tiet nhu truoc (nhin tong quan tuan, keo-tha nhanh).
+  // Mac dinh mo vao la sheet - dung cho canh "so lich voi ban giay".
+  const [fsView, setFsView] = useState("sheet");
   const [inboxOpen, setInboxOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
@@ -189,6 +195,19 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
         : l,
     );
   }, [mode, view.gridLessons, view.lessons, pendingMove]);
+
+  // LUOI DAY: mot ngay chong tu ~12 buoi tro len thi thanh mau mong duoi 10px,
+  // khong con cho cho chu - chi con xem "hinh dang tuan". Hien mot dong goi y
+  // cach thu hep (bo loc "Xem", re chuot/Tab de doc tung thanh, che do "Bang")
+  // thay vi de nguoi dung tu phat hien bo loc sau bao lan cuon.
+  const luoiDay = useMemo(() => {
+    const byDay = new Map();
+    for (const l of view.gridLessons) {
+      if (l.day == null) continue;
+      byDay.set(l.day, (byDay.get(l.day) ?? 0) + 1);
+    }
+    return Math.max(0, ...byDay.values()) >= 12;
+  }, [view.gridLessons]);
 
   const fromLabel = pendingMove
     ? slotRangeLabel(pendingMove.fromSlot, pendingMove.lesson.duration || 1, view.slotsPerDay)
@@ -376,11 +395,55 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
             <span className="text-muted-foreground text-sm tabular-nums">
               {displayLessons.length}/{view.totalLessons} buổi
             </span>
+            {/* Bam vao badge = bat/tat bo loc "Chi buoi co van de" - duong tat
+                nhanh nhat tu "co 51 buoi can chu y" toi luoi chi con dung 51
+                thanh do, thay vi phai mo "Bo loc them" de tim o tick. */}
             {view.problemCount > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-700">
+              <button
+                type="button"
+                onClick={() => set({ onlyProblems: !f.onlyProblems })}
+                aria-pressed={f.onlyProblems}
+                title={
+                  f.onlyProblems
+                    ? "Đang chỉ hiện các buổi có vấn đề — bấm để hiện lại toàn bộ"
+                    : "Bấm để lọc lưới chỉ còn các buổi có vấn đề"
+                }
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-colors",
+                  f.onlyProblems
+                    ? "bg-red-500/25 text-red-700 ring-1 ring-red-500/60"
+                    : "bg-red-500/10 text-red-700 hover:bg-red-500/20",
+                )}
+              >
                 <TriangleAlert className="size-3.5" aria-hidden="true" />
                 {view.problemCount} buổi có vấn đề
-              </span>
+              </button>
+            )}
+            {/* Toan man hinh co HAI cach nhin: "Bang chuong trinh" (sheet giay,
+                hang tiet x cot chuong trinh) va "Luoi buoi" (the 180px). */}
+            {fullscreen && mode === "grid" && (
+              <div className="glass-segmented ml-auto inline-flex h-8 items-center rounded-lg border p-0.75">
+                {[
+                  { key: "sheet", label: "Bảng chương trình", icon: Sheet },
+                  { key: "grid", label: "Lưới buổi", icon: LayoutGrid },
+                ].map((m) => (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => setFsView(m.key)}
+                    aria-pressed={fsView === m.key}
+                    className={cn(
+                      "inline-flex h-full items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors",
+                      fsView === m.key
+                        ? "glass-segmented-active text-foreground"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <m.icon className="size-3.5" aria-hidden="true" />
+                    {m.label}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
           {mode === "grid" && view.totalLessons > 0 && (f.colorBy === "status" ? (
@@ -519,6 +582,27 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
               {f.search.trim() && view.searchMatchIds.size === 0 && (
                 <Notice tone="slate">Không có buổi nào khớp từ khóa; lưới được làm mờ để bạn tiếp tục đối chiếu.</Notice>
               )}
+              {luoiDay && !fullscreen && (
+                <p className="text-muted-foreground text-xs">
+                  Lưới đang rất dày — thu hẹp bằng ô lọc "Xem" phía trên, rê chuột
+                  hoặc Tab tới từng thanh để xem chi tiết, hoặc chuyển sang "Bảng" để tra cứu nhanh.
+                </p>
+              )}
+              {fullscreen && fsView === "sheet" ? (
+                <ProgramSheetBoard
+                  lessons={displayLessons}
+                  numDays={view.numDays}
+                  slotsPerDay={view.slotsPerDay}
+                  highlightedIds={highlighted}
+                  colorBy={f.colorBy}
+                  searchState={
+                    activeProblem || activeCell || !f.search.trim()
+                      ? null
+                      : view.searchMatchIds.size > 0 ? "match" : "none"
+                  }
+                  onMoveLesson={canEdit ? handleDropLesson : undefined}
+                />
+              ) : (
               <LessonGridBoard
                 lessons={displayLessons}
                 numDays={view.numDays}
@@ -546,6 +630,7 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
                 onClearOverride={canEdit ? doClearOverride : undefined}
                 onTachHocChung={canEdit ? doBoHocChung : undefined}
               />
+              )}
             </>
           ) : (
             <LessonTable lessons={displayLessons} />

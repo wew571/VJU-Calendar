@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """PATCH /api/manual/course/<id>: khoa khi co lop da chot, khoa tin chi, danh lai
-ma lop khi doi ma hoc phan. Chay: cd webapp && py -m pytest test_api_course_edit.py -q"""
+ma lop khi doi ma hoc phan. Chay: py -m pytest test/test_api_course_edit.py -q"""
 
 import pytest
 

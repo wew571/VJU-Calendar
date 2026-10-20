@@ -830,6 +830,27 @@ select:focus-visible {
     0 6px 16px color-mix(in srgb, var(--lesson-color) 30%, transparent);
 }
 
+/* Tab den bang ban phim cung can mot dau hieu nhu hover - thanh 10px thi khong
+   co vien focus la mat huong di chuyen hoan toan. outline chu khong box-shadow
+   de khong tran vao tin hieu "highlighted" (vien do) va "pending-save". */
+.lesson-bar:focus-visible {
+  outline: 2px solid var(--foreground, #1e293b);
+  outline-offset: 1px;
+  z-index: 20;
+}
+
+.lesson-bar:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Focus bang ban phim trong luc dang "chim nen" cung phai ro lai nhu hover,
+   neu khong nguoi dung Tab toi mot thanh mo .2 ma khong doc duoc popover cua no
+   la buoi nao. */
+.schedv2-grid-table.has-highlight .lesson-bar:not(.highlighted):focus-visible {
+  opacity: .75;
+  filter: saturate(.85) brightness(1.05);
+}
+
 .lesson-bar.highlighted {
   outline: 3px solid #dc2626;
   outline-offset: 1px;
@@ -2175,3 +2196,238 @@ textarea:focus-visible {
    Nen chi can hoi trong suot mot chut la doc thay chu cua cot khac chay xuyen
    qua. Ben duoi chung von la nen trang cua trang nen #fff giu nguyen mau cu. */
 tbody:has(.xls-chot-badge) .xls-course { background: var(--xls-chot-bg); }
+
+
+/* ---- Bang chuong trinh (toan man hinh, ProgramSheetBoard) ----------------
+   Bo cuc "sheet giay": hang = (Ngay | Tiet | Gio), cot = chuong trinh gom
+   theo khoa. Ba cot trai + hai hang tieu de dinh (sticky) nhu freeze panes;
+   mot buoi nhieu tiet gop DOC qua rowspan (adapters/programSheet.js).
+   Mau the buoi hoc chi la ACCENT (vien trai + nen pha nhat) - bang giu nen
+   --card nhu sheet giay, khong son dac nhu thanh tren luoi; doc duoc trong
+   ca hai theme vi chi dung bien. */
+
+.prog-sheet-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  position: relative; /* neo cho sticky ben trong */
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.prog-sheet {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  width: max-content;
+  min-width: 100%;
+  font-size: 11px;
+  color: var(--foreground);
+}
+
+/* Cot chuong trinh rong co dinh - 3 cot dau dinh bang <colgroup> trong JSX */
+.prog-sheet col:not(:nth-child(-n + 3)) { width: 168px; }
+
+.prog-sheet th,
+.prog-sheet td {
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 0;
+}
+
+/* Hai hang tieu de dinh tren; goc tren-trai dinh ca hai chieu */
+.prog-sheet .stick-t { position: sticky; top: 0; z-index: 12; background: var(--card); }
+.prog-sheet thead tr:last-child .prog { top: 28px; }
+/* Goc tren-trai dinh CA HAI chieu (khong co left:0 thi chi dinh doc, cuon ngang
+   la troi va header chuong trinh tran len vung cot nhan). Can specificity cao
+   hon .stick-l/.stick-t (z 10-12) vi no nam tren ca hai truc. */
+.prog-sheet .stick-l.corner { left: 0; z-index: 16; }
+
+.prog-sheet thead th {
+  height: 28px;
+  font-weight: 600;
+  font-size: 11px;
+  text-align: center;
+  vertical-align: middle;
+  color: var(--foreground);
+  background: color-mix(in oklch, var(--muted) 55%, var(--card));
+}
+.prog-sheet thead .cohort {
+  font-size: 11.5px;
+  letter-spacing: .02em;
+  border-bottom: 1px solid var(--border);
+}
+.prog-sheet thead .prog { font-size: 10.5px; color: var(--muted-foreground); }
+.prog-sheet thead .corner {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: none;
+}
+
+/* Ba cot dinh trai */
+.prog-sheet .stick-l { position: sticky; z-index: 10; background: var(--card); }
+.prog-sheet .day-label { left: 0; z-index: 11; }
+.prog-sheet .tiet { left: 54px; }
+.prog-sheet .gio { left: 100px; }
+
+.prog-sheet .day-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-align: center;
+  vertical-align: middle;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: .05em;
+  background: color-mix(in oklch, var(--muted) 55%, var(--card));
+  border-top: 2px solid var(--border);
+}
+.prog-sheet .tiet {
+  text-align: center;
+  vertical-align: middle;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+.prog-sheet .gio {
+  text-align: center;
+  vertical-align: middle;
+  font-size: 9.5px;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* O du lieu: moi hang tiet cao co dinh de rowspan gop doc deu nhau */
+.prog-sheet td.prog-cell {
+  height: 46px;
+  vertical-align: top;
+  padding: 2px;
+}
+.prog-sheet td.prog-cell.drag-over {
+  outline: 2px dashed var(--primary);
+  outline-offset: -2px;
+  background: color-mix(in oklch, var(--primary) 12%, transparent);
+}
+
+/* O gop doc: chieu cao PHAN CHIA deu cho moi the ben trong. Truoc day the dau
+   min-height:100% khien the thu 2 tran xuong de len cac hang ben duoi (lop
+   "chia lam 2 lop" chong gio gop chung mot o). */
+.prog-cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+  min-height: 0;
+}
+/* ROOMY: cot rat rong -> xep NGANG cac the chong gio (giong sheet giay chia
+   doi cot khi trung gio) thay vi chia doi chieu cao; moi the duoc full chieu
+   cao o gop, du cho cho ten 2 dong + dong GV/phong, khong bi cat chu. */
+.prog-sheet.roomy .prog-cell-stack { flex-direction: row; }
+
+/* The buoi hoc nho trong o - accent trai theo mau nhom */
+.prog-cell-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  padding: 3px 6px 3px 7px;
+  border-left: 3px solid var(--acc, var(--border));
+  border-radius: 4px;
+  background: color-mix(in oklch, var(--acc, var(--muted)) 10%, transparent);
+  overflow: hidden;
+}
+
+.prog-cell-flags {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  display: flex;
+  gap: 2px;
+  color: var(--muted-foreground);
+}
+.prog-cell-card.has-problem .prog-cell-flags { color: #dc2626; }
+.prog-cell-card.has-problem {
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--acc) 55%, transparent);
+}
+
+.prog-cell-name {
+  font-weight: 600;
+  font-size: 10.5px;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding-right: 14px; /* cho cho cum co canh bao */
+}
+.prog-cell-sub {
+  font-size: 9.5px;
+  line-height: 1.25;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Lop don vi khac dieu phoi: soc cheo nhat + vien dut - biet la "khong phai
+   viec cua khoa" ma khong can doc chu */
+.prog-cell-card.bo-qua {
+  opacity: .72;
+  border-left-style: dotted;
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 6px,
+    color-mix(in oklch, var(--acc) 5%, transparent) 6px 8px
+  );
+}
+
+/* Buoi dang cho luu (keo-tha chua bam Luu) - khop tin hieu pending-save tren luoi */
+.prog-cell-card.pending {
+  outline: 2px dashed var(--primary);
+  outline-offset: -2px;
+}
+
+/* Chim xuong khi dang tim kiem / to sang buoi khac */
+.prog-cell-card.dimmed { opacity: .22; }
+
+/* Focus ban phim - dau hieu ro tren the nho */
+.prog-cell-card:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 1px;
+  z-index: 5;
+}
+.prog-cell-card:focus:not(:focus-visible) { outline: none; }
+
+/* ROOMY: khi loc con <=4 cot chuong trinh, moi cot gian rat rong - day chu/hang
+   len kich co "doc nhu sheet giay cho mot nganh" thay vi mat do toan khoa. */
+.prog-sheet.roomy { font-size: 13px; }
+.prog-sheet.roomy thead th { height: 34px; }
+.prog-sheet.roomy thead tr:last-child .prog { top: 34px; }
+.prog-sheet.roomy thead .cohort { font-size: 13px; }
+.prog-sheet.roomy thead .prog { font-size: 12px; }
+.prog-sheet.roomy thead .corner { font-size: 11.5px; }
+.prog-sheet.roomy .day-label { font-size: 12.5px; letter-spacing: .08em; }
+.prog-sheet.roomy .tiet { font-size: 11px; }
+.prog-sheet.roomy .gio { font-size: 10.5px; }
+.prog-sheet.roomy td.prog-cell { height: 64px; padding: 3px; }
+.prog-sheet.roomy .prog-cell-card { padding: 5px 10px 5px 11px; gap: 2px; }
+.prog-sheet.roomy .prog-cell-name {
+  font-size: 12.5px;
+  line-height: 1.3;
+  -webkit-line-clamp: 3;
+}
+.prog-sheet.roomy .prog-cell-sub {
+  font-size: 11px;
+  line-height: 1.3;
+  /* O rong -> cho dong GV/phong xuong 3 dong thay vi cat ngang mot dong */
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.prog-sheet.roomy .prog-cell-flags { top: 5px; right: 6px; }

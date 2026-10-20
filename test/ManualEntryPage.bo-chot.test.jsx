@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import ManualEntryPage from "./ManualEntryPage";
+import ManualEntryPage from "@/presentation/pages/ManualEntryPage";
 
 const app = vi.hoisted(() => ({
   doBoChotSection: vi.fn(),
 }));
 
-vi.mock("../../context/AppDataContext", () => ({
+vi.mock("@/context/AppDataContext", () => ({
   useAppData: () => ({
     data: {
       sourceLabel: "Nhập liệu thủ công",
@@ -34,7 +34,7 @@ vi.mock("../../context/AppDataContext", () => ({
   }),
 }));
 
-vi.mock("../manual/SectionTable", () => ({
+vi.mock("@/presentation/manual/SectionTable", () => ({
   STATUS_META: {},
   default: ({ rows, onBoChot, onOpenSection }) => (
     <>
@@ -43,20 +43,20 @@ vi.mock("../manual/SectionTable", () => ({
     </>
   ),
 }));
-vi.mock("../manual/SectionEditDrawer", () => ({
+vi.mock("@/presentation/manual/SectionEditDrawer", () => ({
   default: ({ onOpenTeacher }) => (
     <div data-testid="section-popup"><button type="button" onClick={() => onOpenTeacher(3)}>Giờ dạy</button></div>
   ),
 }));
-vi.mock("../manual/TeacherEditDrawer", () => ({
+vi.mock("@/presentation/manual/TeacherEditDrawer", () => ({
   default: ({ teacher, onClose }) => (
     <div data-testid="teacher-popup">Giảng viên #{teacher?.id}<button type="button" onClick={onClose}>Đóng giảng viên</button></div>
   ),
 }));
-vi.mock("../manual/CourseEditDrawer", () => ({ default: () => null }));
-vi.mock("../manual/ImportExcelDialog", () => ({ default: () => null }));
-vi.mock("../manual/ExportExcelDialog", () => ({ default: () => null }));
-vi.mock("../manual/ChotCourseDialog", () => ({ default: () => null }));
+vi.mock("@/presentation/manual/CourseEditDrawer", () => ({ default: () => null }));
+vi.mock("@/presentation/manual/ImportExcelDialog", () => ({ default: () => null }));
+vi.mock("@/presentation/manual/ExportExcelDialog", () => ({ default: () => null }));
+vi.mock("@/presentation/manual/ChotCourseDialog", () => ({ default: () => null }));
 
 describe("ManualEntryPage - dialog bỏ chốt", () => {
   beforeEach(() => vi.clearAllMocks());

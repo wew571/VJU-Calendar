@@ -122,14 +122,13 @@ curl http://127.0.0.1:5055/api/state
 
 ## Bộ test API tự động
 
-`webapp/runtests.py` chạy tuần tự 96 test case (TC-01 → TC-96) qua Flask test
+`test/runtests.py` chạy tuần tự 96 test case (TC-01 → TC-96) qua Flask test
 client, không cần mở cổng. Script **tự backup** `manual_state_snapshot.json` và
 `moc_hoan_tac.json` trước khi test rồi khôi phục lại sau, nên chạy được ngay cả
 khi đang có dữ liệu thật — nhưng vẫn nên chạy lúc Flask không hoạt động:
 
 ```
-cd webapp
-py runtests.py
+py test/runtests.py
 ```
 
 Mỗi test in một dòng `[PASS]`/`[FAIL]` kèm mã TC và mô tả; dòng `[FAIL]` có thêm

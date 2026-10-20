@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import TeacherAvailabilityPage from "./TeacherAvailabilityPage";
+import TeacherAvailabilityPage from "@/presentation/pages/TeacherAvailabilityPage";
 
 let appData;
 
-vi.mock("../../context/AppDataContext", () => ({
+vi.mock("@/context/AppDataContext", () => ({
   useAppData: () => appData,
 }));
 
