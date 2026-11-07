@@ -1,6 +1,14 @@
 # Kiểm thử Sprint 2
 
-Các mã S2-Bxx-yy trùng với Test Plan Sprint 2 gồm 61 ca, lập ngày 04/11/2026.
+`sprint2-acceptance.test.jsx` chứa 10 ca TC-01 đến TC-10 tương ứng Plan/Log
+đã tổng hợp theo báo cáo nhóm ngày 05/11/2026. File được chép nguyên từ commit
+`36294ff`, chưa chạy lại trên bản Sprint 2. Kết quả 10/10 PASS trong Log là
+kết quả do báo cáo nhóm công bố.
+
+Các mã S2-Bxx-yy dưới đây thuộc Test Plan cũ gồm 61 ca, lập ngày 04/11/2026.
+Bản Plan/Log cũ được giữ trong `Sprint 2/Minh_chung/2026-11-05-before-report-alignment/`
+của thư mục tài liệu nhóm. `run.py` vẫn chạy bộ 14 bài S2-Bxx-yy và 4 bài hồi quy,
+không chạy file 10 ca TC-01 đến TC-10.
 Mỗi bài test đặt mã ca ngay đầu tên để đối chiếu với kết quả Vitest.
 
 | File | Ca có mã kiểm thử |

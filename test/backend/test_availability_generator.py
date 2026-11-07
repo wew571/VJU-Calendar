@@ -3,7 +3,7 @@
 domain/availability_generator.py va PROMPT-THEM-CHUC-NANG-GIO-RANH-GIANG-VIEN.md
 muc 5.2/5.3/5.4.
 
-Chay: py -m pytest test/test_availability_generator.py -q
+Chay: python -m pytest test/backend/test_availability_generator.py -q
 """
 
 import copy

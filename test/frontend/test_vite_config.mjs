@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { afterEach, test } from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { CONFIG_PATH, createViteConfig, loadFrontendConfig } from '../frontend/vite.config.js'
+import { CONFIG_PATH, createViteConfig, loadFrontendConfig } from '../../frontend/vite.config.js'
 
 const directories = []
 const valid = { devServer: { apiProxy: { path: '/api', target: 'http://127.0.0.1:5055', changeOrigin: true } } }
@@ -23,7 +23,7 @@ function configFile(contents) {
 afterEach(() => { for (const directory of directories.splice(0)) rmSync(directory, { recursive: true, force: true }) })
 
 test('path is derived from source rather than working directory', () => {
-  const expected = resolve(dirname(fileURLToPath(import.meta.url)), '../config/frontend.json')
+  const expected = resolve(dirname(fileURLToPath(import.meta.url)), '../../config/frontend.json')
   const cwd = process.cwd()
   const directory = mkdtempSync(join(tmpdir(), 'vju-cwd-'))
   try {

@@ -24,7 +24,8 @@ def main():
         shutil.copy2(source,isolated/'config'/f'{kind}.json')
     shutil.copy2(REPO/'main.py',isolated/'main.py')
     (isolated/'test').mkdir()
-    for source in [*sorted((REPO/'test').glob('test_*.py')),REPO/'test/conftest.py',REPO/'test/runtests.py']:
+    shutil.copytree(REPO/'test/backend',isolated/'test/backend',ignore=shutil.ignore_patterns('__pycache__'))
+    for source in [REPO/'test/conftest.py',REPO/'test/runtests.py']:
         shutil.copy2(source,isolated/'test'/source.name)
     env={**os.environ,'VJU_SPRINT1_WORKDIR':str(work),'PYTHONIOENCODING':'utf-8'}
     node=shutil.which('node.exe') or shutil.which('node')

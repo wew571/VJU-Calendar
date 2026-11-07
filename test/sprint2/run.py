@@ -16,7 +16,7 @@ def main():
     evidence=work/'evidence'
     evidence.mkdir(parents=True)
     files=[SOURCE/name for name in sorted({item['testFile'] for item in cases.values() if item['testFile']})]
-    regression=[REPO/'test/ManualEntryPage.search-state.test.jsx',REPO/'test/ManualEntryPage.bo-chot.test.jsx']
+    regression=[REPO/'test/frontend/ManualEntryPage.search-state.test.jsx',REPO/'test/frontend/ManualEntryPage.bo-chot.test.jsx']
     paths=[str(path.relative_to(REPO/'test')).replace('\\','/') for path in files+regression]
     command=[node,str(REPO/'frontend/node_modules/vitest/vitest.mjs'),'run',*['../test/'+name for name in paths],'--reporter=verbose','--reporter=json',f'--outputFile={evidence / "test-results.json"}']
     print('Sprint 2: 14 acceptance checks and 4 component regression checks.',flush=True)
