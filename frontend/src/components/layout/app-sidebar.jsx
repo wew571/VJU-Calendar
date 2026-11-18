@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NAV_GUIDE, NAV_HOME, getAllowedGroups } from '@/constants/nav';
+import { getRoleDefinition } from '@/constants/roles';
 import { cn } from '@/lib/utils';
 
 /**
@@ -18,7 +19,7 @@ export function AppSidebar({
   onNavigate,
 }) {
   const groups = getAllowedGroups(role);
-  const isViewer = role === 'viewer';
+  const allowedPages = getRoleDefinition(role).pages;
 
   return (
     <aside
@@ -35,15 +36,19 @@ export function AppSidebar({
       )}
     >
       {/* Hai muc ghim tren cung: man hinh chinh + huong dan su dung. */}
-      <PinnedNavItem item={NAV_HOME} page={page} collapsed={collapsed} onNavigate={onNavigate} />
-      <PinnedNavItem item={NAV_GUIDE} page={page} collapsed={collapsed} onNavigate={onNavigate} />
+      {allowedPages.includes(NAV_HOME.key) && (
+        <PinnedNavItem item={NAV_HOME} page={page} collapsed={collapsed} onNavigate={onNavigate} />
+      )}
+      {allowedPages.includes(NAV_GUIDE.key) && (
+        <PinnedNavItem item={NAV_GUIDE} page={page} collapsed={collapsed} onNavigate={onNavigate} />
+      )}
 
-      {!collapsed && (
+      {!collapsed && groups.length > 0 && (
         <p className="text-muted-foreground/70 px-3 pt-4 pb-1 text-[11px] font-semibold tracking-wide uppercase">
-          {isViewer ? 'Tra cứu' : 'Nghiệp vụ'}
+          {role === 'viewer' ? 'Tra cứu' : 'Nghiệp vụ'}
         </p>
       )}
-      {collapsed && <div className="bg-border my-2 h-px w-6" />}
+      {collapsed && groups.length > 0 && <div className="bg-border my-2 h-px w-6" />}
 
       {groups.map((group) => (
         <NavGroupItem

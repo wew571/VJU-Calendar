@@ -16,6 +16,7 @@ export default function SchedulingWorkflowDialog({
   loading,
   error,
   problemInbox,
+  lockedProgram,
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -34,6 +35,7 @@ export default function SchedulingWorkflowDialog({
               onChange={onPhamViChange}
               disabled={loading || !canEdit}
               ketQuaPhamVi={ketQuaPhamVi}
+              lockedProgram={lockedProgram}
             />
             {error && (
               <Notice tone="red" icon={TriangleAlert} className="font-bold text-black">

@@ -1,6 +1,9 @@
 import { Eye, TriangleAlert, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NativeSelect } from "@/components/ui/native-select";
 import { ThemeSwitcher } from "@/components/layout/theme-switcher";
+import { useEffect, useState } from "react";
+import { ROLE_DEFINITIONS } from "@/constants/roles";
 
 // Thay LoginScreen gốc (JWT thật) — công cụ demo này không có hệ thống tài
 // khoản, nên "đăng nhập" chỉ là chọn vai trò để giới hạn các màn hình được
@@ -10,7 +13,13 @@ import { ThemeSwitcher } from "@/components/layout/theme-switcher";
 // Dung style man dang nhap cua app Nhap hoc: nen do dam (token --sidebar - bo
 // token nay o reference CHI dung cho man dang nhap, khong phai cho sidebar),
 // khoi thuong hieu o giua, the trang do bong.
-export default function RolePickerScreen({ onPick }) {
+export default function RolePickerScreen({ onPick, programs, initialProgram }) {
+  const [selectedProgram, setSelectedProgram] = useState(initialProgram || programs[0] || "");
+
+  useEffect(() => {
+    if (!programs.includes(selectedProgram)) setSelectedProgram(programs[0] || "");
+  }, [programs, selectedProgram]);
+
   return (
     <div className="liquid-role-canvas relative flex min-h-dvh items-center justify-center p-4">
       <ThemeSwitcher className="absolute top-3 right-3" />
@@ -30,24 +39,55 @@ export default function RolePickerScreen({ onPick }) {
         <div className="glass-hero-card rounded-2xl border p-6">
           <h1 className="text-lg font-semibold">Vào công cụ xếp TKB</h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Không cần tài khoản — chọn vai trò phù hợp với việc bạn cần làm.
+            Chọn hồ sơ nghiệp vụ để xem giao diện và luồng thao tác phù hợp.
           </p>
 
           <div className="mt-5 space-y-4">
-            <div className="space-y-1.5">
+            <div className="space-y-2 rounded-lg border p-3">
+              <p className="text-sm font-medium">{ROLE_DEFINITIONS.gdct.label}</p>
+              <p className="text-muted-foreground text-xs">{ROLE_DEFINITIONS.gdct.description}</p>
+              <label className="text-sm font-medium" htmlFor="gdct-program">
+                CTĐT GĐCT phụ trách
+              </label>
+              <NativeSelect
+                id="gdct-program"
+                value={selectedProgram}
+                onChange={(event) => setSelectedProgram(event.target.value)}
+                disabled={programs.length === 0}
+              >
+                {programs.length === 0 ? (
+                  <option value="">Chưa có CTĐT trong dữ liệu</option>
+                ) : programs.map((program) => (
+                  <option key={program} value={program}>{program}</option>
+                ))}
+              </NativeSelect>
               <Button
                 type="button"
-                className="h-11 w-full"
-                onClick={() => onPick("staff")}
+                className="w-full"
+                disabled={!selectedProgram}
+                onClick={() => onPick("gdct", selectedProgram)}
               >
-                <Users className="size-4" />
-                Giáo vụ / Điều phối viên
+                Vào với hồ sơ GĐCT
               </Button>
-              <p className="text-muted-foreground text-xs">
-                Toàn quyền: nạp dữ liệu, nộp giờ, giải Giai đoạn 1 &amp; 2, từ
-                chối/luân chuyển.
-              </p>
             </div>
+
+            {["dpct", "assistant", "resident"].map((role) => {
+              const details = ROLE_DEFINITIONS[role];
+              return (
+                <div className="space-y-1.5" key={role}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 w-full justify-start"
+                    onClick={() => onPick(role)}
+                  >
+                    <Users className="size-4" />
+                    {details.label}
+                  </Button>
+                  <p className="text-muted-foreground text-xs">{details.description}</p>
+                </div>
+              );
+            })}
 
             <div className="space-y-1.5">
               <Button
@@ -69,9 +109,9 @@ export default function RolePickerScreen({ onPick }) {
           <p className="bg-muted/60 text-muted-foreground mt-4 flex items-start gap-1.5 rounded-md p-2 text-xs">
             <TriangleAlert className="mt-px size-3.5 shrink-0" />
             <span>
-              Công cụ nội bộ, <span className="text-foreground font-medium">
-              không dùng để vận hành chính thức</span>. Kết quả chỉ mang tính
-              tham khảo cho giáo vụ khoa.
+              Đây chỉ là hồ sơ giao diện cục bộ, <span className="text-foreground font-medium">
+              không xác thực người dùng và không bảo vệ API</span>. Chọn vai trò
+              không phải cơ chế phân quyền tài khoản.
             </span>
           </p>
         </div>

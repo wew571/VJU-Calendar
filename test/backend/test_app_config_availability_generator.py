@@ -2,7 +2,7 @@
 """Test validate/fallback cua CONFIG["availabilityGenerator"] - xem
 PROMPT-THEM-CHUC-NANG-GIO-RANH-GIANG-VIEN.md muc 6.1/6.2.
 
-Chay: py -m pytest test/test_app_config_availability_generator.py -q
+Chay: python -m pytest test/backend/test_app_config_availability_generator.py -q
 (hoac `py -m pytest test/ -q` de chay toan bo test cua backend)
 """
 

@@ -1,4 +1,4 @@
-# Quy trình nghiệp vụ xếp TKB — 3 vai trò
+# Quy trình nghiệp vụ xếp TKB — vai trò và phạm vi
 
 > Phạm vi: quy trình nghiệp vụ xếp thời khóa biểu (vai trò nào làm gì, input/xử lý/
 > output từng bước), áp dụng cho N khoa dùng chung phòng. Không bao gồm phân quyền/
@@ -6,36 +6,45 @@
 
 ## 1. Vai trò & trách nhiệm
 
-| Vai trò | Gắn với | Trách nhiệm chính |
+| Vai trò | Phạm vi nghiệp vụ | Trách nhiệm |
 |---|---|---|
-| **GĐCT** (Giám đốc Chương trình) | 1 chương trình đào tạo (CTĐT), thuộc 1 khoa | Xác định nhu cầu lớp học phần của CTĐT mình; mời giảng viên thỉnh giảng |
-| **Chuyên viên Giáo vụ Khoa** | 1 khoa (quản lý nhiều CTĐT/GĐCT) | Tổng hợp input từ các GĐCT trong khoa, xếp TKB **theo thời gian** cho toàn khoa (chưa gán phòng) |
-| **Chuyên viên Phòng Đào Tạo** | Toàn trường, dùng chung cho N khoa | Quản lý danh sách phòng của trường; gán **phòng cụ thể** cho TKB (đã có giờ) từ tất cả các khoa |
+| **GĐCT** (Giám đốc Chương trình) | Một CTĐT được phân công | Mời giảng viên thỉnh giảng; nhập/cập nhật hồ sơ và giờ có thể dạy của họ; xếp TKB trong CTĐT phụ trách. |
+| **ĐPCT** (Điều phối CT) | Một CTĐT được phân công | Mời giảng viên thỉnh giảng; nhập/cập nhật hồ sơ và giờ có thể dạy của họ. Không được mặc định có quyền xếp lịch. |
+| **Trợ lý khoa** | Toàn trường | Có thể thực hiện các việc về giảng viên thỉnh giảng; nhập/cập nhật giờ rảnh thay giảng viên cơ hữu; xếp lịch thay GĐCT khi cần, trên phạm vi toàn trường. |
+| **Giảng viên cơ hữu** | Hồ sơ giảng viên của chính mình | Tự khai giờ rảnh. |
 
-1 khoa có nhiều CTĐT, mỗi CTĐT có 1 GĐCT phụ trách. Giáo vụ Khoa nhận input từ tất cả
-GĐCT thuộc khoa mình rồi mới xếp TKB chung cho khoa.
+Mỗi CTĐT có một GĐCT và một ĐPCT. Toàn trường hiện có 9 CTĐT, trong đó 6 CTĐT
+thuộc FATE. Các con số này không phải giá trị để mã hóa cứng trong giao diện.
+
+**JLE và Phòng Đào tạo** tham gia điều phối nghiệp vụ nhưng không có vai trò đăng
+nhập riêng trong phạm vi yêu cầu hiện tại. Không được suy ra từ nhiệm vụ điều phối
+rằng hai đơn vị này có quyền xếp lịch hoặc có màn hình/tài khoản riêng.
+
+Trong màn Chuẩn bị dữ liệu, số nhóm điều phối viên được tính từ các lớp thỉnh giảng
+thuộc dữ liệu/phạm vi đang xem. Đây là số nhóm còn việc hoặc có lớp trong dữ liệu,
+không phải số CTĐT; số này thay đổi theo dữ liệu.
 
 ## 2. Luồng tổng quát
 
 ```
-[0a] Phòng Đào Tạo: quản lý danh sách phòng toàn trường (nền, ít thay đổi trong kỳ)
+[0a] JLE / Phòng Đào tạo: điều phối nghiệp vụ (không phải vai trò đăng nhập riêng)
 [0b] (tuỳ chọn, thủ công) Mô phỏng lại TKB kỳ cũ — dựa vào đó fill TKB kỳ mới,
      không tương đồng thì bỏ qua
         │
         ▼
-[1] GĐCT + hệ thống: tính số lớp cần mở cho môn X
+[1] GĐCT + hệ thống: xác định nhu cầu lớp của CTĐT
         │  output: "Môn X cần K lớp"
         ▼
-[2] GĐCT: mời giảng viên thỉnh giảng, cố chốt giờ dạy được
+[2] GĐCT / ĐPCT / Trợ lý khoa: mời giảng viên thỉnh giảng, nhập/cập nhật hồ sơ
         │  output: GV → môn → (có thể có) khung giờ
         ▼
-[3] Giáo vụ Khoa: chỉ khi [2] chưa chốt giờ — liên hệ lại GV để xác nhận khung giờ
+[3] GĐCT / ĐPCT / Trợ lý khoa: nhập/cập nhật giờ có thể dạy của GV thỉnh giảng
         │  output: GV + khung giờ đầy đủ
         ▼
-[4] Giáo vụ Khoa: xếp TKB theo THỜI GIAN cho toàn khoa (chưa gán phòng)
+[4] GĐCT: xếp TKB CTĐT phụ trách; Trợ lý khoa có thể xếp thay trên toàn trường
         │  output: TKB theo giờ của khoa
         ▼
-[5] Phòng Đào Tạo: gán phòng cụ thể, dựa trên TKB của tất cả N khoa cùng lúc
+[5] JLE / Phòng Đào tạo: điều phối các công việc liên quan (không tạo vai trò đăng nhập)
         │
         ▼
    Thời khóa biểu cuối cùng (có phòng) — bảng tổng hợp toàn trường
@@ -46,12 +55,10 @@ Danh sách phòng ([0a]) cần có sẵn từ sớm — không chỉ để gán 
 
 ## 3. Chi tiết từng bước
 
-### [0a] Phòng Đào Tạo — quản lý danh sách phòng
+### [0a] Điều phối tài nguyên phòng
 
-Phòng Đào Tạo nắm và cập nhật danh sách phòng của trường, mỗi phòng gồm: tên/mã
-phòng, sức chứa, khu vực (Hòa Lạc/Mỹ Đình/...), loại (Lý thuyết/Thực hành), và có thể
-kèm khung giờ đã bận sẵn ngoài giảng dạy. Danh sách này dùng ở bước [1] (dạng tổng hợp
-sức chứa theo loại) và bước [5] (dạng chi tiết từng phòng + khung giờ trống/bận).
+JLE và Phòng Đào tạo phối hợp các công việc liên quan tới tài nguyên phòng. Yêu cầu
+hiện tại không tạo vai trò đăng nhập riêng cho hai đơn vị này.
 
 ### [0b] Mô phỏng lại TKB kỳ cũ (tuỳ chọn, thủ công)
 
@@ -64,49 +71,46 @@ toàn từ [1]. Chỉ là gợi ý điền nhanh, không bắt buộc và không
 GĐCT cung cấp số SV dự kiến học môn X trong kỳ (gộp cả SV học lại/trượt vào cùng một
 tổng, không tách lớp riêng). Hệ thống dùng tổng SV này cùng sức chứa các phòng cùng
 loại (không lọc theo khu vực ở bước này — xem mục 6) để tính số lớp K cần mở, theo
-nguyên tắc ở mục 5. Kết quả "Môn X cần K lớp" được gửi cho Giáo vụ Khoa.
+nguyên tắc ở mục 5. Kết quả "Môn X cần K lớp" thuộc CTĐT do GĐCT phụ trách.
 
-### [2] GĐCT mời giảng viên thỉnh giảng
+### [2] Mời và quản lý giảng viên thỉnh giảng
 
-GĐCT mời GV cho các môn cần thỉnh giảng, cố gắng chốt luôn khung giờ GV có thể dạy
-ngay lúc mời — GV nào dạy môn nào, có thể dạy ngày nào, khung giờ nào. Kết quả (có thể
-đầy đủ khung giờ hoặc còn thiếu nếu GV chưa xác nhận) được gửi cho Giáo vụ Khoa.
+GĐCT, ĐPCT và Trợ lý khoa đều có thể mời GV thỉnh giảng, nhập/cập nhật hồ sơ GV mới
+và nhập/cập nhật giờ có thể dạy. GĐCT/ĐPCT thao tác theo nhiệm vụ của CTĐT mình;
+Trợ lý khoa có phạm vi thao tác toàn trường. Cùng một hồ sơ GV có thể được dùng ở
+nhiều CTĐT; cách gán/quản lý quyền sở hữu hồ sơ dùng chung cần được thống nhất khi
+triển khai tài khoản thật.
 
-### [3] Giáo vụ Khoa bổ sung khung giờ còn thiếu
+### [3] Khai báo giờ rảnh
 
-Với phần GV thỉnh giảng ở [2] chưa có khung giờ, Giáo vụ Khoa liên hệ lại GV để xác
-nhận/thu thập khung giờ. Chỉ cần biết GV đã có giờ hay chưa — GV chưa có giờ thì buổi
-dạy của GV đó ở trạng thái chờ, không được đưa vào xếp TKB ở [4] cho đến khi có giờ.
+GĐCT, ĐPCT hoặc Trợ lý khoa có thể nhập/cập nhật giờ có thể dạy của GV thỉnh giảng.
+Giảng viên cơ hữu tự khai giờ rảnh; Trợ lý khoa có thể nhập/cập nhật thay. Giờ thiếu
+được giữ ở trạng thái chờ theo luồng hiện có.
 
-### [4] Giáo vụ Khoa xếp TKB theo thời gian
+### [4] Xếp TKB
 
-Input: số lớp cần mở theo môn (từ [1], tổng hợp từ mọi GĐCT trong khoa), GV + khung
-giờ đầy đủ (từ [2]+[3]), gợi ý từ TKB kỳ cũ (từ [0b], nếu có).
+GĐCT xếp TKB trong CTĐT mình phụ trách. Trợ lý khoa có thể xếp lịch thay GĐCT khi
+cần, với phạm vi toàn trường. ĐPCT không được mặc định có quyền xếp lịch.
+
+Input: dữ liệu lớp, GV và giờ có thể dạy, gợi ý từ TKB kỳ cũ (từ [0b], nếu có).
 
 Xếp TKB chỉ dựa vào giờ GV rảnh, không xét khu vực/2 cơ sở (xem mục 6); check trùng
 theo giảng viên (đủ dữ liệu vì GV thuộc phạm vi khoa). **Không check trùng phòng ở
 bước này** — khoa không thấy TKB của khoa khác, mà phòng là tài nguyên dùng chung
 N khoa. Hoàn thiện xếp thời khóa biểu cho tới khi hết khả năng xếp thêm.
 
-Nếu có buổi thỉnh giảng không xếp được, GĐCT/Giáo vụ Khoa mời GV khác hoặc đổi khung
-giờ thủ công, rồi nhập lại thông tin mới.
+Nếu có buổi thỉnh giảng không xếp được, người có quyền quản lý GV thỉnh giảng có thể
+cập nhật hồ sơ/giờ có thể dạy theo thỏa thuận thực tế.
 
-Output: TKB hoàn chỉnh theo thời gian của khoa (giờ dạy theo lớp/môn/GV, chưa gán
-phòng) → Phòng Đào Tạo.
+Output: TKB theo phạm vi được phép xếp; thuật toán và các ràng buộc hiện có không đổi.
 
-### [5] Phòng Đào Tạo gán phòng cụ thể
+### [5] Điều phối sau xếp lịch
 
-Input: TKB theo giờ (chưa có phòng) từ tất cả N khoa; danh sách phòng chi tiết + tình
-trạng trống/bận theo khung giờ.
+JLE và Phòng Đào tạo điều phối nghiệp vụ sau khi có lịch. Yêu cầu hiện tại không tạo
+tài khoản đăng nhập, màn hình hay quyền xếp lịch riêng cho hai đơn vị này.
 
-Xếp phòng dựa trên TKB của các khoa: gán đúng 1 phòng cho mỗi buổi học, đảm bảo loại
-phòng khớp (LT/TH), sức chứa ≥ số SV của lớp, không phòng nào bị 2 khoa dùng trùng
-giờ, và xử lý ràng buộc khu vực theo giảng viên (mục 6). Đây là bước duy nhất đủ dữ
-liệu để check trùng phòng và khu vực chính xác — lý do phòng phải xét theo TKB của
-tất cả khoa cùng lúc.
-
-Output cuối cùng: thời khóa biểu đầy đủ có phòng — bảng tổng hợp tất cả chương trình
-của N khoa.
+Việc gán phòng cụ thể không thuộc quyền đăng nhập được xác định trong yêu cầu phân
+vai này. Hiện tại ứng dụng chỉ xử lý các ràng buộc phòng theo thuật toán sẵn có.
 
 ## 4. Thông tin về Phòng học cần quản lý
 
@@ -140,7 +144,7 @@ học của SV.
 
 Cách xử lý trong luồng:
 
-- **Bước [4]** (Giáo vụ Khoa xếp giờ) chỉ dựa vào giờ GV rảnh, không xét khu vực — vì
+- **Bước [4]** (GĐCT hoặc Trợ lý khoa xếp giờ) chỉ dựa vào giờ GV rảnh, không xét khu vực — vì
   phòng (và do đó khu vực) chưa được gán ở bước này.
 - **Bước [5]** (Phòng Đào Tạo gán phòng) là bước duy nhất xét khu vực: vì mỗi phòng
   gắn liền đúng 1 khu vực, gán phòng tức là gán khu vực, nên ràng buộc "1 giảng viên
@@ -152,19 +156,21 @@ cho cả ngày đó. Trường hợp này xử lý bằng cách sửa tay lại 
 
 ## 7. Yêu cầu cho phép sắp xếp thủ công
 
-Ở cả 3 bước có tính toán tự động — [1] tính số lớp, [4] xếp giờ, [5] gán phòng —
+Ở các bước có tính toán tự động —
 người phù hợp phải luôn có thể tự tay sửa/ghi đè, không bị bắt buộc dùng đúng kết quả
 hệ thống tự tính ra:
 
 | Bước tự động | Cho phép sửa tay gì |
 |---|---|
-| [1] Tính số lớp | Sửa tay số lớp (và/hoặc sức chứa mục tiêu mỗi lớp) trước khi gửi cho Giáo vụ Khoa |
+| [1] Tính số lớp | Sửa tay số lớp (và/hoặc sức chứa mục tiêu mỗi lớp) trong CTĐT phụ trách |
 | [4] Xếp TKB theo giờ | Tự tay xếp/sửa giờ dạy cho 1 hoặc nhiều buổi học, không bắt buộc chạy tự động |
 | [5] Gán phòng | Tự tay gán/đổi phòng cụ thể cho 1 buổi học, không bắt buộc theo gán tự động |
 
 ## 8. Ngoài phạm vi tài liệu này
 
-- Phân quyền/tài khoản: 3 vai trò (+ quản trị, nếu có) có phải các login riêng, ai
-  xem/sửa được gì trong hệ thống thật — để tài liệu riêng.
+- Tài khoản và phân quyền bảo mật thật. Vai trò chọn trên giao diện demo không xác
+  thực người dùng và không bảo vệ API.
+- Người được phép nhập/nạp/chỉnh sửa dữ liệu lớp học phần và nhập file Excel: yêu
+  cầu hiện tại chưa chỉ định vai trò này.
 - Giao diện cụ thể cho từng vai trò.
-- Cách tổng hợp dữ liệu phòng/TKB từ nhiều khoa về một nơi chung (mục 4) — chưa chốt.
+- Cách tổng hợp dữ liệu phòng/TKB từ nhiều khoa về một nơi chung — chưa chốt.

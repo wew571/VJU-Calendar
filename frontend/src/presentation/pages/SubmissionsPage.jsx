@@ -118,7 +118,7 @@ export default function SubmissionsPage({ role }) {
   const tabs = [
     { key: VIEW.QUEUE, label: "Cần xử lý", count: sq.queue.length, urgent: sq.queue.length > 0 },
     { key: VIEW.TABLE, label: "Bảng tra cứu", count: sq.guestCount },
-    { key: VIEW.COORDS, label: "Theo điều phối viên", count: sq.coordinatorsBehind.length },
+    { key: VIEW.COORDS, label: "Nhóm điều phối viên còn việc", count: sq.coordinatorsBehind.length },
   ];
 
   const assignSection = assignSectionId != null
@@ -652,8 +652,8 @@ function CoordsView({ sq, onPickCoord }) {
 
   return (
     <Card
-      title={`Theo điều phối viên (${sq.coordinators.length})`}
-      note="Độ dài thanh = số buổi còn thiếu GV hoặc thiếu giờ · bấm một dòng để mở việc của riêng người đó"
+      title={`Nhóm điều phối viên trong dữ liệu (${sq.coordinators.length})`}
+      note={`${sq.coordinatorsBehind.length}/${sq.coordinators.length} nhóm còn việc · đếm theo lớp thỉnh giảng trong dữ liệu hiện tại, không phải số CTĐT · bấm một dòng để mở việc của nhóm đó`}
     >
       <ul className="divide-y">
         {sq.coordinators.map((c) => {

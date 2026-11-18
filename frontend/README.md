@@ -49,21 +49,31 @@ Mở cổng do Vite in ra (thường là `http://localhost:5173`). Với cấu h
 ## Điều hướng
 
 Sidebar 2 cấp (`constants/nav.js`): mục đơn **Thời khoá biểu** ở trên cùng, rồi
-**Chuẩn bị dữ liệu** (Khung giờ đã báo · Giờ rảnh GV), **Dữ liệu học phần**,
-**Nhật ký & bản lưu** (Nhật ký thao tác · Bản đã lưu).
+**Chuẩn bị dữ liệu** (Giảng viên), **Dữ liệu học phần**, **Nhật ký & bản lưu**
+(Nhật ký thao tác · Bản đã lưu). Các mục được hiển thị theo hồ sơ vai trò;
+màn nhập/sửa học phần hiện chưa được phân cho vai trò nào trong yêu cầu nghiệp vụ.
 
 Hai màn cần toàn bộ bề ngang — Thời khoá biểu (lưới tuần) và Dữ liệu học phần (bảng
 mirror 29 cột Excel) — làm sidebar **tự thu về rail 64px**. Thu gọn tự động này KHÔNG
 ghi `localStorage`: nếu ghi, rời trang rộng người dùng sẽ thấy sidebar thu gọn ở mọi
 trang khác mà không hiểu tại sao.
 
-## Vai trò (không có tài khoản thật)
+## Hồ sơ nghiệp vụ mô phỏng (không có tài khoản thật)
 
-Không có hệ thống đăng nhập — chỉ chọn 1 trong 2 vai trò cục bộ:
-- **Giáo vụ / Điều phối viên** (`staff`): toàn quyền — nạp dữ liệu, nộp giờ, giải
-  Giai đoạn 1 & 2, kéo-thả sửa tay.
-- **Xem thôi** (`viewer`): chỉ vào được Thời khoá biểu và Nhật ký & bản lưu, không
-  sinh/giải lại dữ liệu.
+Màn chọn vai trò chỉ điều chỉnh menu và luồng thao tác trên trình duyệt, không xác
+thực người dùng và không bảo vệ API:
+- **GĐCT** (`gdct`): quản lý giảng viên thỉnh giảng và xếp lịch trong CTĐT được chọn.
+- **ĐPCT** (`dpct`): quản lý hồ sơ/giờ có thể dạy của giảng viên thỉnh giảng; không xếp lịch.
+- **Trợ lý khoa** (`assistant`): quản lý giảng viên thỉnh giảng, cập nhật giờ rảnh cơ hữu,
+  xếp lịch toàn trường.
+- **Giảng viên cơ hữu** (`resident`): khai giờ rảnh cho hồ sơ được chọn trong bản demo.
+- **Xem thôi** (`viewer`): chỉ tra cứu lịch và nhật ký.
+
+Tên CTĐT và nhóm điều phối viên hiển thị được lấy từ dữ liệu hiện có; không dùng số
+lượng CTĐT hoặc nhóm điều phối viên hardcode.
+Hồ sơ giảng viên thỉnh giảng trong dữ liệu hiện chưa gắn CTĐT, nên danh sách hồ sơ
+dùng chung; thao tác hồ sơ chưa thể giới hạn theo CTĐT của GĐCT/ĐPCT. Vai trò chỉ
+lọc giao diện, không xác thực người dùng hay bảo vệ API.
 
 ## Ghi chú
 

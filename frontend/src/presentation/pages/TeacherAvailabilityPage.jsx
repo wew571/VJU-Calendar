@@ -1,21 +1,13 @@
 import { useMemo, useState } from "react";
-import { GraduationCap, Plus, TriangleAlert, Upload, Wand2 } from "lucide-react";
+import { GraduationCap, Plus, TriangleAlert } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import TeacherEditDrawer from "../manual/TeacherEditDrawer";
-import ImportLecturersDialog from "../manual/ImportLecturersDialog";
 import { ListSearch } from "@/components/shared/list-search";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { Notice } from "@/components/shared/notice";
 import { Pill } from "@/components/shared/pill";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Table,
   TableBody,
@@ -25,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { getRoleDefinition } from "../../constants/roles";
 
 // Trang nay GOP HAI man truoc day: "Giảng viên" (nhom rieng ngang hang, 2 tab
 // Co huu/Thinh giang) va "Chuẩn bị dữ liệu → Giờ rảnh GV" (chi xem/khai gio cua
@@ -56,19 +49,29 @@ function tongTiet(classes, teacherId) {
 }
 
 export default function TeacherAvailabilityPage({ role }) {
-  const { data, loading, generateAllTeacherAvailability } = useAppData();
-  // Mac dinh THINH GIANG: day la nhom co viec "khai gio" cap thiet hon (Giai
-  // doan 1 phu thuoc khung gio ho bao), con co huu Giai doan 2 tu do chon gio.
-  const [loai, setLoai] = useState("GUEST");
+  const { data, loading } = useAppData();
+  const permissions = getRoleDefinition(role);
+  const allowedTypes = permissions.canDeclareOwnAvailability
+    ? ["RESIDENT"]
+    : permissions.canEditResidentAvailability
+      ? ["GUEST", "RESIDENT"]
+      : ["GUEST"];
+  const [loai, setLoai] = useState(allowedTypes[0]);
   const [search, setSearch] = useState("");
   const [orgFilter, setOrgFilter] = useState("");
   const [drawerId, setDrawerId] = useState(null);
-  const [importOpen, setImportOpen] = useState(false);
-  const [generateAllOpen, setGenerateAllOpen] = useState(false);
-  const [generatingAll, setGeneratingAll] = useState(false);
+  const [myTeacherId, setMyTeacherId] = useState(() => {
+    try {
+      return localStorage.getItem("tkb_resident_teacher") || "";
+    } catch {
+      return "";
+    }
+  });
 
   const meta = LOAI[loai];
-  const canEdit = role !== "viewer";
+  const canEdit = loai === "GUEST"
+    ? permissions.canManageGuests
+    : permissions.canEditResidentAvailability || (permissions.canDeclareOwnAvailability && myTeacherId);
   const classes = data?.classes || [];
 
   // Lop cua tung nguoi: gom theo teacherIds (CA nhom dong giang), khong chi GV
@@ -96,7 +99,13 @@ export default function TeacherAvailabilityPage({ role }) {
     for (const t of all) if (m[t.type]) m[t.type].push(t);
     return m;
   }, [all]);
-  const cuaLoai = theoLoai[loai] ?? [];
+  const residentTeachers = theoLoai.RESIDENT ?? [];
+  const selectedResident = residentTeachers.find(
+    (teacher) => String(teacher.id) === myTeacherId,
+  );
+  const cuaLoai = (theoLoai[loai] ?? []).filter((teacher) =>
+    !permissions.canDeclareOwnAvailability || String(teacher.id) === myTeacherId,
+  );
 
   const orgs = useMemo(
     () => [...new Set(cuaLoai.map((t) => (t.org || "").trim()).filter(Boolean))].sort(),
@@ -124,19 +133,6 @@ export default function TeacherAvailabilityPage({ role }) {
   const chuaNapDanhSach = all.length > 0 && all.every((t) => t.inLecturerList == null);
   const ngoaiDanhSach = cuaLoai.filter((t) => t.inLecturerList === false);
 
-  const handleGenerateAll = async () => {
-    if (generatingAll) return;
-    setGeneratingAll(true);
-    try {
-      await generateAllTeacherAvailability();
-      setGenerateAllOpen(false);
-    } catch {
-      return;
-    } finally {
-      setGeneratingAll(false);
-    }
-  };
-
   if (!data) {
     return (
       <Notice tone="slate">
@@ -148,12 +144,26 @@ export default function TeacherAvailabilityPage({ role }) {
   return (
     <div className="space-y-3">
       <div className="glass-panel rounded-xl border">
+        {permissions.canDeclareOwnAvailability && (
+          <div className="border-b p-3">
+            <Notice tone="amber">
+              {residentTeachers.length === 0
+                ? "Chưa có hồ sơ giảng viên cơ hữu trong dữ liệu hiện tại."
+                : selectedResident
+                  ? `Đang xem hồ sơ ${selectedResident.nameRaw || selectedResident.name}.`
+                  : "Chọn hồ sơ giảng viên cơ hữu trong danh sách bên phải để xem và khai báo giờ rảnh."}{" "}
+              Hồ sơ này chỉ dùng mô phỏng; ứng dụng không xác minh danh tính hay bảo vệ dữ liệu theo tài khoản.
+            </Notice>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2 border-b p-3">
           {/* Loc LOAI GV truoc tien - day la bo loc CAP MOT, quyet dinh ca danh
               sach ben duoi va nghia cua cot "Giờ có thể dạy". Dung chung mot
               kieu "segmented" voi tab man "Học phần" de dong bo. */}
           <div className="glass-segmented inline-flex h-9 items-center rounded-lg border p-0.75" role="tablist">
-            {Object.entries(LOAI).map(([key, m]) => (
+            {allowedTypes.map((key) => {
+              const m = LOAI[key];
+              return (
               <button
                 type="button"
                 key={key}
@@ -172,28 +182,44 @@ export default function TeacherAvailabilityPage({ role }) {
                   {theoLoai[key]?.length ?? 0}
                 </span>
               </button>
-            ))}
+              );
+            })}
           </div>
           <span className="text-muted-foreground text-xs">{meta.moTa}</span>
 
           <div className="ml-auto flex flex-wrap items-center gap-2">
+            {permissions.canDeclareOwnAvailability && (
+              <div className="min-w-52">
+                <NativeSelect
+                  aria-label="Chọn hồ sơ giảng viên cơ hữu trong bản demo"
+                  value={myTeacherId}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setMyTeacherId(value);
+                    setDrawerId(null);
+                    try {
+                      if (value) localStorage.setItem("tkb_resident_teacher", value);
+                      else localStorage.removeItem("tkb_resident_teacher");
+                    } catch {
+                      // Hồ sơ vẫn dùng được trong phiên hiện tại nếu bộ nhớ cục bộ bị chặn.
+                    }
+                  }}
+                >
+                  <option value="">Chọn hồ sơ giảng viên</option>
+                  {residentTeachers.map((teacher) => (
+                    <option key={teacher.id} value={teacher.id}>
+                      {teacher.nameRaw || teacher.name}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </div>
+            )}
             <ListSearch
               value={search}
               onChange={setSearch}
               placeholder="Tìm tên, email, đơn vị"
               className="w-full sm:w-60"
             />
-            {canEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={loading || generatingAll || all.length === 0}
-                onClick={() => setGenerateAllOpen(true)}
-              >
-                <Wand2 className="size-4" />
-                {generatingAll ? "Đang xử lý…" : "Khai toàn bộ giờ rảnh"}
-              </Button>
-            )}
             <FilterSelect
               label="Mọi đơn vị"
               searchable
@@ -201,39 +227,26 @@ export default function TeacherAvailabilityPage({ role }) {
               options={orgs}
               onChange={(v) => setOrgFilter(v ?? "")}
             />
-            {canEdit && loai === "RESIDENT" && (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={loading}
-                onClick={() => setImportOpen(true)}
-                title="Nạp file danh sách giảng viên cơ hữu của trường (.xlsx) — dùng làm nguồn chính thức để phân loại"
-              >
-                <Upload className="size-4" />
-                Nhập danh sách cơ hữu
-              </Button>
-            )}
-            {canEdit && (
+            {!permissions.canDeclareOwnAvailability && canEdit && loai === "GUEST" && (
               <Button size="sm" disabled={loading} onClick={() => setDrawerId("new")}>
                 <Plus className="size-4" />
-                Thêm giảng viên
+                Mời giảng viên thỉnh giảng
               </Button>
             )}
           </div>
         </div>
 
-        {chuaNapDanhSach && loai === "RESIDENT" && (
+        {chuaNapDanhSach && loai === "RESIDENT" && role === "assistant" && (
           <div className="border-b p-3">
             <Notice tone="amber" icon={TriangleAlert}>
               Chưa nạp danh sách giảng viên cơ hữu. Hệ thống đang <strong>đoán</strong> loại giảng
               viên từ ô “Đơn vị công tác” trong file kế hoạch giảng dạy — ô đó giáo vụ gõ tay mỗi kỳ
-              nên hay bỏ trống hoặc ghi mỗi dòng một kiểu. Bấm <strong>Nhập danh sách cơ hữu</strong>{" "}
-              để phân loại theo danh sách chính thức.
+              nên hay bỏ trống hoặc ghi mỗi dòng một kiểu.               Cần đối chiếu danh sách chính thức trước khi dựa vào phân loại này.
             </Notice>
           </div>
         )}
 
-        {ngoaiDanhSach.length > 0 && (
+        {ngoaiDanhSach.length > 0 && role === "assistant" && (
           <div className="border-b p-3">
             <Notice tone="amber" icon={TriangleAlert}>
               {ngoaiDanhSach.length} người ở tab này <strong>không có trong danh sách cơ hữu</strong>{" "}
@@ -263,7 +276,11 @@ export default function TeacherAvailabilityPage({ role }) {
               {visible.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={9} className="text-muted-foreground py-6 text-center">
-                    Không có giảng viên {meta.nhan} nào khớp.
+                    {permissions.canDeclareOwnAvailability && !selectedResident
+                      ? residentTeachers.length === 0
+                        ? "Chưa có hồ sơ giảng viên cơ hữu trong dữ liệu."
+                        : "Hãy chọn hồ sơ giảng viên cơ hữu để xem dữ liệu."
+                      : `Không có giảng viên ${meta.nhan} nào khớp.`}
                   </TableCell>
                 </TableRow>
               )}
@@ -273,8 +290,8 @@ export default function TeacherAvailabilityPage({ role }) {
                 return (
                   <TableRow
                     key={t.id}
-                    className="hover:bg-muted/50 cursor-pointer"
-                    onClick={() => setDrawerId(t.id)}
+                    className={canEdit ? "hover:bg-muted/50 cursor-pointer" : ""}
+                    onClick={canEdit ? () => setDrawerId(t.id) : undefined}
                   >
                     <TableCell className="text-muted-foreground tabular-nums">{t.id}</TableCell>
                     <TableCell className="font-medium">
@@ -313,46 +330,22 @@ export default function TeacherAvailabilityPage({ role }) {
 
         <div className="text-muted-foreground border-t px-3 py-2 text-xs">
           <GraduationCap className="mr-1 inline size-3.5" />
-          Bấm vào một dòng để sửa thông tin, khai giờ có thể dạy hoặc chuyển loại cơ hữu ⇄ thỉnh giảng.
+          {loai === "GUEST"
+            ? "Mời giảng viên thỉnh giảng, cập nhật hồ sơ và giờ có thể dạy."
+            : permissions.canDeclareOwnAvailability
+              ? "Hồ sơ đã chọn là lựa chọn mô phỏng; ứng dụng không xác minh danh tính."
+              : "Trợ lý khoa có thể cập nhật giờ rảnh thay giảng viên cơ hữu."}
         </div>
       </div>
-
-      <Dialog open={generateAllOpen} onOpenChange={(open) => !generatingAll && setGenerateAllOpen(open)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Khai toàn bộ giờ rảnh?</DialogTitle>
-            <DialogDescription>
-              Hệ thống sẽ sinh lại giờ rảnh cho <strong>{all.length} giảng viên</strong> thuộc cả hai
-              loại cơ hữu và thỉnh giảng, không phụ thuộc tab, từ khóa tìm kiếm hay bộ lọc đơn vị.
-              Toàn bộ giờ rảnh đã khai sẽ bị thay bằng kết quả mới. Giờ đang dạy và lịch đã chốt
-              được giữ nguyên.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={generatingAll}
-              onClick={() => setGenerateAllOpen(false)}
-            >
-              Hủy
-            </Button>
-            <Button type="button" disabled={generatingAll} onClick={handleGenerateAll}>
-              {generatingAll ? "Đang xử lý…" : "Xác nhận"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {drawerId != null && (
         <TeacherEditDrawer
           data={data}
           teacher={drawerTeacher}
           onClose={() => setDrawerId(null)}
+          mode={loai === "GUEST" ? "guest" : "availability"}
         />
       )}
-
-      {importOpen && <ImportLecturersDialog open onOpenChange={setImportOpen} />}
     </div>
   );
 }

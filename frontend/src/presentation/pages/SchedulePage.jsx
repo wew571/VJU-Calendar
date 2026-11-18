@@ -22,6 +22,7 @@ import SolverProgress from "../SolverProgress";
 import { Notice } from "@/components/shared/notice";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getRoleDefinition } from "../../constants/roles";
 
 // MAN TRUNG TAM sau refactor - gop Giai doan 1, Giai doan 2, Tra cuu theo giang
 // vien va Check trung lien chuong trinh.
@@ -62,7 +63,7 @@ export function openLessonInManual({ role, lesson, pendingMove, onOpen }) {
   return true;
 }
 
-export default function SchedulePage({ role, filter, onFilterChange, onOpenManualSections }) {
+export default function SchedulePage({ role, assignedProgram, filter, onFilterChange }) {
   const {
     data, guestResult, residentResult, loading, error, solveGuest, solveResident,
     phamVi, setPhamVi,
@@ -97,7 +98,15 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
   const [navOpen, setNavOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
   const boLocXemTruocKhiXep = useRef(null);
-  const canEdit = role !== "viewer";
+  const programExists = (data?.classes ?? []).some((section) =>
+    (section.programParts ?? []).includes(assignedProgram),
+  );
+  const fixedProgram = role === "gdct" && programExists ? assignedProgram : null;
+  const canEdit = getRoleDefinition(role).canSchedule &&
+    (role !== "gdct" || Boolean(fixedProgram));
+  const scheduleScope = fixedProgram
+    ? { programs: [fixedProgram], cohorts: [] }
+    : phamVi;
 
   useEffect(() => {
     if (!fullscreen) return;
@@ -122,15 +131,24 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
     };
   }, [fullscreen, inboxOpen, navOpen, moveDialog, saveConfirmOpen]);
 
-  const f = { ...DEFAULT_FILTER, ...(filter ?? {}) };
-  const set = (patch) => onFilterChange({ ...f, ...patch });
+  const f = {
+    ...DEFAULT_FILTER,
+    ...(filter ?? {}),
+    ...(fixedProgram ? { programs: [fixedProgram] } : {}),
+  };
+  const set = (patch) => onFilterChange({
+    ...f,
+    ...patch,
+    ...(fixedProgram ? { programs: [fixedProgram] } : {}),
+  });
   const handlePhamViChange = (next) => {
+    if (fixedProgram) return;
     setPhamVi(next);
     set(boLocTheoPhamVi(next));
   };
   const openSetup = () => {
     boLocXemTruocKhiXep.current = boLocXemDeKhoiPhuc(f);
-    set(boLocTheoPhamVi(phamVi));
+    set(boLocTheoPhamVi(scheduleScope));
     setSetupOpen(true);
   };
   const handleSetupOpenChange = (open) => {
@@ -147,15 +165,15 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
     [data, guestResult, residentResult, pendingMove],
   );
   const view = useMemo(
-    () => buildScheduleView({ data, guestResult, residentResult, inbox, filter: f, phamVi }),
-    [data, guestResult, residentResult, inbox, filter, phamVi],
+    () => buildScheduleView({ data, guestResult, residentResult, inbox, filter: f, phamVi: scheduleScope }),
+    [data, guestResult, residentResult, inbox, filter, scheduleScope],
   );
   // Hop thu hien tren man: DA LOC theo dung pham vi dang chon o luoi. `inbox`
   // day du van duoc buildScheduleView dung (to mau buoi co van de) - loc ban do
   // se lam buoi ngoai pham vi mat danh dau khi doi bo loc.
   const inboxHien = useMemo(
-    () => filterProblemInbox(inbox, data, f, phamVi),
-    [inbox, data, f.programs, f.khoas, f.chiXemPhamVi, phamVi],
+    () => filterProblemInbox(inbox, data, f, scheduleScope),
+    [inbox, data, f.programs, f.khoas, f.chiXemPhamVi, scheduleScope],
   );
 
   const legendLessons = mode === "grid" ? view.gridLessons : view.lessons;
@@ -175,7 +193,7 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
       await scheduler.exportLuoi(dungDuLieuXuatLuoi({
         view: exportView,
         label: nhanHocKy(data),
-        moTaBoLoc: moTaBoLocDangDung(exportView, data, phamVi),
+        moTaBoLoc: moTaBoLocDangDung(exportView, data, scheduleScope),
       }));
     } catch (e) {
       window.alert(`Xuất lưới thất bại: ${e.message}`);
@@ -222,14 +240,14 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
   // cua chuong trinh do (xem adapters/phamVi.js va webapp/domain/pham_vi.py).
   const steps = useMemo(
     () => buildSteps({
-      data, guestResult, residentResult, gd2HetHieuLuc, phamVi,
+      data, guestResult, residentResult, gd2HetHieuLuc, phamVi: scheduleScope,
       // Bo nuoc keo-tha DANG CHO LUU truoc khi giai: banner con lai se moi giao
       // vu "Luu" mot nuoc di tinh tren vi tri CU, trong khi luoi da la ket qua
       // moi - bam Luu la ghi de len ket qua vua xep.
-      solveGuest: () => { setPendingMove(null); return solveGuest(phamVi); },
-      solveResident: () => { setPendingMove(null); return solveResident(phamVi); },
+      solveGuest: () => { setPendingMove(null); return solveGuest(scheduleScope); },
+      solveResident: () => { setPendingMove(null); return solveResident(scheduleScope); },
     }),
-    [data, guestResult, residentResult, gd2HetHieuLuc, phamVi, solveGuest, solveResident],
+    [data, guestResult, residentResult, gd2HetHieuLuc, scheduleScope, solveGuest, solveResident],
   );
   const completedSteps = steps.filter((step) => step.state === "done").length;
   const setupWarning = steps.some((step) => step.hint || ["blocked", "partial", "error"].includes(step.state));
@@ -238,6 +256,13 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
     return (
       <Notice tone="slate">
         Chưa có dữ liệu — sang "Chuẩn bị dữ liệu" để sinh hoặc nạp dữ liệu trước.
+      </Notice>
+    );
+  }
+  if (role === "gdct" && !fixedProgram) {
+    return (
+      <Notice tone="amber">
+        CTĐT đã chọn không có trong dữ liệu hiện tại. Hãy đổi hồ sơ GĐCT và chọn CTĐT đang có dữ liệu.
       </Notice>
     );
   }
@@ -335,13 +360,6 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
     setSaveConfirmOpen(false);
     setMoveDialog(null);
   };
-  const handleOpenManual = (lesson) => openLessonInManual({
-    role,
-    lesson,
-    pendingMove,
-    onOpen: onOpenManualSections,
-  });
-
   const densityBlock = (
     <>
       <DensityNavigator
@@ -498,7 +516,19 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
         />
       </div>
 
-      <ScheduleToolbar f={f} set={set} view={view} mode={mode} phamVi={phamVi} />
+      {fixedProgram && (
+        <Notice tone="slate">
+          Hồ sơ GĐCT chỉ xem và xếp CTĐT <strong>{fixedProgram}</strong>. Các CTĐT khác không nằm trong phạm vi thao tác.
+        </Notice>
+      )}
+      <ScheduleToolbar
+        f={f}
+        set={set}
+        view={view}
+        mode={mode}
+        phamVi={scheduleScope}
+        lockedProgram={fixedProgram}
+      />
 
       {/* "Xep cho ai" doc TRUOC "bam gi" trong popup; bo loc tren toolbar chi
           quyet dinh lich dang xem, khong thay doi pham vi solver. */}
@@ -533,8 +563,9 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
         open={setupOpen}
         onOpenChange={handleSetupOpenChange}
         data={data}
-        phamVi={phamVi}
+        phamVi={scheduleScope}
         onPhamViChange={handlePhamViChange}
+        lockedProgram={fixedProgram}
         ketQuaPhamVi={residentResult?.phamVi ?? guestResult?.phamVi ?? null}
         steps={steps}
         canEdit={canEdit}
@@ -615,7 +646,6 @@ export default function SchedulePage({ role, filter, onFilterChange, onOpenManua
                 }
                 colorBy={f.colorBy}
                 onPickProblem={pickProblem}
-                onOpenManual={handleOpenManual}
                 scrollTarget={scrollTarget}
                 detailed={fullscreen}
                 // BUG DA SUA: truoc day gate them "&& !pendingMove" o day -

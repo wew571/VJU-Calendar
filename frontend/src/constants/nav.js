@@ -26,6 +26,7 @@ import {
   Save,
   ScrollText,
 } from 'lucide-react';
+import { getRoleDefinition, allowedDataSubKeys } from './roles';
 
 /** Muc don tren cung - man hinh chinh cua cong cu. */
 export const NAV_HOME = {
@@ -104,9 +105,6 @@ export const NAV_GROUPS = [
   },
 ];
 
-// Vai tro "Xem thoi" chi vao duoc man chi-doc + huong dan su dung.
-export const VIEWER_ALLOWED_KEYS = ['schedule', 'history', 'guide'];
-
 /** Nhan hien tren topbar / page header cho tung trang. */
 export const PAGE_LABELS = {
   schedule: NAV_HOME.label,
@@ -126,10 +124,13 @@ export function firstSubKey(pageKey) {
   return group?.children[0]?.key ?? null;
 }
 
-/** Loc nhom theo vai tro; vai tro "Xem thoi" chi thay man chi-doc. */
+/** Lọc điều hướng theo hồ sơ vai trò đang mô phỏng. */
 export function getAllowedGroups(role) {
-  if (role === 'viewer') {
-    return NAV_GROUPS.filter((g) => VIEWER_ALLOWED_KEYS.includes(g.key));
-  }
-  return NAV_GROUPS;
+  const allowedPages = getRoleDefinition(role).pages;
+  const allowedSubs = allowedDataSubKeys(role);
+  return NAV_GROUPS
+    .filter((g) => allowedPages.includes(g.key))
+    .map((g) => g.key === 'data'
+      ? { ...g, children: g.children.filter((child) => allowedSubs.includes(child.key)) }
+      : g);
 }

@@ -19,7 +19,7 @@ function nhanGio(at) {
   return at ? ` lúc ${at.slice(11, 16)} ngày ${at.slice(8, 10)}/${at.slice(5, 7)}` : "";
 }
 
-export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
+export default function ScheduleToolbar({ f, set, view, mode, phamVi, lockedProgram }) {
   const [extraOpen, setExtraOpen] = useState(false);
   const setXem = (patch) => set({ ...patch, chiXemPhamVi: false });
   const extraFilterCount = [
@@ -37,10 +37,11 @@ export default function ScheduleToolbar({ f, set, view, mode, phamVi }) {
             buildScheduleView loc theo cac chuong trinh dang chon. */}
         <Label className="text-muted-foreground text-xs font-medium">Xem</Label>
         <MultiFilterSelect
-          label="Tất cả chương trình"
+          label={lockedProgram || "Tất cả chương trình"}
           searchable
           values={f.programs}
-          options={view.programs}
+          options={lockedProgram ? [lockedProgram] : view.programs}
+          disabled={Boolean(lockedProgram)}
           // Doi chuong trinh thi bo cac khoa khong con thuoc chuong trinh moi - de
           // lai la luoi trong ma nhin van nhu dang co bo loc hop le.
           onChange={(programs) => {

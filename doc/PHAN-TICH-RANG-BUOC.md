@@ -8,19 +8,16 @@
 
 Nói đơn giản, hệ thống phải tìm giờ học phù hợp cho hàng trăm lớp sao cho giảng viên, sinh viên và phòng học không “đụng nhau”, đồng thời lịch tạo ra càng thuận tiện càng tốt.
 
-### Ba vai trò sử dụng hệ thống
+### Vai trò nghiệp vụ
 
-1. **Giám đốc Chương trình**
-
-   Người này xác định chương trình của mình cần mở những môn và bao nhiêu lớp, sau đó mời giảng viên thỉnh giảng. Nếu được, họ chốt luôn những khung giờ mà giảng viên có thể dạy.
-
-2. **Chuyên viên Giáo vụ Khoa**
-
-   Giáo vụ nhận thông tin từ nhiều chương trình trong khoa, bổ sung giờ rảnh còn thiếu của giảng viên và xếp lịch theo thời gian. Đây là người trực tiếp kiểm tra, kéo thả và chỉnh lại lịch khi cần.
-
-3. **Chuyên viên Phòng Đào tạo**
-
-   Phòng Đào tạo quản lý phòng học của toàn trường. Sau khi các khoa đã có lịch theo giờ, Phòng Đào tạo gán phòng cụ thể, kiểm tra loại phòng, sức chứa và tránh để nhiều khoa dùng cùng một phòng.
+- **GĐCT** phụ trách một CTĐT, quản lý giảng viên thỉnh giảng và xếp lịch CTĐT đó.
+- **ĐPCT** phụ trách một CTĐT, cùng GĐCT quản lý giảng viên thỉnh giảng; không mặc định
+  có quyền xếp lịch.
+- **Trợ lý khoa** quản lý giảng viên thỉnh giảng, cập nhật giờ rảnh thay giảng viên cơ hữu
+  và có thể xếp lịch thay GĐCT trên phạm vi toàn trường.
+- **Giảng viên cơ hữu** tự khai giờ rảnh.
+- **JLE và Phòng Đào tạo** điều phối nghiệp vụ nhưng không có vai trò đăng nhập riêng
+  theo yêu cầu hiện tại.
 
 ### Vì sao không thể tiếp tục xếp hoàn toàn bằng tay?
 

@@ -59,7 +59,7 @@ Hai tài liệu phân tích nghiệp vụ được hoàn thành trước tài li
 | Tài liệu | Nội dung |
 |---|---|
 | Phân tích ràng buộc xếp TKB | Toàn bộ quy tắc nghiệp vụ: ràng buộc cứng, ràng buộc mềm, thứ tự ưu tiên. |
-| Quy trình nghiệp vụ xếp TKB — 3 vai trò | Luồng công việc GĐCT → Giáo vụ khoa → Phòng Đào tạo. |
+| Quy trình nghiệp vụ xếp TKB | Vai trò GĐCT, ĐPCT, Trợ lý khoa và giảng viên cơ hữu; JLE/Phòng Đào tạo điều phối nhưng không có vai trò đăng nhập riêng. |
 
 ## 2. Miêu tả tổng thể
 
@@ -83,9 +83,11 @@ Mỗi học kỳ, trường phải xếp lịch cho hàng trăm lớp học ph�
 
 | Bên liên quan | Mối quan tâm |
 |---|---|
-| Giáo vụ / điều phối viên khoa | Người dùng trực tiếp; muốn xếp nhanh, ít sai, kiểm soát được mọi thay đổi. |
-| Giám đốc chương trình đào tạo | Muốn lớp của chương trình mình được xếp đúng khung giờ đã chốt với giảng viên. |
-| Phòng Đào tạo | Quản lý phòng toàn trường; cần nhận được TKB đã có giờ của các khoa. |
+| GĐCT | Quản lý giảng viên thỉnh giảng và xếp TKB trong CTĐT phụ trách. |
+| ĐPCT | Quản lý giảng viên thỉnh giảng trong CTĐT phụ trách; không mặc định có quyền xếp lịch. |
+| Trợ lý khoa | Thao tác toàn trường; quản lý giảng viên thỉnh giảng, cập nhật giờ rảnh cơ hữu và xếp lịch thay GĐCT khi cần. |
+| Giảng viên cơ hữu | Tự khai giờ rảnh. |
+| JLE / Phòng Đào tạo | Điều phối nghiệp vụ; không có vai trò đăng nhập riêng theo yêu cầu hiện tại. |
 | Giảng viên | Không bị xếp trùng giờ, không dạy hai cơ sở trong một ngày, lịch gọn gàng. |
 | Sinh viên | Người hưởng lợi cuối; không bị hai môn chùng giờ trong cùng nhóm. |
 | Nhà phát triển | Cấu trúc rõ ràng, tách nghiệp vụ khỏi giao tiếp, dễ kiểm thử. |
@@ -101,11 +103,11 @@ Mỗi học kỳ, trường phải xếp lịch cho hàng trăm lớp học ph�
 
 Trình tự sử dụng chính mà hệ thống phải phục vụ:
 
-1. **Nạp dữ liệu** — giáo vụ nhập file Excel kế hoạch giảng dạy (hoặc nhập tay) vào hệ thống.
-2. **Chuẩn bị giờ** — điều phối viên nộp khung giờ cho các lớp thỉnh giảng chưa có giờ; khai báo giờ rảnh giảng viên.
+1. **Nạp dữ liệu** — ứng dụng hỗ trợ nạp file Excel hoặc nhập tay, nhưng yêu cầu phân vai hiện tại chưa chỉ định người được phép làm việc này; giao diện vai trò mô phỏng không cấp màn nhập/sửa học phần.
+2. **Chuẩn bị giờ** — GĐCT, ĐPCT hoặc Trợ lý khoa nhập giờ có thể dạy của giảng viên thỉnh giảng; giảng viên cơ hữu tự khai giờ rảnh, Trợ lý khoa có thể nhập thay.
 3. **Giải Giai đoạn 1** — hệ thống xếp các lớp thỉnh giảng vào khung giờ đã báo.
 4. **Giải Giai đoạn 2** — hệ thống ghép các lớp cơ hữu vào chỗ còn trống.
-5. **Tinh chỉnh** — giáo vụ xem hộp thư vấn đề, kéo-thả sửa tay, ghim, chốt; lưu và xuất file Excel hoàn chỉnh.
+5. **Tinh chỉnh** — GĐCT xếp trong CTĐT phụ trách; Trợ lý khoa có thể xếp thay trên phạm vi toàn trường.
 
 ## 3. Yêu cầu chức năng
 
@@ -117,10 +119,10 @@ Bảng dữ liệu học phần là nguồn dữ liệu duy nhất của toàn h
 
 | Mã | Yêu cầu | Mô tả |
 |---|---|---|
-| FR-A1 | Quản lý giảng viên | Thêm/sửa/xoá giảng viên: họ tên, đơn vị, học hàm/vị, email, SĐT, loại (thỉnh giảng/cơ hữu); giảng viên thỉnh giảng kèm khai báo giờ có thể dạy theo từng tiết. |
-| FR-A2 | Quản lý học phần | Thêm/sửa học phần: mã, tên, số tín chỉ. |
-| FR-A3 | Quản lý lớp học phần | Tạo lớp từ giảng viên + học phần; khai Thứ/Tiết cố định hoặc đánh dấu "để hệ thống tự xếp". |
-| FR-A4 | Nhập Excel hai bước | Bước chuẩn hoá: đọc file, hiển thị bảng xem trước, **chưa ghi** dữ liệu; phát hiện và yêu cầu xử lý dữ liệu bất thường (hai nguồn giờ trong file cũ ghi lệch nhau, dòng trùng, lớp chưa có giảng viên...). Bước nạp: ghi chính thức sau khi người dùng xác nhận; nạp mới thay thế toàn bộ dữ liệu cũ. |
+| FR-A1 | Quản lý giảng viên | GĐCT, ĐPCT và Trợ lý khoa được mời/cập nhật hồ sơ và giờ có thể dạy của giảng viên thỉnh giảng. Giảng viên cơ hữu tự khai giờ rảnh; Trợ lý khoa có thể cập nhật thay. |
+| FR-A2 | Quản lý học phần | Thêm/sửa học phần: mã, tên, số tín chỉ. Người được phép thực hiện chưa được phân công trong yêu cầu hiện tại. |
+| FR-A3 | Quản lý lớp học phần | Tạo lớp từ giảng viên + học phần; khai Thứ/Tiết cố định hoặc đánh dấu "để hệ thống tự xếp". Người được phép thực hiện chưa được phân công trong yêu cầu hiện tại. |
+| FR-A4 | Nhập Excel hai bước | Bước chuẩn hoá: đọc file, hiển thị bảng xem trước, **chưa ghi** dữ liệu; phát hiện và yêu cầu xử lý dữ liệu bất thường (hai nguồn giờ trong file cũ ghi lệch nhau, dòng trùng, lớp chưa có giảng viên...). Bước nạp: ghi chính thức sau khi người dùng xác nhận; nạp mới thay thế toàn bộ dữ liệu cũ. Người được phép thực hiện chưa được phân công; luồng giao diện vai trò hiện không cấp quyền này. |
 | FR-A5 | Xuất Excel chuẩn | Xuất toàn bộ dữ liệu học phần ra file Excel khuôn chuẩn FATE, dùng làm văn bản chính thức và nạp lại cho kỳ sau. |
 | FR-A6 | Xoá giờ hàng loạt | Đặt lại Thứ/Tiết của các lớp đang hiển thị theo bộ lọc hiện tại về "tự xếp". |
 | FR-A7 | Bắt đầu học kỳ mới | Xoá toàn bộ dữ liệu về trạng thái trống để nhập liệu cho kỳ mới. |

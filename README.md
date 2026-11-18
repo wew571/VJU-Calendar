@@ -7,7 +7,7 @@
 
 ## 🎯 1. Mục Tiêu Của Dự Án
 
-Việc xếp thời khóa biểu thủ công cho hàng trăm lớp học phần mỗi kỳ luôn là một bài toán rất phức tạp và tốn nhiều thời gian. Giáo vụ phải cân đối rất nhiều điều kiện:
+Việc xếp thời khóa biểu thủ công cho hàng trăm lớp học phần mỗi kỳ luôn là một bài toán rất phức tạp và tốn nhiều thời gian. Người phụ trách cần cân đối nhiều điều kiện:
 - **Giảng viên thỉnh giảng** chỉ rảnh vào một số khung giờ cố định.
 - **Giảng viên cơ hữu** cần phân bổ lịch dạy hợp lý.
 - **Sinh viên cùng một lớp/ngành** không thể học 2 môn cùng một lúc.
@@ -15,7 +15,7 @@ Việc xếp thời khóa biểu thủ công cho hàng trăm lớp học phần 
 
 **VJU-Calendar** ra đời nhằm:
 1. **Tự động hóa tính toán:** Ứng dụng "bộ não" giải toán thông minh để tìm ra phương án xếp lịch tối ưu chỉ trong vài giây đến vài phút.
-2. **Hỗ trợ điều phối linh hoạt (Bán tự động):** Cho phép giáo vụ dễ dàng kéo-thả, chỉnh sửa thủ công và hệ thống sẽ tự động cảnh báo nếu phát sinh trùng lịch.
+2. **Hỗ trợ điều phối linh hoạt (Bán tự động):** Cho phép người có nhiệm vụ xếp lịch dễ dàng kéo-thả, chỉnh sửa thủ công và hệ thống sẽ tự động cảnh báo nếu phát sinh trùng lịch.
 3. **Tiết kiệm thời gian & Hạn chế sai sót:** Nhập dữ liệu trực tiếp từ file Excel kế hoạch giảng dạy và xuất ra bảng thời khóa biểu hoàn chỉnh, sẵn sàng sử dụng.
 
 ---
@@ -77,14 +77,18 @@ Quy trình xếp lịch cơ bản trên hệ thống diễn ra qua 4 bước:
 [Bước 1: Nạp dữ liệu] ──> Nhập file Excel kế hoạch giảng dạy vào hệ thống.
           │
           ▼
-[Bước 2: Xếp Giai đoạn 1] ──> Tự động xếp lịch cho Giảng viên thỉnh giảng theo khung giờ họ đã đăng ký.
+[Bước 2: Chuẩn bị giờ] ──> GĐCT / ĐPCT / Trợ lý khoa cập nhật hồ sơ và giờ có thể dạy của giảng viên thỉnh giảng.
           │
           ▼
-[Bước 3: Xếp Giai đoạn 2] ──> Tự động xếp tiếp Giảng viên cơ hữu & Gán phòng học phù hợp sức chứa.
+[Bước 3: Khai giờ cơ hữu] ──> Giảng viên cơ hữu tự khai giờ rảnh; Trợ lý khoa có thể cập nhật thay.
           │
           ▼
-[Bước 4: Tinh chỉnh & Xuất file] ──> Giáo vụ kiểm tra, kéo thả sửa tay nếu cần và xuất ra file Excel.
+[Bước 4: Xếp lịch] ──> GĐCT xếp CTĐT phụ trách; Trợ lý khoa có thể xếp thay trên phạm vi toàn trường.
 ```
+
+ĐPCT không được mặc định có quyền xếp lịch. JLE và Phòng Đào tạo điều phối nghiệp
+vụ nhưng không có vai trò đăng nhập riêng theo yêu cầu hiện tại. Vai trò chọn trên
+giao diện là hồ sơ mô phỏng, không phải đăng nhập hay cơ chế bảo vệ API.
 
 ---
 

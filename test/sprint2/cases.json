@@ -1,0 +1,563 @@
+{
+  "sources": [
+    {
+      "name": "Test_Plan_Sprint_2.xlsx",
+      "sha256": "43065a924294ec8ae3bf62d30d9220f8fe785a9931a8fdee2ada74424320585b"
+    },
+    {
+      "name": "backlog2.xlsx",
+      "sha256": "9cfb2ca267a1f562ffa94f0ceafa8ba31c3428daeb9ae590f866b5e1a21a0181"
+    }
+  ],
+  "cases": [
+    {
+      "id": "S2-B01-01",
+      "title": "BL01 AC1: Tìm chính xác #19",
+      "expected": "Chỉ lớp ID 19 xuất hiện; không khớp nhầm ID 190.",
+      "planRow": 7,
+      "coverage": "AUTOMATED",
+      "testFile": "sprint2-search.test.jsx",
+      "remaining": ""
+    },
+    {
+      "id": "S2-B01-02",
+      "title": "BL01 AC1: Tìm ID 0",
+      "expected": "Có đúng lớp ID 0 và mở đúng lớp đó; không coi 0 là truy vấn rỗng.",
+      "planRow": 8,
+      "coverage": "AUTOMATED",
+      "testFile": "sprint2-search.test.jsx",
+      "remaining": ""
+    },
+    {
+      "id": "S2-B01-03",
+      "title": "BL01 AC2: ID không tồn tại",
+      "expected": "Bảng có 0 kết quả, hiển thị trạng thái rỗng và không lỗi.",
+      "planRow": 9,
+      "coverage": "AUTOMATED",
+      "testFile": "sprint2-search.test.jsx",
+      "remaining": ""
+    },
+    {
+      "id": "S2-B01-04",
+      "title": "BL01 AC2: Cú pháp sai và nhiều #id",
+      "expected": "Không phát sinh lỗi ứng dụng. Truy vấn sai hoặc chứa nhiều #id không được xử lý nhầm thành một truy vấn #id hợp lệ; xóa truy vấn vẫn tìm kiếm lại được.",
+      "planRow": 10,
+      "coverage": "AUTOMATED",
+      "testFile": "sprint2-search.test.jsx",
+      "remaining": ""
+    },
+    {
+      "id": "S2-B01-05",
+      "title": "BL01 AC3: Hồi quy tìm kiếm thông thường",
+      "expected": "Kết quả từng loại truy vấn khớp kết quả chuẩn, không biến số thuần thành cú pháp #id.",
+      "planRow": 11,
+      "coverage": "AUTOMATED",
+      "testFile": "sprint2-search.test.jsx",
+      "remaining": ""
+    },
+    {
+      "id": "S2-B01-06",
+      "title": "BL01 AC4: Kết hợp #id và bộ lọc",
+      "expected": "Có ID 19 khi thỏa bộ lọc; có 0 kết quả khi bị lọc ra; không trả lớp khác.",
+      "planRow": 12,
+      "coverage": "AUTOMATED",
+      "testFile": "sprint2-search.test.jsx",
+      "remaining": ""
+    },
+    {
+      "id": "S2-B02-01",
+      "title": "BL02 AC1: Đổi hash hợp lệ",
+      "expected": "Nội dung, tiêu đề và menu cập nhật ngay cùng trang đích, không cần F5.",
+      "planRow": 13,
+      "coverage": "AUTOMATED",
+      "testFile": "sprint2-navigation.test.jsx",
+      "remaining": ""
+    },
+    {
+      "id": "S2-B02-02",
+      "title": "BL02 AC2: Link trực tiếp và F5",
+      "expected": "Cả mở trực tiếp và F5 khôi phục đúng trang, trang con và bộ lọc được mã hóa trong URL.",
+      "planRow": 14,
+      "coverage": "AUTOMATED_PARTIAL",
+      "testFile": "sprint2-navigation.test.jsx",
+      "remaining": "App shell deep link/remount and schedule filter only. Still check actual F5 and lecturer subpage filters in a browser."
+    },
+    {
+      "id": "S2-B02-03",
+      "title": "BL02 AC3: Back và Forward",
+      "expected": "Thứ tự quan sát là C-B-A-B-C; nội dung, URL, tiêu đề và menu khớp nhau.",
+      "planRow": 15,
+      "coverage": "AUTOMATED_PARTIAL",
+      "testFile": "sprint2-navigation.test.jsx",
+      "remaining": "App shell uses manual/schedule/guide A-B-C. Repeat the exact manual/schedule/lecturer sequence in a browser."
+    },
+    {
+      "id": "S2-B02-04",
+      "title": "BL02 AC4: URL không hợp lệ",
+      "expected": "Điều hướng về trang hợp lệ theo fallback đã thống nhất, không crash hoặc mắc vòng lặp.",
+      "planRow": 16,
+      "coverage": "AUTOMATED_PARTIAL",
+      "testFile": "sprint2-navigation.test.jsx",
+      "remaining": "Invalid page/subpage only. Malformed filter parsing and agreed fallback policy remain to be checked."
+    },
+    {
+      "id": "S2-B02-05",
+      "title": "BL02 AC4: URL bị hạn chế quyền",
+      "expected": "Chuyển về trang được phép. API bảo vệ vẫn từ chối thao tác trái quyền, kể cả mở link trực tiếp.",
+      "planRow": 17,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await real authentication, approved permission matrix and protected API contract; local role selection is insufficient."
+    },
+    {
+      "id": "S2-B02-06",
+      "title": "BL02 AC5: Lịch sử khi gõ tìm kiếm",
+      "expected": "Đổi trang được phản ánh trong lịch sử. Thay đổi bộ lọc không tạo một mục lịch sử cho từng ký tự tìm kiếm.",
+      "planRow": 18,
+      "coverage": "AUTOMATED",
+      "testFile": "sprint2-navigation.test.jsx",
+      "remaining": ""
+    },
+    {
+      "id": "S2-B03-01",
+      "title": "BL03 AC1: Hướng dẫn lưu JSON hiện tại",
+      "expected": "Nêu đúng nhập liệu được lưu JSON; không còn câu tắt backend làm mất hết dữ liệu.",
+      "planRow": 19,
+      "coverage": "AUTOMATED_PARTIAL",
+      "testFile": "sprint2-guide.test.jsx",
+      "remaining": "In-app content only. Still review repo guidance and observe the JSON version on a test copy."
+    },
+    {
+      "id": "S2-B03-02",
+      "title": "BL03 AC2: Phân biệt nháp, lưu và mốc hoàn tác",
+      "expected": "Hướng dẫn mô tả đúng các trạng thái và thao tác phục hồi. Không hứa có kho nhiều phương án.",
+      "planRow": 20,
+      "coverage": "AUTOMATED_PARTIAL",
+      "testFile": "sprint2-guide.test.jsx",
+      "remaining": "In-app content only. Still observe draft/save/undo behavior and reconcile the wording."
+    },
+    {
+      "id": "S2-B03-03",
+      "title": "BL03 AC3: Giới hạn của xuất Excel",
+      "expected": "Nêu rõ xuất Excel không tạo backup đầy đủ hoặc bản khôi phục trên server.",
+      "planRow": 21,
+      "coverage": "AUTOMATED_PARTIAL",
+      "testFile": "sprint2-guide.test.jsx",
+      "remaining": "In-app content only. Still inspect exported FATE/grid files and reconcile backup/restore limitations."
+    },
+    {
+      "id": "S2-B03-04",
+      "title": "BL03 AC4: Hướng dẫn sau phát hành CSDL",
+      "expected": "Tài liệu hai nơi thống nhất với bản đang phát hành; không mô tả JSON là nguồn chính của bản đã chuyển CSDL.",
+      "planRow": 22,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await database release and its save/error/recovery contract; then review both app and repo guidance."
+    },
+    {
+      "id": "S2-B04-01",
+      "title": "BL04 AC1: Duyệt mô hình và ánh xạ dữ liệu",
+      "expected": "Có phiên bản mô hình/mapping được duyệt, không bỏ sót trường và quan hệ thuộc phạm vi nhận.",
+      "planRow": 23,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await approved model/mapping, DB TEST environment, migrations and recovery runbook. Design approval is a manual review."
+    },
+    {
+      "id": "S2-B04-02",
+      "title": "BL04 AC2: Migration tạo mới",
+      "expected": "Tạo được schema đúng mô hình đã duyệt; ứng dụng kết nối và đọc/ghi được dữ liệu QA.",
+      "planRow": 24,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await approved model/mapping, DB TEST environment, migrations and recovery runbook. Design approval is a manual review."
+    },
+    {
+      "id": "S2-B04-03",
+      "title": "BL04 AC2: Migration nâng cấp",
+      "expected": "Nâng cấp thành công, giữ dữ liệu và quan hệ; ghi nhận được phiên bản migration.",
+      "planRow": 25,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await approved model/mapping, DB TEST environment, migrations and recovery runbook. Design approval is a manual review."
+    },
+    {
+      "id": "S2-B04-04",
+      "title": "BL04 AC3: Tách DEV/TEST/PROD",
+      "expected": "Ba môi trường có cấu hình/phạm vi dữ liệu riêng; không có kết nối ngầm từ TEST sang PROD.",
+      "planRow": 26,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await approved model/mapping, DB TEST environment, migrations and recovery runbook. Design approval is a manual review."
+    },
+    {
+      "id": "S2-B04-05",
+      "title": "BL04 AC3: Bí mật kết nối",
+      "expected": "Thông tin kết nối bí mật không nằm trong mã nguồn hoặc output minh chứng công khai.",
+      "planRow": 27,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await approved model/mapping, DB TEST environment, migrations and recovery runbook. Design approval is a manual review."
+    },
+    {
+      "id": "S2-B04-06",
+      "title": "BL04 AC4: Phiên bản cấu hình nghiệp vụ",
+      "expected": "Cấu hình có phiên bản; từ mỗi lần giải truy ra đúng phiên bản lịch tuần/cơ sở/pool/solver đã dùng.",
+      "planRow": 28,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await approved model/mapping, DB TEST environment, migrations and recovery runbook. Design approval is a manual review."
+    },
+    {
+      "id": "S2-B04-07",
+      "title": "BL04 AC5: Lỗi migration và phục hồi",
+      "expected": "Triển khai dừng; không tiếp tục phục vụ trên schema dở dang; phục hồi bản sao thành công theo runbook và đối soát.",
+      "planRow": 29,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await approved model/mapping, DB TEST environment, migrations and recovery runbook. Design approval is a manual review."
+    },
+    {
+      "id": "S2-B05-01",
+      "title": "BL05 AC1: Quản trị tạo tài khoản và gán quyền",
+      "expected": "Tạo/gán quyền được theo ma trận phân quyền; tài khoản thường không tự có quyền quản trị.",
+      "planRow": 30,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await account/session/permission APIs and approved scope matrix, session policy and login limit N/W/L."
+    },
+    {
+      "id": "S2-B05-02",
+      "title": "BL05 AC1: Chặn tự quản trị trái phép",
+      "expected": "API từ chối thao tác; dữ liệu tài khoản/quyền không đổi.",
+      "planRow": 31,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await account/session/permission APIs and approved scope matrix, session policy and login limit N/W/L."
+    },
+    {
+      "id": "S2-B05-03",
+      "title": "BL05 AC1: Vô hiệu hóa tài khoản",
+      "expected": "Tài khoản bị vô hiệu hóa không đăng nhập mới hoặc truy cập API bảo vệ bằng phiên cũ.",
+      "planRow": 32,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await account/session/permission APIs and approved scope matrix, session policy and login limit N/W/L."
+    },
+    {
+      "id": "S2-B05-04",
+      "title": "BL05 AC2: Đăng nhập và đăng xuất",
+      "expected": "Đăng nhập dùng được quyền được cấp; đăng xuất làm phiên cũ không còn truy cập được API bảo vệ.",
+      "planRow": 33,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await account/session/permission APIs and approved scope matrix, session policy and login limit N/W/L."
+    },
+    {
+      "id": "S2-B05-05",
+      "title": "BL05 AC2: Phiên hết hạn hoặc bị thu hồi",
+      "expected": "Cả phiên hết hạn và phiên bị thu hồi bị từ chối ở API bảo vệ, không chỉ ở giao diện.",
+      "planRow": 34,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await account/session/permission APIs and approved scope matrix, session policy and login limit N/W/L."
+    },
+    {
+      "id": "S2-B05-06",
+      "title": "BL05 AC3: Viewer gọi API ghi trực tiếp",
+      "expected": "Mọi thao tác bị cấm đều bị server từ chối; dữ liệu CSDL không thay đổi.",
+      "planRow": 35,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await account/session/permission APIs and approved scope matrix, session policy and login limit N/W/L."
+    },
+    {
+      "id": "S2-B05-07",
+      "title": "BL05 AC3: Cách ly phạm vi dữ liệu",
+      "expected": "API trả/chấp nhận đúng phạm vi đã duyệt; đổi ID hoặc học kỳ không truy cập được dữ liệu bị cấm.",
+      "planRow": 36,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await account/session/permission APIs and approved scope matrix, session policy and login limit N/W/L."
+    },
+    {
+      "id": "S2-B05-08",
+      "title": "BL05 AC4: Mật khẩu không lưu dạng rõ",
+      "expected": "Không có mật khẩu dạng rõ trong bản ghi tài khoản, log hoặc phản hồi API; đăng nhập hợp lệ vẫn hoạt động.",
+      "planRow": 37,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await account/session/permission APIs and approved scope matrix, session policy and login limit N/W/L."
+    },
+    {
+      "id": "S2-B05-09",
+      "title": "BL05 AC4: Giới hạn đăng nhập sai",
+      "expected": "Giới hạn kích hoạt đúng N/W/L và chính sách được duyệt; không cho thử không giới hạn.",
+      "planRow": 38,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await account/session/permission APIs and approved scope matrix, session policy and login limit N/W/L."
+    },
+    {
+      "id": "S2-B05-10",
+      "title": "BL05 AC5: Sửa role phía trình duyệt",
+      "expected": "Role phía client không nâng quyền server; giao diện phản ánh lại quyền server; API ghi vẫn bị từ chối.",
+      "planRow": 39,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await account/session/permission APIs and approved scope matrix, session policy and login limit N/W/L."
+    },
+    {
+      "id": "S2-B06-01",
+      "title": "BL06 AC1: Đủ thuộc tính và quan hệ",
+      "expected": "Thuộc tính/quan hệ đủ theo mô hình được duyệt; trạng thái thiếu dữ liệu hợp lệ không bị tự sửa hoặc mất.",
+      "planRow": 40,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB-backed business APIs, semester/ID contract, shared TEST DB and controlled transaction failure mechanism."
+    },
+    {
+      "id": "S2-B06-02",
+      "title": "BL06 AC2: Giữ dữ liệu nghiệp vụ qua restart",
+      "expected": "Mọi trạng thái và liên kết giữ nguyên qua restart.",
+      "planRow": 41,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB-backed business APIs, semester/ID contract, shared TEST DB and controlled transaction failure mechanism."
+    },
+    {
+      "id": "S2-B06-03",
+      "title": "BL06 AC3: Học kỳ cũ và ID ổn định",
+      "expected": "Kỳ A không bị mất; ID đã được cấp giữ ổn định sau thao tác; tìm #id đúng học kỳ/phạm vi hiện tại.",
+      "planRow": 42,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB-backed business APIs, semester/ID contract, shared TEST DB and controlled transaction failure mechanism."
+    },
+    {
+      "id": "S2-B06-04",
+      "title": "BL06 AC4: API đọc nguồn CSDL",
+      "expected": "API trả dữ liệu CSDL đã lưu, không đọc lại giá trị cũ chỉ có trong STATE/JSON.",
+      "planRow": 43,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB-backed business APIs, semester/ID contract, shared TEST DB and controlled transaction failure mechanism."
+    },
+    {
+      "id": "S2-B06-05",
+      "title": "BL06 AC4: Hai backend dùng chung dữ liệu",
+      "expected": "B đọc được dữ liệu A đã commit theo chính sách nhất quán đã duyệt; không cần chép file trạng thái thủ công.",
+      "planRow": 44,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB-backed business APIs, semester/ID contract, shared TEST DB and controlled transaction failure mechanism."
+    },
+    {
+      "id": "S2-B06-06",
+      "title": "BL06 AC5: Ghi nhiều bảng thành công",
+      "expected": "Toàn bộ thay đổi được commit cùng nhau, phản hồi chỉ báo thành công sau khi lưu hoàn tất.",
+      "planRow": 45,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB-backed business APIs, semester/ID contract, shared TEST DB and controlled transaction failure mechanism."
+    },
+    {
+      "id": "S2-B06-07",
+      "title": "BL06 AC5: Rollback lỗi giữa giao dịch",
+      "expected": "Rollback toàn bộ giao dịch, không có quan hệ mồ côi, không báo thành công và không mất dữ liệu cũ.",
+      "planRow": 46,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB-backed business APIs, semester/ID contract, shared TEST DB and controlled transaction failure mechanism."
+    },
+    {
+      "id": "S2-B07-01",
+      "title": "BL07 AC1: Giữ lịch và mốc gần nhất",
+      "expected": "Lịch đã lưu và mốc gần nhất còn sau restart; hoàn tác khôi phục đúng mốc được phép.",
+      "planRow": 47,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB/version/permission/preview ownership contracts and TEST environment. Clarify grid re-import for S2-B07-11."
+    },
+    {
+      "id": "S2-B07-02",
+      "title": "BL07 AC1: Kết quả giải chưa áp dụng",
+      "expected": "Kết quả solver chưa áp dụng không tự ghi đè lịch A đang được sử dụng.",
+      "planRow": 48,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB/version/permission/preview ownership contracts and TEST environment. Clarify grid re-import for S2-B07-11."
+    },
+    {
+      "id": "S2-B07-03",
+      "title": "BL07 AC2: Hai người sửa cùng phiên bản",
+      "expected": "B bị từ chối vì bản cũ và có hướng dẫn tải lại; thay đổi A không bị ghi đè im lặng.",
+      "planRow": 49,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB/version/permission/preview ownership contracts and TEST environment. Clarify grid re-import for S2-B07-11."
+    },
+    {
+      "id": "S2-B07-04",
+      "title": "BL07 AC2: Áp dụng kết quả solver lỗi thời",
+      "expected": "Kết quả dựa V1 bị từ chối; lịch V2 được bảo toàn; chỉ dẫn tải lại hoặc giải lại.",
+      "planRow": 50,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB/version/permission/preview ownership contracts and TEST environment. Clarify grid re-import for S2-B07-11."
+    },
+    {
+      "id": "S2-B07-05",
+      "title": "BL07 AC1,2: Hoàn tác có kiểm tra quyền và phiên bản",
+      "expected": "Chặn người không đủ quyền và bản thao tác lỗi thời; không ghi đè công việc người khác.",
+      "planRow": 51,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB/version/permission/preview ownership contracts and TEST environment. Clarify grid re-import for S2-B07-11."
+    },
+    {
+      "id": "S2-B07-06",
+      "title": "BL07 AC1: Hủy xác nhận hoàn tác",
+      "expected": "Hiển thị tác động trước khi ghi. Hủy giữ nguyên lịch; đồng ý với phiên bản hiện hành mới được hoàn tác.",
+      "planRow": 52,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB/version/permission/preview ownership contracts and TEST environment. Clarify grid re-import for S2-B07-11."
+    },
+    {
+      "id": "S2-B07-07",
+      "title": "BL07 AC3: Cách ly bản xem trước nhập",
+      "expected": "A/B không thấy hoặc commit nhầm preview của nhau; server kiểm tra người sở hữu preview.",
+      "planRow": 53,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB/version/permission/preview ownership contracts and TEST environment. Clarify grid re-import for S2-B07-11."
+    },
+    {
+      "id": "S2-B07-08",
+      "title": "BL07 AC3: Chỉ nhập sau xác nhận",
+      "expected": "Trước xác nhận không ghi dữ liệu nghiệp vụ. Sau xác nhận chỉ commit đúng file, học kỳ, chế độ và quyền.",
+      "planRow": 54,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB/version/permission/preview ownership contracts and TEST environment. Clarify grid re-import for S2-B07-11."
+    },
+    {
+      "id": "S2-B07-09",
+      "title": "BL07 AC3: Lỗi nhập rollback toàn bộ",
+      "expected": "Không nhập dở dang, dữ liệu trước nhập giữ nguyên; phản hồi lỗi và không báo thành công.",
+      "planRow": 55,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB/version/permission/preview ownership contracts and TEST environment. Clarify grid re-import for S2-B07-11."
+    },
+    {
+      "id": "S2-B07-10",
+      "title": "BL07 AC4: Xuất đúng học kỳ, bộ lọc, quyền",
+      "expected": "File được phép xuất chỉ chứa đúng kỳ/phần lọc/phạm vi được phép. Yêu cầu trái quyền bị API từ chối.",
+      "planRow": 56,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB/version/permission/preview ownership contracts and TEST environment. Clarify grid re-import for S2-B07-11."
+    },
+    {
+      "id": "S2-B07-11",
+      "title": "BL07 AC4: Mở file và round-trip",
+      "expected": "Hai file mở được và chứa đúng dữ liệu xuất. File FATE nhập lại bảo toàn thuộc tính và quan hệ nghiệp vụ của các lớp được xuất.",
+      "planRow": 57,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB/version/permission/preview ownership contracts and TEST environment. Clarify grid re-import for S2-B07-11."
+    },
+    {
+      "id": "S2-B07-12",
+      "title": "BL07 AC5: Phản hồi ghi và nhật ký",
+      "expected": "UI/API phản ánh đúng kết quả. Nhật ký còn sau restart, có người thực hiện, thời điểm, kết quả, không ghi bí mật.",
+      "planRow": 58,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await DB/version/permission/preview ownership contracts and TEST environment. Clarify grid re-import for S2-B07-11."
+    },
+    {
+      "id": "S2-B08-01",
+      "title": "BL08 AC1: Đối soát migration dữ liệu và mốc",
+      "expected": "Báo cáo đối soát chỉ ra sai lệch nếu có; nguồn gốc không đổi; dữ liệu và mốc được chuyển đúng mapping được duyệt.",
+      "planRow": 59,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await migration/backup/deployment handoff, approved load and RPO/RTO targets and operations/acceptance evidence."
+    },
+    {
+      "id": "S2-B08-02",
+      "title": "BL08 AC1: Migration chạy lại không nhân đôi",
+      "expected": "Không nhân đôi hoặc mất bản ghi, không sửa JSON gốc, có kết quả rõ ràng cho lần chạy lại.",
+      "planRow": 60,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await migration/backup/deployment handoff, approved load and RPO/RTO targets and operations/acceptance evidence."
+    },
+    {
+      "id": "S2-B08-03",
+      "title": "BL08 AC2: Backup tự động và khôi phục thử",
+      "expected": "Backup tự động tạo được bản dùng được; khôi phục thử thành công trong môi trường riêng; không ghi đè PROD.",
+      "planRow": 61,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await migration/backup/deployment handoff, approved load and RPO/RTO targets and operations/acceptance evidence."
+    },
+    {
+      "id": "S2-B08-04",
+      "title": "BL08 AC2: Đạt RPO và RTO",
+      "expected": "Mức mất dữ liệu không vượt RPO và thời gian phục hồi không vượt RTO đã duyệt; có số đo và bằng chứng.",
+      "planRow": 62,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await migration/backup/deployment handoff, approved load and RPO/RTO targets and operations/acceptance evidence."
+    },
+    {
+      "id": "S2-B08-05",
+      "title": "BL08 AC3: Cấu hình triển khai",
+      "expected": "Ứng dụng dùng HTTPS, debug tắt, DB không công khai; không mở truy cập trái với thiết kế được duyệt.",
+      "planRow": 63,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await migration/backup/deployment handoff, approved load and RPO/RTO targets and operations/acceptance evidence."
+    },
+    {
+      "id": "S2-B08-06",
+      "title": "BL08 AC3: Cảnh báo lỗi kết nối và backup",
+      "expected": "Cả hai lỗi tạo cảnh báo tới đúng người phụ trách theo cấu hình; không báo backup thành công giả.",
+      "planRow": 64,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await migration/backup/deployment handoff, approved load and RPO/RTO targets and operations/acceptance evidence."
+    },
+    {
+      "id": "S2-B08-07",
+      "title": "BL08 AC4: Hồi quy, quyền và sửa đồng thời",
+      "expected": "Kiểm thử hồi quy, quyền truy cập và sửa đồng thời đạt tiêu chí nghiệm thu; không phát sinh vượt quyền, ghi đè mất dữ liệu hoặc rollback sai.",
+      "planRow": 65,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await migration/backup/deployment handoff, approved load and RPO/RTO targets and operations/acceptance evidence."
+    },
+    {
+      "id": "S2-B08-08",
+      "title": "BL08 AC4: Tải nhiều người dùng",
+      "expected": "Độ trễ, tỷ lệ lỗi và khả năng phục vụ đạt ngưỡng nghiệm thu của hệ thống; không mất bản ghi, vượt quyền hoặc làm dữ liệu không nhất quán.",
+      "planRow": 66,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await migration/backup/deployment handoff, approved load and RPO/RTO targets and operations/acceptance evidence."
+    },
+    {
+      "id": "S2-B08-09",
+      "title": "BL08 AC5: Nghiệm thu và sẵn sàng chuyển đổi",
+      "expected": "Có người vận hành và phê duyệt cutover/rollback trước chuyển thật; giáo vụ nghiệm thu phạm vi đã nhận.",
+      "planRow": 67,
+      "coverage": "MANUAL_OR_HANDOFF",
+      "testFile": null,
+      "remaining": "Await migration/backup/deployment handoff, approved load and RPO/RTO targets and operations/acceptance evidence."
+    }
+  ]
+}
