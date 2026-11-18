@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 //
 // Cả chương trình lẫn khóa đều chọn NHIỀU: "FTH + BCSE, khóa 2026, 2025 và 2024"
 // trong cùng một lần xếp. Backend (domain/pham_vi.py) đã nhận danh sách.
-export default function PhamViXepPanel({ data, phamVi, onChange, disabled, ketQuaPhamVi }) {
+export default function PhamViXepPanel({ data, phamVi, onChange, disabled, ketQuaPhamVi, lockedProgram }) {
   const programs = danhSachChuongTrinh(data);
   const chuongTrinh = phamVi?.programs ?? [];
   const khoaDaChon = phamVi?.cohorts ?? [];
@@ -55,25 +55,31 @@ export default function PhamViXepPanel({ data, phamVi, onChange, disabled, ketQu
         Xếp cho
       </span>
 
-      <MultiFilterSelect
-        label="Toàn khoa"
-        searchable
-        values={chuongTrinh}
-        disabled={disabled}
-        options={programs}
-        onChange={datChuongTrinh}
-      />
+      {lockedProgram ? (
+        <Pill tone="violet">CTĐT phụ trách: {lockedProgram}</Pill>
+      ) : (
+        <>
+          <MultiFilterSelect
+            label="Toàn khoa"
+            searchable
+            values={chuongTrinh}
+            disabled={disabled}
+            options={programs}
+            onChange={datChuongTrinh}
+          />
 
-      {/* Không chọn khóa nào = MỌI khóa của chương trình. Phải nói ra, không thì
-          giáo vụ tưởng chưa chọn gì là chưa xếp được. */}
-      <MultiFilterSelect
-        label="Mọi khoá"
-        searchable
-        values={khoaDaChon}
-        disabled={disabled}
-        options={khoas}
-        onChange={datKhoa}
-      />
+          {/* Không chọn khóa nào = MỌI khóa của chương trình. Phải nói ra, không thì
+              giáo vụ tưởng chưa chọn gì là chưa xếp được. */}
+          <MultiFilterSelect
+            label="Mọi khoá"
+            searchable
+            values={khoaDaChon}
+            disabled={disabled}
+            options={khoas}
+            onChange={datKhoa}
+          />
+        </>
+      )}
 
       <div className="ml-auto flex flex-wrap items-center gap-2">
         {dangCoPhamVi ? (

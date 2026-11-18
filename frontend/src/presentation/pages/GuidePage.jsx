@@ -15,7 +15,10 @@ import { cn } from '@/lib/utils';
 
 /** Nhan vai tro dung lai xuyen suot trang huong dan. */
 const ROLE_MAP = {
-  staff: { label: 'Giáo vụ / Điều phối viên', tone: 'violet' },
+  gdct: { label: 'Giám đốc CT', tone: 'violet' },
+  dpct: { label: 'Điều phối CT', tone: 'blue' },
+  assistant: { label: 'Trợ lý khoa', tone: 'violet' },
+  resident: { label: 'Giảng viên cơ hữu', tone: 'emerald' },
   viewer: { label: 'Xem thôi', tone: 'slate' },
   tester: { label: 'Tester', tone: 'blue' },
 };
@@ -61,29 +64,35 @@ const SECTIONS = [
 
 const WORKFLOW_STEPS = [
   {
-    title: 'Nhập dữ liệu học phần',
-    desc: 'Tại "Dữ liệu học phần": gõ tay từng lớp, hoặc "Nhập từ Excel" để nạp nhanh từ file kế hoạch giảng dạy kỳ trước.',
+    title: 'Nạp dữ liệu học phần',
+    desc: 'Ứng dụng hiện hỗ trợ nhập tay hoặc nạp Excel. Màn này không được cấp cho hồ sơ vai trò nào vì yêu cầu hiện tại chưa chỉ định ai được phép nhập/sửa dữ liệu lớp học phần.',
+    roles: [],
   },
   {
-    title: 'Thu khung giờ giảng viên',
-    desc: 'Tại "Chuẩn bị dữ liệu": mỗi giảng viên báo khung giờ có thể dạy. Lớp chưa có giờ ở trạng thái chờ, chưa được đưa vào giải.',
+    title: 'Quản lý giảng viên thỉnh giảng',
+    desc: 'GĐCT, ĐPCT và Trợ lý khoa có thể mời giảng viên, cập nhật hồ sơ và giờ có thể dạy. Trợ lý khoa cũng có thể cập nhật giờ rảnh thay giảng viên cơ hữu.',
+    roles: ['gdct', 'dpct', 'assistant'],
   },
   {
-    title: 'Giải Giai đoạn 1 — xếp thỉnh giảng',
-    desc: 'Xếp giảng viên thỉnh giảng (GUEST) trước, theo đúng khung giờ đã báo — nhóm này ít linh hoạt về giờ nên ưu tiên xếp trước.',
+    title: 'Xếp thời khóa biểu',
+    desc: 'GĐCT xếp CTĐT phụ trách; Trợ lý khoa có thể xếp thay khi cần trên phạm vi toàn trường. ĐPCT không được mặc định có quyền xếp lịch.',
+    roles: ['gdct', 'assistant'],
   },
   {
-    title: 'Giải Giai đoạn 2 — ghép cơ hữu',
-    desc: 'Xếp tiếp giảng viên cơ hữu (RESIDENT), hệ thống xếp phần còn lại xung quanh những gì Giai đoạn 1 đã cố định.',
+    title: 'Khai giờ rảnh cơ hữu',
+    desc: 'Giảng viên cơ hữu tự khai giờ rảnh; Trợ lý khoa có thể nhập hoặc cập nhật thay. Giờ rảnh được dùng bởi các bước giải hiện có.',
+    roles: ['resident', 'assistant'],
   },
   {
     title: 'Kiểm tra & sửa tay',
     desc: 'Xem lưới Thời khoá biểu, mở hộp thư "Vấn đề" để rà trùng lịch, kiểm tra tab "Chưa xếp được". Kéo-thả sửa trực tiếp tạo một "ghim" giữ nguyên khi giải lại.',
+    roles: ['gdct', 'assistant'],
     testerToo: true,
   },
   {
     title: 'Xuất kết quả',
     desc: '"Xuất file" để tải thời khoá biểu theo khuôn FATE, hoặc "Lưu thời khoá biểu" để ghi kết quả đang xếp trở lại vào dữ liệu học phần.',
+    roles: ['gdct', 'assistant'],
   },
 ];
 
@@ -102,21 +111,19 @@ const SCREENS = [
   {
     icon: '📋',
     title: 'Dữ liệu học phần',
-    desc: 'Bảng nhập liệu chính — mirror đúng 29 cột của file Excel gốc.',
+    desc: 'Ứng dụng có màn nhập liệu mirror 29 cột Excel, nhưng hiện chưa cấp màn này cho hồ sơ vai trò nào.',
     items: [
-      'Thêm/sửa từng lớp bằng tay',
-      'Nhập từ Excel · Xuất file',
-      'Xóa giờ hàng loạt',
-      'Bắt đầu học kỳ mới (xóa sạch để làm lại)',
+      'Người được phép nhập/sửa học phần và nạp Excel chưa được phân công',
+      'Các hồ sơ vai trò hiện không thấy mục này trên menu',
     ],
   },
   {
     icon: '🗂️',
     title: 'Chuẩn bị dữ liệu',
-    desc: '2 tab con, dùng trước khi giải.',
+    desc: 'Mục Giảng viên dùng để chuẩn bị hồ sơ và giờ rảnh theo vai trò.',
     items: [
-      '"Học phần" — việc cần làm theo lớp: chưa có giảng viên (bấm "Phân công giảng viên") hay đã có giảng viên nhưng chưa khai giờ (bấm "Nhập giờ")',
-      '"Giảng viên" — danh sách giảng viên (cơ hữu/thỉnh giảng), sửa thông tin và khai giờ có thể dạy',
+      'GĐCT, ĐPCT và Trợ lý khoa mời/cập nhật hồ sơ và giờ có thể dạy của giảng viên thỉnh giảng',
+      'Giảng viên cơ hữu khai giờ rảnh cho hồ sơ đại diện; Trợ lý khoa có thể cập nhật thay',
     ],
   },
   {
@@ -254,9 +261,12 @@ export default function GuidePage() {
           đang xếp.
         </p>
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <RoleTag role="staff" />
+          <RoleTag role="gdct" />
+          <RoleTag role="dpct" />
+          <RoleTag role="assistant" />
+          <RoleTag role="resident" />
           <RoleTag role="viewer" />
-          <span className="text-muted-foreground">— cả hai đều xem được trang này</span>
+          <span className="text-muted-foreground">— các hồ sơ mô phỏng; không xác thực tài khoản</span>
         </div>
       </div>
 
@@ -319,30 +329,27 @@ export default function GuidePage() {
                 description="Khác với quy trình đầy đủ ngoài đời"
               >
                 <p>
-                  Quy trình đầy đủ ngoài đời có 3 vai trò (GĐCT → Giáo vụ Khoa →
-                  Phòng Đào Tạo), xếp giờ trước rồi gán phòng sau. Bản demo hiện
-                  tại <strong>gộp mọi việc vào một giao diện</strong> với 2 vai
-                  trò cục bộ, và xếp giờ + phòng trong cùng một lượt giải — dùng
-                  để kiểm thử thuật toán và luồng nhập liệu, chưa phản ánh việc
-                  chia nhiều khoa/phòng ban dùng chung hệ thống.
+                  Mỗi CTĐT có một GĐCT và một ĐPCT. GĐCT xếp CTĐT mình phụ trách;
+                  Trợ lý khoa có thể xếp thay trên phạm vi toàn trường. JLE và
+                  Phòng Đào tạo điều phối nghiệp vụ nhưng không có hồ sơ đăng
+                  nhập riêng theo yêu cầu hiện tại. Vai trò trên màn hình chỉ
+                  điều chỉnh giao diện cục bộ, không phải phân quyền bảo mật.
                 </p>
               </Card>
 
               <Card title="Vai trò trong demo" description="Không có đăng nhập thật">
                 <div className="divide-y">
-                  <div className="grid grid-cols-1 gap-2 py-3 first:pt-0 sm:grid-cols-[180px_1fr]">
-                    <RoleTag role="staff" className="h-fit" />
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground text-sm">
-                        Toàn bộ điều hướng.
-                      </p>
-                      <p className="text-sm">
-                        Nhập/sửa dữ liệu học phần, nộp khung giờ giảng viên, chạy
-                        giải Giai đoạn 1 &amp; 2, kéo-thả sửa tay, xuất file, lưu
-                        bản đã xếp.
-                      </p>
+                  {[
+                    ['gdct', 'Quản lý giảng viên thỉnh giảng và xếp lịch trong CTĐT được chọn.'],
+                    ['dpct', 'Quản lý giảng viên thỉnh giảng; không xếp lịch.'],
+                    ['assistant', 'Quản lý giảng viên thỉnh giảng, cập nhật giờ rảnh cơ hữu và xếp lịch toàn trường.'],
+                    ['resident', 'Khai giờ rảnh cho hồ sơ giảng viên được chọn trong bản demo.'],
+                  ].map(([role, description]) => (
+                    <div key={role} className="grid grid-cols-1 gap-2 py-3 first:pt-0 sm:grid-cols-[180px_1fr]">
+                      <RoleTag role={role} className="h-fit" />
+                      <p className="text-sm">{description}</p>
                     </div>
-                  </div>
+                  ))}
                   <div className="grid grid-cols-1 gap-2 py-3 last:pb-0 sm:grid-cols-[180px_1fr]">
                     <RoleTag role="viewer" className="h-fit" />
                     <div className="space-y-1">
@@ -357,10 +364,16 @@ export default function GuidePage() {
                   </div>
                 </div>
                 <p className="text-muted-foreground mt-4 text-sm leading-relaxed">
-                  Vai trò chỉ đổi những gì hiện ra trên giao diện, không phải một
-                  tài khoản riêng — dữ liệu cả hai vai trò nhìn thấy là chung một
-                  trạng thái phía server. Muốn thử cả hai góc nhìn trên cùng dữ
-                  liệu, quay lại màn chọn vai trò và chọn lại là được.
+                  Chọn vai trò không xác thực người dùng và không bảo vệ API;
+                  dữ liệu được dùng chung trên máy chủ. Hồ sơ giảng viên chọn
+                  ở vai trò cơ hữu cũng chỉ là lựa chọn mô phỏng, không xác minh
+                  đó là người đang thao tác.
+                </p>
+                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                  Hồ sơ giảng viên thỉnh giảng hiện dùng chung, chưa gắn với CTĐT;
+                  giao diện chưa thể giới hạn việc quản lý hồ sơ theo CTĐT của
+                  GĐCT/ĐPCT. Màn nhập/sửa dữ liệu học phần cũng chưa được phân
+                  quyền cho vai trò nào.
                 </p>
               </Card>
 
@@ -416,7 +429,7 @@ export default function GuidePage() {
                         {step.desc}
                       </p>
                       <div className="flex flex-wrap gap-1.5 pt-0.5">
-                        <RoleTag role="staff" />
+                        {step.roles.map((role) => <RoleTag key={role} role={role} />)}
                         {step.testerToo && <RoleTag role="tester" />}
                       </div>
                     </div>
@@ -447,6 +460,10 @@ export default function GuidePage() {
                   Dữ liệu học phần → Nhập từ Excel → chọn file .xlsx → xem bản xem
                   trước → "Xóa dữ liệu cũ và nạp N lớp".
                 </p>
+                <Notice tone="amber" icon={AlertTriangle} className="mt-3">
+                  Quy trình nhập Excel được mô tả để tham khảo; hiện chưa có hồ sơ vai trò
+                  nào được giao quyền dùng màn nhập/sửa dữ liệu học phần.
+                </Notice>
                 <Notice tone="amber" icon={AlertTriangle} className="mt-3">
                   Bước xác nhận sẽ <strong>xóa toàn bộ dữ liệu học phần đang
                   có</strong> rồi nạp dữ liệu mới — không có nút undo. Bước xem

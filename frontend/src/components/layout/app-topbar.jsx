@@ -15,15 +15,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-// Khoa khop voi gia tri onPick() cua RolePickerScreen.
-export const ROLE_LABELS = {
-  viewer: 'Xem thôi',
-  staff: 'Giáo vụ / Điều phối viên',
-};
+import { getRoleDefinition } from '@/constants/roles';
 
 export function roleLabel(role) {
-  return ROLE_LABELS[role] ?? ROLE_LABELS.staff;
+  return getRoleDefinition(role).label;
 }
 
 /**
@@ -73,7 +68,7 @@ export function AppTopbar({ collapsed, onToggleSidebar, role, onChangeRole }) {
         <DropdownMenuTrigger className="hover:bg-muted focus-visible:ring-ring/50 flex shrink-0 items-center gap-2 rounded-md p-1 pr-2 focus-visible:ring-[3px] focus-visible:outline-none">
           <Avatar className="bg-primary size-8">
             <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
-              {role === 'viewer' ? 'XT' : 'GV'}
+              {getRoleDefinition(role).initials}
             </AvatarFallback>
           </Avatar>
           <span className="hidden text-sm font-medium sm:block">{name}</span>

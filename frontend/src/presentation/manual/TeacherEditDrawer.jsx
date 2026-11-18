@@ -35,7 +35,7 @@ function formFromTeacher(t) {
 // co id de gan gio ranh (phai tao xong GV truoc), va SubmissionWindowGrid von
 // da co san nut luu rieng, tai dung nguyen khong sua de khong dong den 1
 // component dang dung o man "Khung gio da bao".
-export default function TeacherEditDrawer({ data, teacher, onClose }) {
+export default function TeacherEditDrawer({ data, teacher, onClose, mode = "full" }) {
   const { loading, addManualTeacher, updateManualTeacher, generateTeacherAvailability } = useAppData();
   const [teacherId, setTeacherId] = useState(teacher?.id ?? null);
   const [form, setForm] = useState(teacher ? formFromTeacher(teacher) : emptyForm());
@@ -43,6 +43,8 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
   const [error, setError] = useState(null);
   const [phoneError, setPhoneError] = useState(null);
   const teacherKey = teacher?.id ?? "new";
+  const canEditProfile = mode !== "availability";
+  const guestOnly = mode === "guest";
 
   useEffect(() => {
     setTeacherId(teacher?.id ?? null);
@@ -82,7 +84,8 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
     }
     const payload = {
       name: form.name.trim(), org: form.org.trim(), title: form.title.trim(),
-      email: form.email.trim(), phone: form.phone, teacherType: form.teacherType,
+      email: form.email.trim(), phone: form.phone,
+      teacherType: guestOnly ? "GUEST" : form.teacherType,
     };
     try {
       if (teacherId != null) {
@@ -130,23 +133,27 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
         <DialogHeader className="flex shrink-0 flex-row items-center justify-between gap-3 border-b px-5 py-3">
           <div className="min-w-0">
             <DialogTitle className="text-xl tracking-tight">
-              {teacherId != null ? `Sửa giảng viên #${teacherId}` : "Thêm giảng viên mới"}
+              {mode === "availability"
+                ? `Giờ rảnh — ${teacher?.nameRaw || teacher?.name || `giảng viên #${teacherId}`}`
+                : teacherId != null ? `Sửa giảng viên #${teacherId}` : "Thêm giảng viên mới"}
             </DialogTitle>
-            <DialogDescription className="sr-only">Chỉnh sửa thông tin giảng viên.</DialogDescription>
+            <DialogDescription className="sr-only">
+              {mode === "availability" ? "Cập nhật giờ rảnh giảng viên." : "Chỉnh sửa thông tin giảng viên."}
+            </DialogDescription>
           </div>
           <DialogClose className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring/50 inline-flex size-8 shrink-0 items-center justify-center rounded-md transition-colors focus-visible:ring-[3px] focus-visible:outline-none">
             <X className="size-4" />
             <span className="sr-only">Đóng</span>
           </DialogClose>
         </DialogHeader>
-        <DrawerBody className={`grid grid-cols-1 !space-y-0 !overflow-y-auto !p-0 ${teacherId != null ? "min-[900px]:grid-cols-2 min-[900px]:!overflow-hidden" : ""}`}>
+        <DrawerBody className={`grid grid-cols-1 !space-y-0 !overflow-y-auto !p-0 ${teacherId != null && canEditProfile ? "min-[900px]:grid-cols-2 min-[900px]:!overflow-hidden" : ""}`}>
+          {canEditProfile && (
           <div className="min-h-0 min-w-0 space-y-5 px-5 py-4 min-[900px]:overflow-y-auto">
         {error && (
           <Notice tone="red" icon={TriangleAlert}>
             {error}
           </Notice>
         )}
-
         <form onSubmit={handleSaveInfo}>
           <DrawerSection title="Thông tin giảng viên">
             <FormRow label="Học hàm/học vị">
@@ -191,7 +198,7 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
                 />
               )}
             </FormRow>
-            <FormRow label="Loại giảng viên">
+            {!guestOnly && <FormRow label="Loại giảng viên">
               {(id) => (
                 <>
                   <NativeSelect
@@ -223,7 +230,7 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
                   )}
                 </>
               )}
-            </FormRow>
+            </FormRow>}
             <FormRow label="Email">
               {(id) => (
                 <Input
@@ -272,8 +279,14 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
           </DrawerSection>
         </form>
           </div>
+          )}
           {teacherId != null && (
-            <div className="min-h-0 min-w-0 border-white/70 px-5 py-4 min-[900px]:overflow-y-auto min-[900px]:border-l">
+            <div className={`min-h-0 min-w-0 px-5 py-4 ${canEditProfile ? "border-white/70 min-[900px]:overflow-y-auto min-[900px]:border-l" : "overflow-y-auto"}`}>
+              {!canEditProfile && error && (
+                <Notice tone="red" icon={TriangleAlert} className="mb-4">
+                  {error}
+                </Notice>
+              )}
               {/* Khai gio cho MOI giang vien (ca co huu) va co TAC DUNG THAT: da khai
                   thi chi xep trong khung do. Luoi con hien them cac o nguoi nay DANG
                   DAY (suy tu lop da chot gio) bang mau nhat - de nap file xong nhin ra
@@ -290,7 +303,7 @@ export default function TeacherEditDrawer({ data, teacher, onClose }) {
                   showInstructions={false}
                   saveLabel={(n) => (n === 0 ? "Xóa hết giờ rảnh" : `Lưu ${n} khung giờ`)}
                   onSave={handleSaveAvailability}
-                  onGenerateAvailability={handleGenerateAvailability}
+                  onGenerateAvailability={mode === "full" ? handleGenerateAvailability : undefined}
                 />
               </DrawerSection>
             </div>

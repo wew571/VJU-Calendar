@@ -90,11 +90,13 @@ Tôi thấy **“Lớp đã nhập (214/293)”**, **“Chốt lịch 274/293 l�
 
 **Nên làm:** Ghi nhãn đủ nghĩa bên cạnh từng số, ví dụ **“214 lớp đang hiện trong bảng / 293 lớp có trong dữ liệu”**. Thêm một khung “Cách tính các con số” ngắn ở trang nhập liệu và lịch.
 
-### 14. Tab “Theo điều phối viên 0” lại mở ra 8 người
+### 14. Tab “Theo điều phối viên 0” lại mở ra 8 người — đã xử lý trong giao diện
 
 Ở phần Chuẩn bị dữ liệu → Học phần, tab ghi **“Theo điều phối viên 0”** nhưng bấm vào thấy danh sách **8 điều phối viên**, ai cũng đã đủ. Có thể số 0 nghĩa là **không còn người có việc cần làm**, song người dùng dễ tưởng tab trống.
 
 **Nên làm:** Đổi thành **“Điều phối viên: 0 người còn việc”**, hoặc dùng số 8 nếu con số trên tab nhằm đếm số người trong danh sách.
+
+**Cập nhật:** Tab hiện ghi rõ số nhóm điều phối viên còn việc; danh sách ghi riêng tổng nhóm điều phối viên có trong dữ liệu và chú thích đây không phải số CTĐT. Cả hai số được tính từ dữ liệu hiện tại, không hardcode.
 
 ### 15. Hai nút “Giảng viên” và “Học phần” thực ra là nút thêm mới
 
